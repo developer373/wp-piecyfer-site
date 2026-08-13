@@ -192,22 +192,34 @@ own. Section 5 of the plan document shows this is far more tractable than it loo
 
 **32 plugins on disk, 25 active.** There is severe functional overlap:
 
-| Function | Plugins installed | Should be |
-|---|---|---|
-| **SEO** | All in One SEO 4.7.8, Yoast 24.3, Yoast Premium 23.6, AIOSEO Broken Link Checker | **1** |
-| **Page cache / optimisation** | WP Rocket, Debloat, WP Meteor, `boost-cache` dir | **1** |
-| **Object cache** | Object Cache Pro, Redis Object Cache | **1 (or 0 locally)** |
-| **Image optimisation** | Imagify, WP Smush Pro, Easy Image Optimizer *(malware)* | **1** |
-| **Backup** | UpdraftPlus, All-in-One WP Migration | **1** |
-| **Elementor addons** | ElementsKit, ElementsKit Lite | **1** |
+| Function | Plugins installed | Of those, **active** | Should be |
+|---|---|---|---|
+| **SEO** | All in One SEO 4.7.8, Yoast 24.3, Yoast Premium 23.6, AIOSEO Broken Link Checker | AIOSEO + Broken Link Checker | **1** |
+| **Page cache / optimisation** | WP Rocket, Debloat, WP Meteor, `boost-cache` dir | WP Meteor only | **1** |
+| **Object cache** | Object Cache Pro, Redis Object Cache | both | **1 (or 0 locally)** |
+| **Image optimisation** | Imagify, WP Smush Pro, Easy Image Optimizer *(malware)* | Smush + the malware | **1** |
+| **Backup** | UpdraftPlus, All-in-One WP Migration | both | **1** |
+| **Elementor addons** | ElementsKit, ElementsKit Lite | both | **1** |
 
-🔴 **Running AIOSEO and Yoast simultaneously is actively harmful** — both emit canonical tags, Open
-Graph tags, meta descriptions, robots directives and XML sitemaps. Search engines are currently
-receiving duplicated and potentially conflicting metadata from this site. This is a real,
-measurable SEO defect that exists right now.
+> ### ⚠️ Correction — this section originally overstated two things
+>
+> The table above counts plugins **installed on disk**. Checking `active_plugins` shows that
+> several of the apparent conflicts were not actually running:
+>
+> - **Yoast (free 24.3 and Premium 23.6) were installed but NOT active.** Only AIOSEO was
+>   active. There was therefore **no live duplicate-metadata conflict** — I claimed there was,
+>   and that was wrong. The duplication risk is latent (activating Yoast alongside AIOSEO would
+>   cause it), not present.
+> - **WP Rocket and Debloat were installed but NOT active.** Of the optimisation layers, only
+>   **WP Meteor** was actually running, so they were not fighting each other either.
+>
+> The genuine finding in this area turned out to be different and is documented in
+> `STATUS.md`: WP Meteor's blanket JS deferral was masking a 450px horizontal overflow and a
+> JavaScript exception on every page.
 
-🟠 **Three stacked JS-deferral / cache layers** (WP Rocket + Debloat + WP Meteor) commonly fight each
-other and are a frequent cause of "the site randomly breaks" reports.
+🟠 **Unused-but-installed plugins are still a liability.** Yoast ×2, WP Rocket and Debloat sit on
+disk receiving no updates. Dormant code is still reachable code — `wp-file-manager`, the likely
+entry vector for this compromise, was dormant too.
 
 🟠 `wp-file-manager` (dormant but on disk) should be deleted, not just deactivated.
 
