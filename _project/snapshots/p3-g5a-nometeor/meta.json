@@ -1,0 +1,205 @@
+{
+  "label": "p3-g5a-nometeor",
+  "base": "http://localhost/piecyfer",
+  "capturedAt": "2026-08-13T21:46:09.338Z",
+  "pages": [
+    {
+      "path": "/",
+      "slug": "home-root",
+      "url": "http://localhost/piecyfer/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')"
+      ],
+      "failedRequests": [],
+      "htmlBytes": 438733,
+      "ms": 80176
+    },
+    {
+      "path": "/contact-us/",
+      "slug": "contact-us",
+      "url": "http://localhost/piecyfer/contact-us/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')"
+      ],
+      "failedRequests": [],
+      "htmlBytes": 270233,
+      "ms": 49935
+    },
+    {
+      "path": "/our-team/",
+      "slug": "our-team",
+      "url": "http://localhost/piecyfer/our-team/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')"
+      ],
+      "failedRequests": [],
+      "htmlBytes": 233082,
+      "ms": 56198
+    },
+    {
+      "path": "/blogs/",
+      "slug": "blogs",
+      "url": "http://localhost/piecyfer/blogs/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')"
+      ],
+      "failedRequests": [],
+      "htmlBytes": 235895,
+      "ms": 58033
+    },
+    {
+      "path": "/building-high-performing-web-apps-10-easy-yet-important-tips/",
+      "slug": "building-high-performing-web-apps-10-easy-yet-important-tips",
+      "url": "http://localhost/piecyfer/building-high-performing-web-apps-10-easy-yet-important-tips/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')"
+      ],
+      "failedRequests": [],
+      "htmlBytes": 255985,
+      "ms": 82096
+    },
+    {
+      "path": "/web-app-development/",
+      "slug": "web-app-development",
+      "url": "http://localhost/piecyfer/web-app-development/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')"
+      ],
+      "failedRequests": [],
+      "htmlBytes": 257950,
+      "ms": 51491
+    },
+    {
+      "path": "/?s=software",
+      "slug": "s-software",
+      "url": "http://localhost/piecyfer/?s=software",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')"
+      ],
+      "failedRequests": [],
+      "htmlBytes": 225923,
+      "ms": 50810
+    },
+    {
+      "path": "/this-url-does-not-exist-404-test/",
+      "slug": "this-url-does-not-exist-404-test",
+      "url": "http://localhost/piecyfer/this-url-does-not-exist-404-test/",
+      "viewports": {
+        "desktop": {
+          "status": 404
+        },
+        "tablet": {
+          "status": 404
+        },
+        "mobile": {
+          "status": 404
+        }
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "PAGEERROR: TypeError: Cannot set properties of null (setting 'innerHTML')"
+      ],
+      "failedRequests": [
+        "404 /this-url-does-not-exist-404-test/"
+      ],
+      "htmlBytes": 212327,
+      "ms": 44428
+    }
+  ],
+  "completedAt": "2026-08-13T21:54:06.187Z"
+}
