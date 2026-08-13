@@ -1,7 +1,7 @@
 {
   "label": "baseline",
   "base": "http://localhost/piecyfer",
-  "capturedAt": "2026-08-13T19:29:41.073Z",
+  "capturedAt": "2026-08-13T20:40:08.526Z",
   "pages": [
     {
       "path": "/",
@@ -21,7 +21,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 443511,
-      "ms": 56179
+      "ms": 108310
     },
     {
       "path": "/home/",
@@ -41,7 +41,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 443511,
-      "ms": 79085
+      "ms": 98244
     },
     {
       "path": "/about-piecyfer/",
@@ -61,7 +61,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 251133,
-      "ms": 49904
+      "ms": 58081
     },
     {
       "path": "/our-team/",
@@ -81,7 +81,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 257152,
-      "ms": 50833
+      "ms": 54528
     },
     {
       "path": "/why-choose-us/",
@@ -101,7 +101,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 262768,
-      "ms": 50345
+      "ms": 51454
     },
     {
       "path": "/contact-us/",
@@ -121,7 +121,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 293397,
-      "ms": 45767
+      "ms": 49337
     },
     {
       "path": "/hire-an-expert/",
@@ -141,7 +141,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 343564,
-      "ms": 57439
+      "ms": 65322
     },
     {
       "path": "/privacy-policy/",
@@ -161,7 +161,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 236046,
-      "ms": 42980
+      "ms": 47188
     },
     {
       "path": "/terms-conditions/",
@@ -181,7 +181,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 237091,
-      "ms": 46885
+      "ms": 45207
     },
     {
       "path": "/web-app-development/",
@@ -201,7 +201,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 281041,
-      "ms": 45697
+      "ms": 55608
     },
     {
       "path": "/mobile-app-development/",
@@ -221,7 +221,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 260229,
-      "ms": 50933
+      "ms": 51603
     },
     {
       "path": "/enterprise-software-development/",
@@ -241,7 +241,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 273511,
-      "ms": 47865
+      "ms": 54143
     },
     {
       "path": "/software-quality-testing/",
@@ -261,7 +261,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 273187,
-      "ms": 44370
+      "ms": 52826
     },
     {
       "path": "/software-maintenance-and-support/",
@@ -281,7 +281,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 313549,
-      "ms": 51736
+      "ms": 53237
     },
     {
       "path": "/software-migration/",
@@ -301,7 +301,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 271973,
-      "ms": 51048
+      "ms": 51918
     },
     {
       "path": "/software-re-engineering/",
@@ -321,7 +321,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 273658,
-      "ms": 56329
+      "ms": 46809
     },
     {
       "path": "/cloud-services/",
@@ -341,7 +341,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 273242,
-      "ms": 47782
+      "ms": 53919
     },
     {
       "path": "/cms-solutions/",
@@ -361,7 +361,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 272249,
-      "ms": 45990
+      "ms": 60831
     },
     {
       "path": "/crm-solutions/",
@@ -381,7 +381,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 272490,
-      "ms": 44576
+      "ms": 55952
     },
     {
       "path": "/digital-marketing/",
@@ -401,7 +401,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 341087,
-      "ms": 53914
+      "ms": 62641
     },
     {
       "path": "/emerging-tech/",
@@ -421,7 +421,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 365465,
-      "ms": 55328
+      "ms": 63650
     },
     {
       "path": "/blogs/",
@@ -441,7 +441,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 260474,
-      "ms": 50583
+      "ms": 57463
     },
     {
       "path": "/boosting-sales-with-a-powerful-crm-a-guide-for-us-businesses/",
@@ -461,7 +461,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 283756,
-      "ms": 53032
+      "ms": 58374
     },
     {
       "path": "/building-high-performing-web-apps-10-easy-yet-important-tips/",
@@ -481,7 +481,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 280659,
-      "ms": 51203
+      "ms": 58450
     },
     {
       "path": "/creating-engaging-mobile-apps-for-the-us-market-best-practices/",
@@ -501,7 +501,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 284533,
-      "ms": 46273
+      "ms": 59792
     },
     {
       "path": "/crm-trends-in-2025-what-to-expect-in-the-future/",
@@ -521,7 +521,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 290095,
-      "ms": 52922
+      "ms": 57798
     },
     {
       "path": "/mobile-app-development-in-the-age-of-ai-opportunities-and-challenges/",
@@ -541,7 +541,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 280827,
-      "ms": 50367
+      "ms": 54767
     },
     {
       "path": "/sales-teams-spend-70-of-their-day-not-selling-heres-the-ai-stack-that-fixes-it/",
@@ -561,7 +561,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 289371,
-      "ms": 51734
+      "ms": 57725
     },
     {
       "path": "/streamlining-operations-with-erp-softwares-real-world-case-studies/",
@@ -581,7 +581,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 275131,
-      "ms": 51396
+      "ms": 53500
     },
     {
       "path": "/tailored-enterprise-software-solutions-a-guide-for-us-businesses/",
@@ -601,7 +601,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 285850,
-      "ms": 52166
+      "ms": 58756
     },
     {
       "path": "/the-88-problem-why-most-ai-agent-pilots-never-reach-production-and-what-nvidias-latest-push-actually-solves/",
@@ -621,7 +621,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 290987,
-      "ms": 53363
+      "ms": 57947
     },
     {
       "path": "/the-benefits-of-progressive-web-apps-for-us-businesses/",
@@ -641,7 +641,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 288523,
-      "ms": 53379
+      "ms": 56429
     },
     {
       "path": "/the-legacy-integration-wall-why-60-of-ai-projects-stall-before-they-ship/",
@@ -661,7 +661,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 286767,
-      "ms": 50051
+      "ms": 57938
     },
     {
       "path": "/we-reviewed-50-enterprise-ai-deployments-the-successful-ones-had-one-thing-in-common/",
@@ -681,7 +681,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 284896,
-      "ms": 54995
+      "ms": 58071
     },
     {
       "path": "/why-ai-native-companies-are-outperforming-traditional-software-businesses/",
@@ -701,7 +701,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 274967,
-      "ms": 50164
+      "ms": 58019
     },
     {
       "path": "/why-healthcare-companies-are-finally-ditching-legacy-systems-in-2026/",
@@ -721,7 +721,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 287291,
-      "ms": 52466
+      "ms": 57392
     },
     {
       "path": "/why-healthcare-software-fails-without-security-first-architecture/",
@@ -741,7 +741,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 288295,
-      "ms": 53726
+      "ms": 72488
     },
     {
       "path": "/?s=software",
@@ -761,7 +761,7 @@
       "consoleErrors": [],
       "failedRequests": [],
       "htmlBytes": 250738,
-      "ms": 46282
+      "ms": 67551
     },
     {
       "path": "/this-url-does-not-exist-404-test/",
@@ -787,8 +787,8 @@
         "404 /this-url-does-not-exist-404-test/"
       ],
       "htmlBytes": 237020,
-      "ms": 43532
+      "ms": 41797
     }
   ],
-  "completedAt": "2026-08-13T20:02:54.223Z"
+  "completedAt": "2026-08-13T21:18:21.743Z"
 }
