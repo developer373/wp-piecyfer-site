@@ -27,7 +27,22 @@ const arg = n => (process.argv.includes(n) ? process.argv[process.argv.indexOf(n
 const only = arg('--only');
 const force = process.argv.includes('--force');       // re-capture pages already done
 const quick = process.argv.includes('--quick');       // 8-page subset instead of all 39
-const concurrency = Number(arg('--concurrency')) || 3;
+/**
+ * Pages captured in parallel. Default 1 — deliberately.
+ *
+ * At concurrency 3 this machine takes 60–90s per page instead of the usual 8s,
+ * and under that contention Chromium composites parts of an 11,000px full-page
+ * screenshot before their images are decoded. The result was one or two
+ * screenshots per run differing by several percent, with byte-identical markup
+ * — a pure paint race, and it moved to a different page each time, which is
+ * what made it so hard to pin down.
+ *
+ * Serial capture is barely slower overall (the parallel speedup was mostly
+ * eaten by contention) and it is the difference between a harness that reports
+ * phantom regressions and one that can be trusted. Two consecutive serial runs
+ * of the untouched site compare byte-identical.
+ */
+const concurrency = Number(arg('--concurrency')) || 1;
 
 const outDir = path.join(__dirname, '..', 'snapshots', label);
 const htmlDir = path.join(outDir, 'html');
@@ -229,38 +244,8 @@ async function settle(page) {
 
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
 
-  // Stop carousels, then force their lazy slides to load — in that order.
-  //
-  // The site's carousels use Swiper with swiper-lazy, which only loads a
-  // slide's image as that slide approaches the active position. Autoplay
-  // therefore decides *how many* logos have loaded by the time we screenshot,
-  // and the answer differed on every run: the client-logo strip on the home
-  // page showed three logos in one capture and six in the next.
-  //
-  // Pinning the track with CSS is not enough, because that hides the movement
-  // without stopping Swiper's internal index from advancing and pulling in more
-  // images. So: stop autoplay, reset to slide zero, and only then promote every
-  // remaining data-src to a real src so all slides are populated regardless of
-  // position.
-  await page.evaluate(() => {
-    document.querySelectorAll('.swiper, .swiper-container').forEach(el => {
-      const sw = el.swiper;
-      if (!sw) return;
-      try {
-        sw.autoplay?.stop();
-        sw.slideTo(0, 0, false);
-      } catch (e) { /* older Swiper builds differ; the CSS pin still applies */ }
-    });
-
-    document.querySelectorAll('img[data-src]').forEach(img => {
-      img.src = img.dataset.src;
-      img.classList.remove('swiper-lazy');
-    });
-    document.querySelectorAll('img[data-srcset]').forEach(img => {
-      img.srcset = img.dataset.srcset;
-    });
-    document.querySelectorAll('.swiper-lazy-preloader').forEach(el => el.remove());
-  }).catch(() => {});
+  // Carousels are tamed inside the polling loop below rather than here, so the
+  // fix reapplies as Swiper clones new slides. See the comment there.
 
   // Warm the browser cache for every image the page references, including ones
   // the layout has not revealed yet.
@@ -306,10 +291,36 @@ async function settle(page) {
   }).catch(() => {});
 
   // Poll until three consecutive identical signatures, or give up.
+  //
+  // The carousel taming runs on *every* iteration, not once. Swiper in loop
+  // mode clones slides on the fly, so a single pass promotes the data-src
+  // attributes that exist at that instant and then Swiper injects a fresh batch
+  // of unloaded clones behind it. That is why the client-logo strip kept
+  // showing a different number of logos per capture even after autoplay was
+  // stopped: we were fixing a set that Swiper then replaced.
   let last = null;
   let stable = 0;
   for (let i = 0; i < 25; i++) {
     const sig = await page.evaluate(() => {
+      document.querySelectorAll('.swiper, .swiper-container').forEach(el => {
+        const sw = el.swiper;
+        if (!sw) return;
+        try {
+          sw.autoplay?.stop();
+          sw.slideTo(0, 0, false);
+        } catch (e) { /* CSS pin still holds the track */ }
+      });
+      document.querySelectorAll('img[data-src]').forEach(img => {
+        img.src = img.dataset.src;
+        img.removeAttribute('data-src');
+        img.classList.remove('swiper-lazy');
+      });
+      document.querySelectorAll('img[data-srcset]').forEach(img => {
+        img.srcset = img.dataset.srcset;
+        img.removeAttribute('data-srcset');
+      });
+      document.querySelectorAll('.swiper-lazy-preloader').forEach(el => el.remove());
+
       const imgs = [...document.images];
       return [
         imgs.length,
@@ -327,10 +338,31 @@ async function settle(page) {
     await page.waitForTimeout(400);
   }
 
-  // Webfonts last: screenshotting before Inter Tight swaps in captures the
-  // fallback face and reports a whole-page text diff on the next run.
+  // Webfonts: screenshotting before Inter Tight swaps in captures the fallback
+  // face and reports a whole-page text diff on the next run.
   await page.evaluate(() => document.fonts.ready).catch(() => {});
-  await page.waitForTimeout(300);
+
+  // Force every image to be fully decoded before we screenshot.
+  //
+  // `complete === true` only means the bytes arrived; the bitmap may not be
+  // decoded, and on an 11,000px full-page capture Chromium can composite a
+  // region before its images are paintable. That was the last false positive
+  // standing: the client-logo strip had identical markup in both runs — same
+  // DOM, same inline styles, same src attributes — yet showed three logos in
+  // one screenshot and six in the other. Nothing was loading differently; the
+  // pixels simply were not ready.
+  //
+  // decode() resolves only once the frame is ready to paint, which is exactly
+  // the guarantee a screenshot needs.
+  await page.evaluate(async () => {
+    await Promise.all(
+      [...document.images].map(img =>
+        (img.decode ? img.decode() : Promise.resolve()).catch(() => {})
+      )
+    );
+  }).catch(() => {});
+
+  await page.waitForTimeout(400);
 }
 
 // Metadata is written after every page, not at the end. A 40-minute run that
