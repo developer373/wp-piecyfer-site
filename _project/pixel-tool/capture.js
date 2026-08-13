@@ -147,17 +147,29 @@ const IGNORE_ASSETS = [
 ];
 const ignoreAsset = url => IGNORE_ASSETS.some(re => re.test(url));
 
+/** After this many consecutive failures a URL is treated as permanently dead. */
+const MAX_FETCH_ATTEMPTS = 3;
+
 async function cacheRoute(route) {
   const url = route.request().url();
+
+  // Inherently non-deterministic third parties never enter the cache: their
+  // URLs are unique per load, so caching them only fills the disk.
+  if (ignoreAsset(url)) return route.abort();
+
   const key = cacheKey(url);
   const bodyFile = path.join(cacheDir, key + '.body');
   const metaFile = path.join(cacheDir, key + '.json');
 
-  if (fs.existsSync(bodyFile) && fs.existsSync(metaFile)) {
-    const m = JSON.parse(fs.readFileSync(metaFile, 'utf8'));
-    if (m.aborted) return route.abort();
-    return route.fulfill({ status: m.status, headers: m.headers, body: fs.readFileSync(bodyFile) });
+  let meta = null;
+  if (fs.existsSync(metaFile)) {
+    try { meta = JSON.parse(fs.readFileSync(metaFile, 'utf8')); } catch (e) { meta = null; }
   }
+
+  if (meta && !meta.dead && fs.existsSync(bodyFile) && !meta.attempts) {
+    return route.fulfill({ status: meta.status, headers: meta.headers, body: fs.readFileSync(bodyFile) });
+  }
+  if (meta && meta.dead) return route.abort();
 
   try {
     const resp = await route.fetch({ timeout: 20000 });
@@ -166,10 +178,16 @@ async function cacheRoute(route) {
     fs.writeFileSync(metaFile, JSON.stringify({ url, status: resp.status(), headers: resp.headers() }));
     return route.fulfill({ status: resp.status(), headers: resp.headers(), body });
   } catch (e) {
-    // Record the failure too. A resource that is genuinely unreachable should
-    // fail the same way on every run rather than flapping.
-    fs.writeFileSync(bodyFile, '');
-    fs.writeFileSync(metaFile, JSON.stringify({ url, aborted: true, error: String(e).slice(0, 200) }));
+    // Do NOT treat one failure as permanent. A transient network hiccup on a
+    // Google Fonts woff2 once got cached as "aborted", which would have
+    // silently removed Montserrat from every capture from then on — the
+    // baseline would have looked stable while being wrong. Retry across runs,
+    // and only give up after MAX_FETCH_ATTEMPTS.
+    const attempts = ( meta?.attempts || 0 ) + 1;
+    fs.writeFileSync(
+      metaFile,
+      JSON.stringify({ url, attempts, dead: attempts >= MAX_FETCH_ATTEMPTS, error: String(e).slice(0, 200) })
+    );
     return route.abort();
   }
 }
