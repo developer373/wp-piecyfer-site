@@ -365,6 +365,34 @@ async function settle(page) {
   await page.waitForTimeout(400);
 }
 
+/**
+ * Screenshot until two consecutive captures are byte-identical.
+ *
+ * The definitive answer to paint races, and it needs no guesswork about which
+ * element is misbehaving. Everything else here — waiting on images, fonts,
+ * decode(), carousels — reduces the chance that a screenshot is taken mid-paint;
+ * this *detects* it. If two shots taken 500ms apart agree, the page had stopped
+ * changing.
+ *
+ * Necessary because even serially, the home page (11,334px tall) still
+ * occasionally disagreed with itself: two captures under an identical
+ * configuration differed on one screenshot, which proves the difference was
+ * never caused by the change under test.
+ *
+ * Returns the buffer plus whether stability was actually reached, so a page
+ * that never settles is reported rather than silently trusted.
+ */
+async function stableScreenshot(page, opts, attempts = 4) {
+  let prev = await page.screenshot(opts);
+  for (let i = 1; i < attempts; i++) {
+    await page.waitForTimeout(500);
+    const next = await page.screenshot(opts);
+    if (next.equals(prev)) return { buffer: next, stable: true };
+    prev = next;
+  }
+  return { buffer: prev, stable: false };
+}
+
 // Metadata is written after every page, not at the end. A 40-minute run that
 // dies at page 30 must not lose the 29 pages it already proved.
 const metaPath = path.join(outDir, 'meta.json');
@@ -447,11 +475,11 @@ async function capturePage(browser, p, i, total) {
 
         await settle(page);
 
-        await page.screenshot({
-          path: path.join(shotDir, `${slug}@${vp.name}.png`),
-          fullPage: true,
-          animations: 'disabled',
-        });
+        const shot = await stableScreenshot(page, { fullPage: true, animations: 'disabled' });
+        fs.writeFileSync(path.join(shotDir, `${slug}@${vp.name}.png`), shot.buffer);
+        if (!shot.stable) {
+          record.unstableShots = (record.unstableShots || []).concat(vp.name);
+        }
 
         // Markup is viewport-independent for our purposes; capture it once.
         if (vp.name === 'desktop') {
