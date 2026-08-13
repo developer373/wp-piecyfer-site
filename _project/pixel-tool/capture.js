@@ -85,9 +85,12 @@ let meta = { label, base: BASE, capturedAt: new Date().toISOString(), pages: [] 
 if (fs.existsSync(metaPath)) {
   try { meta = JSON.parse(fs.readFileSync(metaPath, 'utf8')); } catch (e) { /* start fresh */ }
 }
-const doneSlugs = new Set(
-  meta.pages.filter(p => Object.values(p.viewports || {}).every(v => v.status === 200)).map(p => p.slug)
-);
+// A page counts as captured when every viewport produced a real HTTP response.
+// Not "status === 200": the 404-template URL is *expected* to return 404, and
+// treating that as a failure would re-capture it on every run and permanently
+// report 38/39.
+const captured = p => Object.values(p.viewports || {}).every(v => typeof v.status === 'number' && v.status > 0);
+const doneSlugs = new Set(meta.pages.filter(captured).map(p => p.slug));
 
 function saveMeta() {
   fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
@@ -105,6 +108,16 @@ async function capturePage(browser, p, i, total) {
         deviceScaleFactor: 1,
         reducedMotion: 'reduce',
       });
+      // Four documents store root-relative /wp-content/... URLs (3 team photos
+      // on Our Team, 3 PDF links). Those resolve correctly on the production
+      // domain-root install but 404 on this /piecyfer/ subdirectory copy.
+      // Rewrite them so the baseline shows what production shows, instead of
+      // baking a local-only 404 into the reference we compare everything to.
+      await ctx.route('**://localhost/wp-content/**', route => {
+        const fixed = route.request().url().replace('://localhost/wp-content/', '://localhost/piecyfer/wp-content/');
+        return route.continue({ url: fixed });
+      });
+
       const page = await ctx.newPage();
       page.on('console', m => {
         if (m.type() === 'error') record.consoleErrors.push(m.text().slice(0, 200));
@@ -139,6 +152,12 @@ async function capturePage(browser, p, i, total) {
           await new Promise(r => setTimeout(r, 300));
         });
         await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
+
+        // The site pulls Inter Tight and friends from fonts.googleapis.com. If
+        // we screenshot before the webfont swaps in we capture the fallback
+        // face, and the next run — which happens to be a touch faster — shows a
+        // full-page text diff that has nothing to do with our changes.
+        await page.evaluate(() => document.fonts.ready).catch(() => {});
 
         await page.screenshot({
           path: path.join(shotDir, `${slug}@${vp.name}.png`),
@@ -212,7 +231,9 @@ async function capturePage(browser, p, i, total) {
   meta.completedAt = new Date().toISOString();
   saveMeta();
 
-  const ok = meta.pages.filter(p => Object.values(p.viewports).every(v => v.status === 200)).length;
+  const ok = meta.pages.filter(captured).length;
   console.log(`\ndone -> ${outDir}`);
   console.log(`${ok}/${meta.pages.length} pages fully captured at all ${VIEWPORTS.length} viewports`);
+  const failed = meta.pages.filter(p => !captured(p));
+  failed.forEach(p => console.log(`  incomplete: ${p.slug} ${JSON.stringify(p.viewports)}`));
 })();
