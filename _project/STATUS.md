@@ -97,12 +97,20 @@ Six separate causes, each found by cropping the differing bands and looking at t
 | 4 | Images inside hidden tab panels — never scrolled into view | Pre-warm every image URL via off-DOM `Image()`, including CSS background images |
 | 5 | Swiper autoplay left carousels at different offsets | Stop autoplay, reset to slide 0, pin the track with CSS |
 | 6 | `swiper-lazy` loads a slide's image only as it nears the active position, so autoplay decided how many client logos appeared — 3 in one run, 6 in the next | Promote `data-src` → `src` **after** stopping the carousel; the ordering is what makes it work |
+| 7 | **The real root cause.** Capturing 3 pages in parallel pushed this machine from ~8s to 60–90s per page, and under that contention Chromium composited parts of an 11,000px screenshot before its images had decoded | Capture **serially** |
+
+Cause 7 is worth dwelling on, because the first six were partly symptom-chasing. The tell was
+that markup stayed **byte-identical** — same DOM, same inline styles, same `src` attributes —
+while pixels differed, and the affected page moved around between runs. Nothing was loading
+differently; the pixels simply were not ready. Each targeted fix reduced the count without ever
+reaching zero, which is the signature of treating symptoms rather than the cause.
+
+Serial capture costs almost nothing in wall-clock terms, because the parallel speedup was being
+eaten by the contention it created. The six earlier fixes are all kept — they were real, and each
+would resurface on a faster machine or a slower network.
 
 **Self-test now passes cleanly:** two consecutive captures of the untouched site produce
 0 markup changes, 0 visual changes, 0 console errors, 0 broken assets — exit code 0.
-
-The definitive baseline is being captured with this stable harness now. Every later phase is
-gated on `node compare.js baseline <step>` returning zero.
 
 ---
 
