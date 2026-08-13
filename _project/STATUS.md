@@ -73,13 +73,36 @@ Built `_project/pixel-tool/` — the harness that makes "pixel perfect" checkabl
 claimed:
 
 - `capture.js <label>` — 39 URLs × 3 viewports (1920/768/375), full-page screenshots +
-  normalised HTML + broken-asset and console-error tracking
+  normalised HTML + broken-asset and console-error tracking. `--quick` captures an 8-page
+  representative subset for fast checks between steps.
 - `compare.js <a> <b>` — markup diff, per-pixel screenshot diff with anti-aliasing tolerance,
-  new-console-error and newly-broken-asset detection. Exits non-zero on any change.
+  new-console-error and newly-broken-asset detection. Exits non-zero on any change, so it can
+  gate a phase.
 - `analyse-widgets.js` — the widget/settings census behind `02-WIDGET-REBUILD-SPEC.md`
 
-Baseline capture is running now. Every later phase gets gated on
-`node compare.js baseline <step>` returning zero.
+### The harness had to be debugged before it could be trusted
+
+Capturing the same untouched site twice initially disagreed on **5 of 24 screenshots, by up to
+5.2% of pixels**. Every one of those was a false positive. Had that gone unnoticed, Phase 3 and
+Phase 4 would have been spent chasing regressions that did not exist — and, worse, a real
+regression would have been invisible in the noise.
+
+Six separate causes, each found by cropping the differing bands and looking at them:
+
+| # | Cause | Fix |
+|---|---|---|
+| 1 | Webfonts fetched from `fonts.googleapis.com`, intermittently failing → page fell back to a system face | On-disk cache of off-site responses, replayed byte-identically; wait for `document.fonts.ready` |
+| 2 | Google Maps mints new tile URLs and tokens per load, and sits in a global template | Iframe content hidden, box preserved; its requests excluded from the report |
+| 3 | Lazy images below the fold — `networkidle` is not enough, lazy-load fires on scroll | Step-scroll pass, then poll until image count / loaded count / page height are stable 3× |
+| 4 | Images inside hidden tab panels — never scrolled into view | Pre-warm every image URL via off-DOM `Image()`, including CSS background images |
+| 5 | Swiper autoplay left carousels at different offsets | Stop autoplay, reset to slide 0, pin the track with CSS |
+| 6 | `swiper-lazy` loads a slide's image only as it nears the active position, so autoplay decided how many client logos appeared — 3 in one run, 6 in the next | Promote `data-src` → `src` **after** stopping the carousel; the ordering is what makes it work |
+
+**Self-test now passes cleanly:** two consecutive captures of the untouched site produce
+0 markup changes, 0 visual changes, 0 console errors, 0 broken assets — exit code 0.
+
+The definitive baseline is being captured with this stable harness now. Every later phase is
+gated on `node compare.js baseline <step>` returning zero.
 
 ---
 
