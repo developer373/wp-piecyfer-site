@@ -17,6 +17,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { chromium } = require('playwright');
 const { BASE, PATHS, QUICK, VIEWPORTS, slugify } = require('./urls');
+const { normalise } = require('./normalise');
 
 const label = process.argv[2];
 if (!label) {
@@ -49,34 +50,8 @@ const htmlDir = path.join(outDir, 'html');
 const shotDir = path.join(outDir, 'shots');
 [outDir, htmlDir, shotDir].forEach(d => fs.mkdirSync(d, { recursive: true }));
 
-/**
- * Strip everything that legitimately changes between two runs of an unchanged
- * site. Without this every diff is 100% noise: WordPress regenerates nonces per
- * request, Elementor appends ?ver= cache-busters, and several plugins emit
- * timestamps and random element ids.
- *
- * Anything NOT stripped here is content we are asserting must stay identical.
- */
-function normalise(html) {
-  return html
-    // nonces and one-time tokens
-    .replace(/(nonce["':=\s]+)[a-f0-9]{8,12}/gi, '$1__NONCE__')
-    .replace(/(_wpnonce=)[a-f0-9]{8,12}/gi, '$1__NONCE__')
-    .replace(/("(?:nonce|_?ajax_nonce|rest_nonce)"\s*:\s*")[^"]+/gi, '$1__NONCE__')
-    // asset cache-busters
-    .replace(/([?&]ver=)[^"'&\s]+/gi, '$1__VER__')
-    // elementor / plugin generated ids that are random per render
-    .replace(/(elementor-element-)[a-f0-9]{6,9}\b/gi, '$1__EID__')
-    .replace(/(id="[a-z-]*?)[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, '$1__UUID__')
-    // timestamps and dates-of-render
-    .replace(/\b\d{10,13}\b/g, '__TS__')
-    .replace(/\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[^"'<\s]*/g, '__ISODATE__')
-    // whitespace noise
-    .replace(/\r\n/g, '\n')
-    .replace(/[ \t]+$/gm, '')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
+// Markup normalisation lives in normalise.js so renormalise.js can apply the
+// identical rules to already-captured baselines.
 
 /**
  * Freeze anything that would make two screenshots of the same page differ:
@@ -307,6 +282,13 @@ async function settle(page) {
         if (!sw) return;
         try {
           sw.autoplay?.stop();
+          // update() recomputes slide widths from the current layout. Swiper
+          // sizes its slides once at init, which on this site happens before
+          // webfonts settle — so the blog listing's featured image came out a
+          // few pixels wider in one run than the next, with byte-identical
+          // markup. (The markup diff could never have caught it: HTML is
+          // captured at the desktop viewport only, and this showed on tablet.)
+          sw.update();
           sw.slideTo(0, 0, false);
         } catch (e) { /* CSS pin still holds the track */ }
       });

@@ -28,7 +28,9 @@ final class Plugin {
 	 *
 	 * @var array<class-string>
 	 */
-	private const WIDGETS = array();
+	private const WIDGETS = array(
+		Widgets\Template::class,
+	);
 
 	public static function instance(): Plugin {
 		return self::$instance ??= new self();
@@ -53,6 +55,11 @@ final class Plugin {
 		 */
 		add_action( 'elementor/widgets/register', array( $this, 'register_widgets' ), 20 );
 		add_action( 'elementor/elements/categories_registered', array( $this, 'register_categories' ) );
+
+		// Dynamic tags register at priority 20 for the same reason as widgets:
+		// after Pro, so ours win while Pro is still installed and each one can
+		// be verified against the baseline before anything depends on it.
+		DynamicTags\Manager::init();
 		add_action( 'elementor/frontend/after_enqueue_styles', array( $this, 'enqueue_frontend' ) );
 		add_action( 'admin_notices', array( $this, 'maybe_warn_untested_elementor' ) );
 	}

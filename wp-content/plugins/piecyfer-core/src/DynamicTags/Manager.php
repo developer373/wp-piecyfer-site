@@ -60,7 +60,11 @@ final class Manager {
 	);
 
 	public static function init(): void {
-		add_action( 'elementor/dynamic_tags/register', array( self::class, 'register' ) );
+		// Priority 20, after Elementor Pro's default 10. The tags manager keys
+		// on tag name, so the later registration wins — the same side-by-side
+		// mechanism the widgets use. Relying on plugin load order instead would
+		// work here by luck of the alphabet, which is not a guarantee.
+		add_action( 'elementor/dynamic_tags/register', array( self::class, 'register' ), 20 );
 	}
 
 	public static function register( TagsManager $tags_manager ): void {
