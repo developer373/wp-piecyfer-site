@@ -1,12 +1,13 @@
 # PieCyfer — project status
 
-Updated: **2026-08-13**
+Updated: **2026-08-14**
 
 | Doc | What it covers |
 |---|---|
 | `00-AUDIT-REPORT.md` | Security audit findings, malware analysis, plugin/licence assessment |
-| `01-REBUILD-PLAN.md` | The 9-phase plan, decisions needed, effort estimates |
+| `01-REBUILD-PLAN.md` | The 9-phase plan and effort estimates |
 | `02-WIDGET-REBUILD-SPEC.md` | Phase 4 build contract — every widget, every setting, build order |
+| `03-PHASE3-RUNBOOK.md` | Plugin-removal loop, group by group |
 | `STATUS.md` | ← you are here |
 
 ---
@@ -15,13 +16,14 @@ Updated: **2026-08-13**
 
 | Phase | Status |
 |---|---|
-| **0 — Backup & safety net** | ✅ **Done** |
-| **1 — Malware eradication (local)** | ✅ **Done** |
-| **1b — Malware eradication (LIVE site)** | 🔴 **Blocked — needs your input** |
-| **2 — Pixel baseline capture** | 🟡 Harness done; final baseline capturing |
-| 3 — Plugin consolidation | ⬜ Ready to start — dependency check clean |
-| **4a — `piecyfer-core` skeleton** | ✅ **Done** (registers nothing yet, by design) |
-| 4b–4n — widgets, theme builder, form | ⬜ Not started |
+| **0 — Backup & safety net** | ✅ Done |
+| **1 — Malware eradication (local)** | ✅ Done |
+| **1b — Malware eradication (LIVE site)** | ⏸️ Live site is down; deferred |
+| **2 — Pixel baseline & harness** | ✅ Done |
+| **3 — Plugin consolidation** | 🟡 Partial — 9 removed; caching/SEO left to you |
+| **4a — `piecyfer-core` skeleton** | ✅ Done, verified no-op |
+| **4b — dynamic tags + first widgets** | 🟡 Tags + Template **verified**; 3 more widgets written |
+| 4c–4n — remaining widgets, theme builder, form, popup | ⬜ The bulk of the work |
 | 5 — Theme decision | ⬜ Blocked on your decision |
 | 6 — Performance | ⬜ Not started |
 | 7 — Technical SEO | ⬜ Not started |
@@ -29,197 +31,129 @@ Updated: **2026-08-13**
 
 ---
 
-## Phase 0 — done
+## What is done
 
-- Database dumped: `_project/backups/piecyfer-db-2026-08-13-preclean.sql.gz` (34 MB, 56 tables)
-- `wp-config.php` backed up before salt rotation
-- **Git repository initialised** in the site root — 21,438 files tracked, `uploads/`,
-  `updraft/` and `wp-config.php` excluded. Two commits so far:
-  - `72dc08f2` pre-cleanup snapshot (site as found, malware included, so it is revertible)
-  - `87a21968` Phase 1 cleanup
+### Phase 0 — safety net
+Database dumped (34 MB gzipped, 56 tables). Git repository in the site root, 21k files tracked.
+Every change since is a separate commit with the verdict in the message.
 
-Git is the real safety net: every change from here is diffable and revertible with
-`git checkout`.
+### Phase 1 — malware eradication
+Four malicious plugins removed and quarantined outside the web root with every `.php` renamed so
+it cannot execute. The backdoor administrator `sys_maint` deleted with its usermeta and marker
+option. All eight `wp-config` salts rotated. `wp-file-manager` (the likely entry vector) deleted.
 
-## Phase 1 — done (local copy only)
+Verified afterwards: WordPress core checksums 100% clean, zero signature hits site-wide, two
+users remain, every page HTTP 200 with no PHP errors.
 
-**Removed 4 malicious plugins**, quarantined to `C:\xampp\_piecyfer-quarantine\` (outside the
-web root, every `.php` renamed to `.php.quarantined`, `.htaccess` deny-all):
+### Phase 2 — the verification harness
 
-- `shop-mini-tools`, `faq-accordion-lite-b`, `easy-image-optimizer` — one shared backdoor that
-  created a hidden self-healing administrator and injected obfuscated JavaScript into every
-  anonymous page view
-- `custom-fields-pro-56` — pulled arbitrary JavaScript from a Binance Smart Chain contract and
-  executed it in visitors' browsers
+`_project/pixel-tool/` captures 39 URLs × 3 viewports (full-page screenshots + normalised HTML +
+console errors + broken assets) and diffs two runs, exiting non-zero on any change.
 
-**Database cleaned:** backdoor administrator `sys_maint` (ID 3) deleted along with its 15
-usermeta rows, the `_wp_ip` hide-marker and the `_wp_ip_id` option.
+**Making it trustworthy took eight rounds of debugging**, because the first version disagreed
+with itself on 5 of 24 screenshots when nothing had changed. Full table in the commit history;
+the two that mattered most were capturing serially (parallel capture starved the machine and
+Chromium composited screenshots before images decoded) and screenshotting until two consecutive
+captures are byte-identical.
 
-**Also:**
-- All 8 `wp-config.php` salts rotated — invalidates any session the attacker still held
-- `wp-file-manager` 8.0.4 deleted (likely entry vector)
-- `maintenance` plugin deactivated — it was hiding the entire real front end behind an
-  "under maintenance" page
-
-**Verified clean:**
-- WordPress core checksums: 0 modified, 0 missing, 0 unknown
-- Zero malware signatures anywhere in the tree
-- 2 users remain (the two legitimate admins)
-- All pages HTTP 200, no PHP errors, no injected scripts
-
-## Phase 2 — in progress
-
-Built `_project/pixel-tool/` — the harness that makes "pixel perfect" checkable rather than
-claimed:
-
-- `capture.js <label>` — 39 URLs × 3 viewports (1920/768/375), full-page screenshots +
-  normalised HTML + broken-asset and console-error tracking. `--quick` captures an 8-page
-  representative subset for fast checks between steps.
-- `compare.js <a> <b>` — markup diff, per-pixel screenshot diff with anti-aliasing tolerance,
-  new-console-error and newly-broken-asset detection. Exits non-zero on any change, so it can
-  gate a phase.
-- `analyse-widgets.js` — the widget/settings census behind `02-WIDGET-REBUILD-SPEC.md`
-
-### The harness had to be debugged before it could be trusted
-
-Capturing the same untouched site twice initially disagreed on **5 of 24 screenshots, by up to
-5.2% of pixels**. Every one of those was a false positive. Had that gone unnoticed, Phase 3 and
-Phase 4 would have been spent chasing regressions that did not exist — and, worse, a real
+A harness that cries wolf is worse than no harness: every later phase is gated on it, and a real
 regression would have been invisible in the noise.
 
-Six separate causes, each found by cropping the differing bands and looking at them:
+### Phase 3 — plugin consolidation (partial, by agreement)
 
-| # | Cause | Fix |
-|---|---|---|
-| 1 | Webfonts fetched from `fonts.googleapis.com`, intermittently failing → page fell back to a system face | On-disk cache of off-site responses, replayed byte-identically; wait for `document.fonts.ready` |
-| 2 | Google Maps mints new tile URLs and tokens per load, and sits in a global template | Iframe content hidden, box preserved; its requests excluded from the report |
-| 3 | Lazy images below the fold — `networkidle` is not enough, lazy-load fires on scroll | Step-scroll pass, then poll until image count / loaded count / page height are stable 3× |
-| 4 | Images inside hidden tab panels — never scrolled into view | Pre-warm every image URL via off-DOM `Image()`, including CSS background images |
-| 5 | Swiper autoplay left carousels at different offsets | Stop autoplay, reset to slide 0, pin the track with CSS |
-| 6 | `swiper-lazy` loads a slide's image only as it nears the active position, so autoplay decided how many client logos appeared — 3 in one run, 6 in the next | Promote `data-src` → `src` **after** stopping the carousel; the ordering is what makes it work |
-| 7 | Capturing 3 pages in parallel pushed this machine from ~8s to 60–90s per page, and under that contention Chromium composited parts of an 11,000px screenshot before its images had decoded | Capture **serially** |
-| 8 | **The definitive fix.** Even serially, two runs of an *identical configuration* still disagreed on one screenshot of the home page — at 11,334px the tallest on the site | **Screenshot until two consecutive captures are byte-identical** |
+Removed and verified: `query-monitor`, `duplicate-page`, `vamtam-importers-e`, `maintenance`,
+`wp-smush-pro`, `imagify`, `all-in-one-wp-migration`, `simple-copy-protection`, `wp-meteor`.
 
-Causes 7 and 8 are worth dwelling on, because the first six were partly symptom-chasing. The
-tell was that markup stayed **byte-identical** — same DOM, same inline styles, same `src`
-attributes — while pixels differed, and the affected page moved around between runs. Nothing was
-loading differently; the pixels simply were not ready. Each targeted fix reduced the count
-without reaching zero, which is the signature of treating symptoms rather than the cause.
+**`wp-meteor`'s removal fixed two real, pre-existing bugs** that its blanket JS deferral had been
+hiding:
 
-Fix 8 is the one that needed no guesswork about which element was misbehaving. Everything before
-it *reduces the chance* of catching a page mid-paint; taking a second screenshot 500ms later and
-requiring the two to match *detects* it. If the page had stopped changing, they agree.
+1. **450px of horizontal overflow on every page.** Full-page captures were 2370px wide at a
+   1920px viewport, with the click-to-chat button parked off-canvas. Visitors got a horizontal
+   scrollbar and a layout shift until their first mouse move released the deferred scripts.
+2. **A JavaScript exception on every page.** The theme's Additional JS ran
+   `document.querySelector('.select-caret-down-wrapper').innerHTML = …` in `<head>`, before
+   `<body>` exists, so it always threw — and the throw aborted the rest of that inline block.
+   Fixed to run on DOM ready and to apply to every matching element rather than the first;
+   the previous value is kept as `vamtam_additional_js_backup_<ts>`.
 
-The decisive experiment was comparing two runs that differed in nothing at all. They still
-disagreed on one screenshot — which proves the difference could not have been caused by the
-change under test, because there was no change under test. Without that check, the very first
-real comparison would have been read as "activating the plugin altered the home page."
+Caching (WP Rocket, Debloat, Object Cache Pro) and the SEO plugins are **left untouched at your
+request**.
 
-Per-page stability is now recorded (`unstableShots`), so a page that never settles within the
-retry budget is surfaced rather than silently trusted. Nothing has hit that limit.
+### Phase 4a — plugin skeleton, verified inert
 
-**Self-test passes cleanly:** two consecutive captures of the untouched site produce
-0 markup changes, 0 visual changes, 0 console errors, 0 broken assets — exit code 0.
+`piecyfer-core` activates and changes nothing: 0 markup changes, 0 visual changes across 24
+screenshots. That single test validated both the plugin and the method end to end.
+
+### Phase 4b — dynamic tags and the first widgets
+
+**Verified byte-identical markup** with Elementor Pro still installed:
+
+- 8 dynamic tags — `site-title`, `site-logo`, `post-title`, `post-terms`,
+  `post-featured-image`, `archive-title`, `current-date-time`, `internal-url`
+- the `template` widget (19 instances)
+
+`_project/scripts/which-implementation.php` confirms the takeover is real rather than assumed —
+it prints which class actually serves each widget and tag. That matters because a page renders
+the same either way, so a replacement could silently fail to take over and the pixel comparison
+would still pass.
+
+Written, not yet verified: `theme-post-title`, `theme-archive-title`, `theme-site-logo`.
 
 ---
 
-## 🔴 Blocked on you
+## The approach that makes this safe
 
-### 1. The live site is still infected — this is the urgent one
-
-Everything above was done to the **local copy**. The live site
-(`wdev.piecyfer.com`, and whatever the production domain is) still has all four malicious
-plugins and the `sys_maint` administrator. Real visitors are still being served attacker code.
-
-`_project/scripts/piecyfer-malware-cleanup.php` is ready and proven — it ran cleanly here. It
-verifies a malware signature before deleting anything, quarantines rather than destroys, and is
-safe to run twice. Start with `--dry-run`.
+Elementor's widget registry is a plain array keyed on widget name, so **the last registration
+wins**. `piecyfer-core` registers at priority 20, after Pro's default 10, and takes widgets over
+**one at a time while Pro is still installed**:
 
 ```
-php piecyfer-malware-cleanup.php --path=/path/to/public_html --dry-run
-php piecyfer-malware-cleanup.php --path=/path/to/public_html
+implement one  →  capture --quick  →  compare against baseline
+     0 diff → keep it            any diff → delete the file, Pro's version is instantly back
 ```
 
-**Tell me how you reach the live server — SSH, cPanel, or FTP only — and I will adapt it.**
+The site stays fully working throughout, each widget is proven equivalent before anything depends
+on it, and reverting one widget is one `git checkout` of one file. Pro comes out only at the end,
+when nothing of its is rendering anymore.
 
-Regardless of method, these must happen by hand (see `01-REBUILD-PLAN.md` §1.2 for the full
-list): rotate every admin password, the hosting password, FTP/SSH credentials **and keys**, the
-database password, and the wp-config salts. Then check Google Search Console → Security Issues.
-
-### 2. Decisions that shape Phases 3–6
-
-| # | Question | My recommendation |
-|---|---|---|
-| 1 | Theme: buy a VamTam licence (~$69), build `piecyfer-theme`, or keep the nulled one? | **Build our own** — the header, footer, single, archive, search and 404 are all Elementor Theme Builder already, so the theme does less than it appears |
-| 2 | WP Rocket replacement — free stack, or buy a licence? | Free stack; measure first |
-| 3 | Analytics — keep MonsterInsights, or a lightweight GA4 snippet in `piecyfer-core`? | Own snippet |
-| 4 | Right-click / copy protection — keep? | Drop it; it blocks nobody and hurts UX |
-
-None of these block Phases 2–4, so work continues either way.
+Two of the widgets so far turned out to be free Elementor widgets in disguise —
+`theme-post-title` is `Widget_Heading` with three changes, `theme-site-logo` is `Widget_Image`
+with two. Extending those keeps every one of their style control ids, and therefore every
+generated CSS rule, identical for free.
 
 ---
 
-## Phase 4a — done
+## Honest view of what remains
 
-`wp-content/plugins/piecyfer-core/` exists and lints clean. It **registers no widgets** — the
-skeleton has to be provably inert before it starts replacing anything, and the next step is to
-activate it and prove a zero-difference capture against the baseline. That single test validates
-both the plugin and the whole verification method at once.
+Phase 4 is the bulk of the project and it is mostly transcription, not invention. Each widget
+needs its control **ids and `selectors` arrays** reproduced exactly, because Elementor compiles
+those into the per-page CSS — a missing control means a missing CSS rule, which is a visual
+change even when the markup matches.
 
-What it already provides:
+Some are large: Pro's `blockquote` is 1,019 lines and `search-form` 978, though this site only
+populates ~20 settings on each.
 
-- Requirement guards — refuses to load below Elementor 3.20 with a clear reason; above the tested
-  3.25.10 it still loads but warns. Refusing outright would take the site down for a routine
-  Elementor update, which is precisely the fragility we are removing.
-- A hand-rolled autoloader, so there is no `composer install` step to forget on deploy.
-- Per-widget `try`/`catch` at registration and at render, so one broken widget produces a logged
-  error and a visible marker for editors — never a white page for a visitor.
-- `AbstractWidget`, which encodes the three rules that make the migration pixel-identical
-  (same `get_name()`, same control ids, same markup) and gives each widget per-page conditional
-  asset loading, which Elementor Pro does not do.
+Remaining, roughly in order of effort:
+
+| Item | Notes |
+|---|---|
+| **Theme Builder** | 10 templates + display conditions. Largest single item. |
+| **`posts` / `archive-posts`** | VamTam's `vamtam_classic` skin on top of Pro's — 150 custom controls, 83% of all VamTam settings |
+| **`form`** | Fields, validation, actions-after-submit, mail, spam protection |
+| **`nav-menu`** | 25 instances, 70 populated settings, and VamTam subclasses it |
+| 11 more Pro widgets | `blockquote`, `search-form`, `call-to-action`, `post-info`, `gallery`, `testimonial-carousel`, `post-comments`, `theme-post-content`, `archive-posts`… |
+| 6 ElementsKit widgets | Plus your two custom builder widgets, which lift over almost verbatim |
+| Control injections | Custom CSS (58 elements), Motion FX scale (23), Sticky (3) |
+| Popup | 1 popup, plus the `popup` dynamic tag — which turns out to belong to **VamTam**, not Pro |
 
 ---
 
-## Notable findings since the plan was written
+## Open decisions
 
-**The Elementor Pro removal is a three-plugin problem.** `vamtam-elementor-integration-tecnologia`
-subclasses Elementor Pro classes directly, and several of those files have **no
-`class_exists()` guard**. Deactivating Pro on its own would white-screen the editor and the front
-end. Pro must come out in Phase 4 alongside the VamTam integration, never in Phase 3.
-Full detail in `02-WIDGET-REBUILD-SPEC.md`.
-
-**`posts` and `archive-posts` are harder than first estimated.** They use VamTam's custom
-`vamtam_classic` skin layered on Elementor Pro's — 150 custom controls between them, holding 83%
-of all VamTam customisation on the site. Reclassified from Medium to Hard.
-
-**ElementsKit is easier than first estimated.** It injects controls into all 2,269 widgets, but
-those are untouched defaults. Only 6 widget types and 4 deliberate settings are real.
-
-**The site is self-contained.** The only off-site asset references are 203 inert ElementsKit
-placeholder defaults pointing at `wdev.piecyfer.com`. All real content is local.
-
-**The site was in maintenance mode.** Worth confirming whether that is also true on live — if
-so, real visitors currently see a holding page rather than the site.
-
-**Phase 3 is de-risked.** Static dependency check across the theme and the VamTam plugins found
-**no hard references** to any plugin on the removal list — no AIOSEO, Imagify, Smush, Debloat,
-WP Meteor, Object Cache Pro, OptinMonster, MonsterInsights, All-in-One WP Migration or
-Click-to-Chat calls anywhere. The only two WP Rocket hits are harmless: an
-`add_filter( 'rocket_cache_wc_empty_cart', … )` that simply does nothing when WP Rocket is
-absent, and `BeRocket_AAPF_…` options, which belong to an unrelated plugin. Phase 3 can proceed
-as planned — minus the Elementor cluster, which is deferred to Phase 4.
-
-**Fonts are loaded from Google, not self-hosted.** `fonts.googleapis.com` / `fonts.gstatic.com`
-serve Inter Tight and others. Two consequences: a Phase 6 self-hosting task, and a capture
-harness that must wait for `document.fonts.ready` before screenshotting — without it a run
-occasionally photographs the fallback face and reports a whole-page diff that means nothing.
-
-**Four documents store root-relative `/wp-content/…` URLs** (3 team photos on Our Team, 3 PDF
-links on the App Development tabs). These resolve correctly on the production domain root but
-404 on this `/piecyfer/` subdirectory copy. The capture harness rewrites them so the baseline
-reflects production rather than a local-only artefact. Worth fixing properly in the content at
-some point, but it is not a production bug today.
-
-**Domains in play:** `piecyfer.com` (production), `careers.piecyfer.com` (a separate careers
-site, linked 15 times), `wdev.piecyfer.com` (staging — only referenced by inert ElementsKit
-placeholder defaults).
+1. **Theme** — buy a VamTam licence (~$69), or build `piecyfer-theme`? My recommendation is to
+   build our own: the header, footer, single, archive, search and 404 are all Elementor Theme
+   Builder documents, so the theme does far less than it appears to. Nothing is blocked on this
+   until Phase 5.
+2. **Live site** — currently down. When it comes back,
+   `_project/scripts/piecyfer-malware-cleanup.php` is ready and proven; it needs the same
+   credential rotation listed in `01-REBUILD-PLAN.md` §1.2.
