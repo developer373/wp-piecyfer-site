@@ -185,6 +185,38 @@ one effect, not the whole module.
 
 ---
 
+## The migration is reversible at every step — side-by-side replacement
+
+A verified property of Elementor, not a hope. `Widgets_Manager::register()` is:
+
+```php
+// elementor/includes/managers/widgets.php:266
+$this->_widget_types[ $widget_instance->get_name() ] = $widget_instance;
+```
+
+A plain array assignment keyed on the widget name. **The last registration for a name wins,
+silently, with no conflict.**
+
+So `piecyfer-core` registers on `elementor/widgets/register` at **priority 20**, after Elementor
+Pro's default 10, and can take over widgets **one at a time while Pro is still installed**:
+
+```
+implement one widget  →  capture --quick  →  compare against baseline
+        ↓ 0 diff                                    ↓ any diff
+   keep it, commit                        delete the class file — Pro's
+                                          version is instantly back
+```
+
+Why this matters: the obvious approach — remove Pro, then rebuild 22 widgets — leaves the site
+broken for the entire build, with no working reference to compare against and no way back if a
+widget turns out to be harder than expected. This ordering inverts that. The site stays fully
+working throughout, every widget is proven equivalent *before* it is relied on, and reverting a
+single widget is one `git checkout` of one file.
+
+Pro is only deactivated at the very end, when every widget it owns has already been replaced and
+verified. At that point the final comparison should show **zero** difference, because nothing of
+Pro's is still rendering anything.
+
 ## Revised build order
 
 Sequenced so that each step is independently verifiable against the baseline, cheapest and

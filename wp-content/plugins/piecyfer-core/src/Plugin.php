@@ -35,7 +35,23 @@ final class Plugin {
 	}
 
 	private function __construct() {
-		add_action( 'elementor/widgets/register', array( $this, 'register_widgets' ) );
+		/*
+		 * Priority 20 — deliberately after Elementor Pro, which registers at the
+		 * default 10.
+		 *
+		 * Widgets_Manager::register() is a plain array assignment keyed on the
+		 * widget name, so the last registration for a given name wins with no
+		 * conflict and no warning. That lets us replace Pro's widgets one at a
+		 * time *while Pro is still installed*: implement one, capture, compare
+		 * against the baseline, and either keep it or delete the class and fall
+		 * straight back to Pro's version.
+		 *
+		 * The alternative — remove Pro first, then rebuild 22 widgets against a
+		 * broken site — has no working reference to compare against and no way
+		 * back. This ordering is what makes the migration reversible at every
+		 * single step.
+		 */
+		add_action( 'elementor/widgets/register', array( $this, 'register_widgets' ), 20 );
 		add_action( 'elementor/elements/categories_registered', array( $this, 'register_categories' ) );
 		add_action( 'elementor/frontend/after_enqueue_styles', array( $this, 'enqueue_frontend' ) );
 		add_action( 'admin_notices', array( $this, 'maybe_warn_untested_elementor' ) );
