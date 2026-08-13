@@ -1,0 +1,16 @@
+{
+  "name": "piecyfer-pixel-tool",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Capture and diff rendered HTML + screenshots so every cleanup step can be proven pixel-identical.",
+  "type": "commonjs",
+  "scripts": {
+    "capture": "node capture.js",
+    "compare": "node compare.js"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0",
+    "pixelmatch": "^5.3.0",
+    "pngjs": "^7.0.0"
+  }
+}

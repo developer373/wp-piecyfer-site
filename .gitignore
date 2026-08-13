@@ -11,6 +11,13 @@ wp-content/ai1wm-backups/
 _project/backups/
 _project/quarantine/
 
+# Pixel-tool output. The PNGs are hundreds of MB per run and are regenerable
+# from the site at any time; the normalised HTML, metadata and diff reports are
+# small and ARE tracked, because they are the actual evidence.
+_project/snapshots/*/shots/
+_project/snapshots/_diff-*/*.png
+_project/pixel-tool/node_modules/
+
 # --- Caches & build artefacts ----------------------------------------------
 wp-content/cache/
 wp-content/boost-cache/

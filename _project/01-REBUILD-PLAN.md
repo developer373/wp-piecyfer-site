@@ -3,6 +3,14 @@
 **Companion to:** `00-AUDIT-REPORT.md`
 **Goal:** a clean, self-owned, update-proof, fast site that is **100% pixel-identical** to today's.
 
+> **Superseded in two places by `02-WIDGET-REBUILD-SPEC.md`,** written after the full widget
+> census. Read that document's first two sections before starting Phase 3 or 4:
+> 1. Phase 4's `posts` / `archive-posts` are **Hard**, not Medium — they use VamTam's custom
+>    `vamtam_classic` skin on top of Elementor Pro's.
+> 2. **Elementor Pro must not be removed in Phase 3.** The VamTam integration plugin subclasses
+>    Pro classes without guards; removing Pro alone white-screens the site. Pro comes out in
+>    Phase 4, together with the VamTam integration. Phase 3.7 below is corrected accordingly.
+
 ---
 
 ## The core strategy (read this first)
@@ -211,9 +219,15 @@ Keep `updraftplus` (free tier is genuinely good). Delete `all-in-one-wp-migratio
 `simple-copy-protection` (harmless, but right-click blocking stops no one and hurts UX —
 folded into `piecyfer-core` as an optional toggle if you want to keep it)
 
-### 3.7 Replace with own code — Phase 4
-`elementor-pro` · `elementskit` · `elementskit-lite` · `click-to-chat-for-whatsapp` ·
-`faq` functionality · `optinmonster`
+### 3.7 Deferred to Phase 4 — do NOT touch these in Phase 3
+
+`elementor-pro` · `elementskit` · `elementskit-lite` · `vamtam-elementor-integration-tecnologia` ·
+`click-to-chat-for-whatsapp` · `optinmonster`
+
+These four Elementor-related plugins are mutually entangled — the VamTam integration subclasses
+Elementor Pro classes with inconsistent `class_exists()` guards, so deactivating Pro on its own
+takes down the editor and the front end. They come out **together**, in Phase 4, once
+`piecyfer-core` can stand in for all of them. See `02-WIDGET-REBUILD-SPEC.md`.
 
 ### 3.8 Keep
 
