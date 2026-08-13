@@ -58,6 +58,32 @@ const PATHS = [
   '/this-url-does-not-exist-404-test/', // error-404 template
 ];
 
+// A representative subset for fast iteration. A full 39-page capture takes
+// ~35 minutes, which is too slow to run after every single plugin removal.
+// These eight pages between them exercise every template and every Pro widget
+// that has more than a couple of instances:
+//
+//   /                 home: nav-menu, template, posts, testimonial-carousel
+//   /contact-us/      form widget, google map
+//   /our-team/        image-box grids, root-relative image URLs
+//   /blogs/           posts widget with the vamtam_classic skin
+//   a single post     single-post theme-builder template, post-comments
+//   /web-app-dev/     a typical service page, icon-box heavy
+//   /?s=software      search-results theme-builder template
+//   /404 test         error-404 theme-builder template
+//
+// Use the full set as the gate at the end of each phase.
+const QUICK = [
+  '/',
+  '/contact-us/',
+  '/our-team/',
+  '/blogs/',
+  '/building-high-performing-web-apps-10-easy-yet-important-tips/',
+  '/web-app-development/',
+  '/?s=software',
+  '/this-url-does-not-exist-404-test/',
+];
+
 // Viewport widths. Height is nominal; captures are full-page.
 const VIEWPORTS = [
   { name: 'desktop', width: 1920, height: 1080 },
@@ -70,4 +96,4 @@ function slugify(p) {
   return s === '' ? 'home-root' : s.slice(0, 80);
 }
 
-module.exports = { BASE, PATHS, VIEWPORTS, slugify };
+module.exports = { BASE, PATHS, QUICK, VIEWPORTS, slugify };

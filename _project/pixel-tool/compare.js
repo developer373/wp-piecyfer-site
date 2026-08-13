@@ -37,8 +37,18 @@ fs.mkdirSync(outDir, { recursive: true });
 const PIXEL_THRESHOLD = 0.1;   // per-pixel colour distance
 const RATIO_TOLERANCE = 0.0002; // 0.02% of pixels may differ
 
+// A --quick capture holds 8 pages; the baseline holds 39. Comparing them is
+// legitimate and common, so absence from B is only a failure when B is not a
+// subset of A. Otherwise it is just "we did not check that page this time".
+const slugsIn = d => new Set(
+  fs.existsSync(path.join(d, 'html')) ? fs.readdirSync(path.join(d, 'html')).map(f => f.replace(/\.html$/, '')) : []
+);
+const slugsA = slugsIn(dirA);
+const slugsB = slugsIn(dirB);
+const isSubset = slugsB.size < slugsA.size && [...slugsB].every(s => slugsA.has(s));
+
 const lines = [];
-let htmlChanged = 0, shotsChanged = 0, missing = 0, compared = 0;
+let htmlChanged = 0, shotsChanged = 0, missing = 0, compared = 0, skipped = 0;
 
 // ------------------------------------------------------------------ markup
 lines.push('## Markup differences\n');
@@ -46,7 +56,10 @@ const htmlA = fs.existsSync(path.join(dirA, 'html')) ? fs.readdirSync(path.join(
 for (const f of htmlA) {
   const pa = path.join(dirA, 'html', f);
   const pb = path.join(dirB, 'html', f);
-  if (!fs.existsSync(pb)) { lines.push(`- **MISSING in ${b}**: \`${f}\``); missing++; continue; }
+  if (!fs.existsSync(pb)) {
+    if (isSubset) { skipped++; continue; }
+    lines.push(`- **MISSING in ${b}**: \`${f}\``); missing++; continue;
+  }
   const sa = fs.readFileSync(pa, 'utf8');
   const sb = fs.readFileSync(pb, 'utf8');
   if (sa === sb) continue;
@@ -73,7 +86,10 @@ const shotsA = fs.existsSync(path.join(dirA, 'shots')) ? fs.readdirSync(path.joi
 for (const f of shotsA) {
   const pa = path.join(dirA, 'shots', f);
   const pb = path.join(dirB, 'shots', f);
-  if (!fs.existsSync(pb)) { lines.push(`- **MISSING in ${b}**: \`${f}\``); missing++; continue; }
+  if (!fs.existsSync(pb)) {
+    if (isSubset) { skipped++; continue; }
+    lines.push(`- **MISSING in ${b}**: \`${f}\``); missing++; continue;
+  }
 
   const ia = PNG.sync.read(fs.readFileSync(pa));
   const ib = PNG.sync.read(fs.readFileSync(pb));
@@ -134,6 +150,11 @@ const clean = htmlChanged === 0 && shotsChanged === 0 && missing === 0 && newErr
 const header =
   `# Pixel & markup comparison\n\n` +
   `**${a}** → **${b}**\n\n` +
+  (isSubset
+    ? `> Subset comparison: \`${b}\` covers ${slugsB.size} of the ${slugsA.size} pages in ` +
+      `\`${a}\`. ${skipped} artefact(s) in the baseline were not re-captured this run and are ` +
+      `not counted as missing. Run the full set before closing out a phase.\n\n`
+    : '') +
   `| | |\n|---|---|\n` +
   `| Screenshots compared | ${compared} |\n` +
   `| Pages with markup changes | ${htmlChanged} |\n` +

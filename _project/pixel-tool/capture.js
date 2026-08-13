@@ -15,7 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
-const { BASE, PATHS, VIEWPORTS, slugify } = require('./urls');
+const { BASE, PATHS, QUICK, VIEWPORTS, slugify } = require('./urls');
 
 const label = process.argv[2];
 if (!label) {
@@ -25,6 +25,7 @@ if (!label) {
 const arg = n => (process.argv.includes(n) ? process.argv[process.argv.indexOf(n) + 1] : null);
 const only = arg('--only');
 const force = process.argv.includes('--force');       // re-capture pages already done
+const quick = process.argv.includes('--quick');       // 8-page subset instead of all 39
 const concurrency = Number(arg('--concurrency')) || 3;
 
 const outDir = path.join(__dirname, '..', 'snapshots', label);
@@ -196,7 +197,10 @@ async function capturePage(browser, p, i, total) {
 }
 
 (async () => {
-  let targets = only ? PATHS.filter(p => p.includes(only)) : PATHS;
+  // --quick: the 8-page representative subset, for checking after each small
+  // change. The full 39-page set is the gate at the end of a phase.
+  const all = quick ? QUICK : PATHS;
+  let targets = only ? all.filter(p => p.includes(only)) : all;
 
   if (!force) {
     const before = targets.length;
