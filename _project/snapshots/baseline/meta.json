@@ -1,0 +1,794 @@
+{
+  "label": "baseline",
+  "base": "http://localhost/piecyfer",
+  "capturedAt": "2026-08-13T18:33:09.948Z",
+  "pages": [
+    {
+      "path": "/about-piecyfer/",
+      "slug": "about-piecyfer",
+      "url": "http://localhost/piecyfer/about-piecyfer/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 251133,
+      "ms": 54481
+    },
+    {
+      "path": "/home/",
+      "slug": "home",
+      "url": "http://localhost/piecyfer/home/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 444261,
+      "ms": 91903
+    },
+    {
+      "path": "/",
+      "slug": "home-root",
+      "url": "http://localhost/piecyfer/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 444261,
+      "ms": 92781
+    },
+    {
+      "path": "/why-choose-us/",
+      "slug": "why-choose-us",
+      "url": "http://localhost/piecyfer/why-choose-us/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 262768,
+      "ms": 68650
+    },
+    {
+      "path": "/contact-us/",
+      "slug": "contact-us",
+      "url": "http://localhost/piecyfer/contact-us/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 293397,
+      "ms": 69337
+    },
+    {
+      "path": "/our-team/",
+      "slug": "our-team",
+      "url": "http://localhost/piecyfer/our-team/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 257152,
+      "ms": 112759
+    },
+    {
+      "path": "/terms-conditions/",
+      "slug": "terms-conditions",
+      "url": "http://localhost/piecyfer/terms-conditions/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 237091,
+      "ms": 63313
+    },
+    {
+      "path": "/privacy-policy/",
+      "slug": "privacy-policy",
+      "url": "http://localhost/piecyfer/privacy-policy/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 236046,
+      "ms": 72311
+    },
+    {
+      "path": "/hire-an-expert/",
+      "slug": "hire-an-expert",
+      "url": "http://localhost/piecyfer/hire-an-expert/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 343564,
+      "ms": 102909
+    },
+    {
+      "path": "/mobile-app-development/",
+      "slug": "mobile-app-development",
+      "url": "http://localhost/piecyfer/mobile-app-development/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 260229,
+      "ms": 65284
+    },
+    {
+      "path": "/web-app-development/",
+      "slug": "web-app-development",
+      "url": "http://localhost/piecyfer/web-app-development/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 281041,
+      "ms": 79070
+    },
+    {
+      "path": "/enterprise-software-development/",
+      "slug": "enterprise-software-development",
+      "url": "http://localhost/piecyfer/enterprise-software-development/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 273511,
+      "ms": 72382
+    },
+    {
+      "path": "/software-quality-testing/",
+      "slug": "software-quality-testing",
+      "url": "http://localhost/piecyfer/software-quality-testing/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 273187,
+      "ms": 61136
+    },
+    {
+      "path": "/software-maintenance-and-support/",
+      "slug": "software-maintenance-and-support",
+      "url": "http://localhost/piecyfer/software-maintenance-and-support/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 313549,
+      "ms": 74565
+    },
+    {
+      "path": "/software-migration/",
+      "slug": "software-migration",
+      "url": "http://localhost/piecyfer/software-migration/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 271973,
+      "ms": 61621
+    },
+    {
+      "path": "/software-re-engineering/",
+      "slug": "software-re-engineering",
+      "url": "http://localhost/piecyfer/software-re-engineering/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 273658,
+      "ms": 69405
+    },
+    {
+      "path": "/cloud-services/",
+      "slug": "cloud-services",
+      "url": "http://localhost/piecyfer/cloud-services/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 273242,
+      "ms": 70299
+    },
+    {
+      "path": "/cms-solutions/",
+      "slug": "cms-solutions",
+      "url": "http://localhost/piecyfer/cms-solutions/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 272249,
+      "ms": 69365
+    },
+    {
+      "path": "/crm-solutions/",
+      "slug": "crm-solutions",
+      "url": "http://localhost/piecyfer/crm-solutions/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 272490,
+      "ms": 75287
+    },
+    {
+      "path": "/digital-marketing/",
+      "slug": "digital-marketing",
+      "url": "http://localhost/piecyfer/digital-marketing/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 341087,
+      "ms": 71874
+    },
+    {
+      "path": "/emerging-tech/",
+      "slug": "emerging-tech",
+      "url": "http://localhost/piecyfer/emerging-tech/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 365465,
+      "ms": 84026
+    },
+    {
+      "path": "/blogs/",
+      "slug": "blogs",
+      "url": "http://localhost/piecyfer/blogs/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 260474,
+      "ms": 79381
+    },
+    {
+      "path": "/boosting-sales-with-a-powerful-crm-a-guide-for-us-businesses/",
+      "slug": "boosting-sales-with-a-powerful-crm-a-guide-for-us-businesses",
+      "url": "http://localhost/piecyfer/boosting-sales-with-a-powerful-crm-a-guide-for-us-businesses/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 283756,
+      "ms": 83486
+    },
+    {
+      "path": "/building-high-performing-web-apps-10-easy-yet-important-tips/",
+      "slug": "building-high-performing-web-apps-10-easy-yet-important-tips",
+      "url": "http://localhost/piecyfer/building-high-performing-web-apps-10-easy-yet-important-tips/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 280659,
+      "ms": 80527
+    },
+    {
+      "path": "/creating-engaging-mobile-apps-for-the-us-market-best-practices/",
+      "slug": "creating-engaging-mobile-apps-for-the-us-market-best-practices",
+      "url": "http://localhost/piecyfer/creating-engaging-mobile-apps-for-the-us-market-best-practices/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 284533,
+      "ms": 65355
+    },
+    {
+      "path": "/crm-trends-in-2025-what-to-expect-in-the-future/",
+      "slug": "crm-trends-in-2025-what-to-expect-in-the-future",
+      "url": "http://localhost/piecyfer/crm-trends-in-2025-what-to-expect-in-the-future/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 290095,
+      "ms": 62923
+    },
+    {
+      "path": "/mobile-app-development-in-the-age-of-ai-opportunities-and-challenges/",
+      "slug": "mobile-app-development-in-the-age-of-ai-opportunities-and-challenges",
+      "url": "http://localhost/piecyfer/mobile-app-development-in-the-age-of-ai-opportunities-and-challenges/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 280827,
+      "ms": 61171
+    },
+    {
+      "path": "/sales-teams-spend-70-of-their-day-not-selling-heres-the-ai-stack-that-fixes-it/",
+      "slug": "sales-teams-spend-70-of-their-day-not-selling-heres-the-ai-stack-that-fixes-it",
+      "url": "http://localhost/piecyfer/sales-teams-spend-70-of-their-day-not-selling-heres-the-ai-stack-that-fixes-it/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 289371,
+      "ms": 60532
+    },
+    {
+      "path": "/streamlining-operations-with-erp-softwares-real-world-case-studies/",
+      "slug": "streamlining-operations-with-erp-softwares-real-world-case-studies",
+      "url": "http://localhost/piecyfer/streamlining-operations-with-erp-softwares-real-world-case-studies/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 275131,
+      "ms": 61824
+    },
+    {
+      "path": "/tailored-enterprise-software-solutions-a-guide-for-us-businesses/",
+      "slug": "tailored-enterprise-software-solutions-a-guide-for-us-businesses",
+      "url": "http://localhost/piecyfer/tailored-enterprise-software-solutions-a-guide-for-us-businesses/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 285850,
+      "ms": 60865
+    },
+    {
+      "path": "/the-88-problem-why-most-ai-agent-pilots-never-reach-production-and-what-nvidias-latest-push-actually-solves/",
+      "slug": "the-88-problem-why-most-ai-agent-pilots-never-reach-production-and-what-nvidias-",
+      "url": "http://localhost/piecyfer/the-88-problem-why-most-ai-agent-pilots-never-reach-production-and-what-nvidias-latest-push-actually-solves/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 290987,
+      "ms": 61502
+    },
+    {
+      "path": "/the-legacy-integration-wall-why-60-of-ai-projects-stall-before-they-ship/",
+      "slug": "the-legacy-integration-wall-why-60-of-ai-projects-stall-before-they-ship",
+      "url": "http://localhost/piecyfer/the-legacy-integration-wall-why-60-of-ai-projects-stall-before-they-ship/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 286767,
+      "ms": 72083
+    },
+    {
+      "path": "/the-benefits-of-progressive-web-apps-for-us-businesses/",
+      "slug": "the-benefits-of-progressive-web-apps-for-us-businesses",
+      "url": "http://localhost/piecyfer/the-benefits-of-progressive-web-apps-for-us-businesses/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 288523,
+      "ms": 95353
+    },
+    {
+      "path": "/we-reviewed-50-enterprise-ai-deployments-the-successful-ones-had-one-thing-in-common/",
+      "slug": "we-reviewed-50-enterprise-ai-deployments-the-successful-ones-had-one-thing-in-co",
+      "url": "http://localhost/piecyfer/we-reviewed-50-enterprise-ai-deployments-the-successful-ones-had-one-thing-in-common/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 284896,
+      "ms": 73956
+    },
+    {
+      "path": "/why-healthcare-companies-are-finally-ditching-legacy-systems-in-2026/",
+      "slug": "why-healthcare-companies-are-finally-ditching-legacy-systems-in-2026",
+      "url": "http://localhost/piecyfer/why-healthcare-companies-are-finally-ditching-legacy-systems-in-2026/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 287291,
+      "ms": 85937
+    },
+    {
+      "path": "/why-healthcare-software-fails-without-security-first-architecture/",
+      "slug": "why-healthcare-software-fails-without-security-first-architecture",
+      "url": "http://localhost/piecyfer/why-healthcare-software-fails-without-security-first-architecture/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 288295,
+      "ms": 80822
+    },
+    {
+      "path": "/why-ai-native-companies-are-outperforming-traditional-software-businesses/",
+      "slug": "why-ai-native-companies-are-outperforming-traditional-software-businesses",
+      "url": "http://localhost/piecyfer/why-ai-native-companies-are-outperforming-traditional-software-businesses/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 274967,
+      "ms": 115309
+    },
+    {
+      "path": "/?s=software",
+      "slug": "s-software",
+      "url": "http://localhost/piecyfer/?s=software",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 250738,
+      "ms": 58228
+    },
+    {
+      "path": "/this-url-does-not-exist-404-test/",
+      "slug": "this-url-does-not-exist-404-test",
+      "url": "http://localhost/piecyfer/this-url-does-not-exist-404-test/",
+      "viewports": {
+        "desktop": {
+          "status": 404
+        },
+        "tablet": {
+          "status": 404
+        },
+        "mobile": {
+          "status": 404
+        }
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "failedRequests": [
+        "404 /this-url-does-not-exist-404-test/"
+      ],
+      "htmlBytes": 237020,
+      "ms": 56685
+    }
+  ],
+  "completedAt": "2026-08-13T18:49:34.548Z"
+}
