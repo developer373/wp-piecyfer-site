@@ -217,6 +217,56 @@ Pro is only deactivated at the very end, when every widget it owns has already b
 verified. At that point the final comparison should show **zero** difference, because nothing of
 Pro's is still rendering anything.
 
+## Dynamic tags are a prerequisite, not a late step
+
+Originally scheduled at 4k. That was wrong, discovered while reading the actual saved settings
+of the "easy" widgets rather than Pro's source.
+
+**Every one of the theme title/logo widgets stores its content as a dynamic tag, not as text.**
+For example `theme-post-title` in the Blog Post Template stores:
+
+```json
+"__dynamic__": { "title": "[elementor-tag id=\"\" name=\"post-title\" settings=\"…\"]" }
+"title": "Add Your Heading Text Here"
+```
+
+The literal `title` is just Elementor's placeholder. The real content comes from the tag. Without
+the `post-title` tag registered, the widget renders the placeholder — or nothing.
+
+Worse: **dynamic tags are also used on free Elementor widgets.** Four of the nine tags below are
+attached to a plain `heading.title` or a `column.background_image`. So removing Elementor Pro
+degrades widgets we were not otherwise touching.
+
+### The complete set — 9 tags, 31 uses
+
+| Tag | Uses | Attached to |
+|---|---|---|
+| `post-featured-image` | 11 | `image.image`, `column.background_image` |
+| `popup` | 6 | `button.link` — opens the Consultation CTA popup |
+| `internal-url` | 3 | `button.link` |
+| `archive-title` | 3 | `theme-archive-title.title`, **`heading.title`** |
+| `site-logo` | 2 | `theme-site-logo.image` |
+| `current-date-time` | 2 | **`heading.title`** |
+| `site-title` | 2 | **`heading.title`** |
+| `post-terms` | 1 | **`heading.title`** |
+| `post-title` | 1 | `theme-post-title.title` |
+
+Nine tags is a small, closed set — this is a scheduling correction, not a scope explosion. They
+move to **step 4b**, ahead of the widgets that depend on them.
+
+Note that `popup` is not really a tag in the usual sense: it renders a link that triggers
+Elementor Pro's popup system, so those 6 uses are blocked on the popup work rather than on the
+tag itself.
+
+## Skins are needed too
+
+`post-comments` stores `_skin: "theme_comments"`. Elementor's skin system is core (free), but the
+skin itself is Pro's. Any replacement must register a skin under the same id or the saved value
+points at nothing.
+
+Same applies to `posts` and `archive-posts`, which store `_skin` alongside their
+`vamtam_classic_*` settings — already flagged as the Hard items.
+
 ## Revised build order
 
 Sequenced so that each step is independently verifiable against the baseline, cheapest and
