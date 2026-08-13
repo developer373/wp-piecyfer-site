@@ -1,0 +1,95 @@
+<?php return array(
+    'root' => array(
+        'name' => '__root__',
+        'pretty_version' => '1.2.8',
+        'version' => '1.2.8.0',
+        'reference' => '1d0dc203082e6188f66a92f12c79b92de1695fab',
+        'type' => 'library',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'dev' => true,
+    ),
+    'versions' => array(
+        '__root__' => array(
+            'pretty_version' => '1.2.8',
+            'version' => '1.2.8.0',
+            'reference' => '1d0dc203082e6188f66a92f12c79b92de1695fab',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'cmb2/cmb2' => array(
+            'pretty_version' => 'dev-develop',
+            'version' => 'dev-develop',
+            'reference' => 'd1f124fe3f86e452c5976aa02891b93d65fb08f1',
+            'type' => 'wordpress-plugin',
+            'install_path' => __DIR__ . '/../cmb2',
+            'aliases' => array(
+                0 => '9999999-dev',
+            ),
+            'dev_requirement' => false,
+        ),
+        'composer/installers' => array(
+            'pretty_version' => 'v1.12.0',
+            'version' => '1.12.0.0',
+            'reference' => 'd20a64ed3c94748397ff5973488761b22f6d3f19',
+            'type' => 'composer-plugin',
+            'install_path' => __DIR__ . '/./installers',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
+        'cweagans/composer-patches' => array(
+            'pretty_version' => '1.7.0',
+            'version' => '1.7.0.0',
+            'reference' => 'ae02121445ad75f4eaff800cc532b5e6233e2ddf',
+            'type' => 'composer-plugin',
+            'install_path' => __DIR__ . '/../cweagans/composer-patches',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
+        'matthiasmullie/minify' => array(
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
+            'reference' => 'ea59f2981be3bd38b5c3fd92cd5cb6c7b0cd512e',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../matthiasmullie/minify',
+            'aliases' => array(
+                0 => '9999999-dev',
+            ),
+            'dev_requirement' => false,
+        ),
+        'matthiasmullie/path-converter' => array(
+            'pretty_version' => '1.1.3',
+            'version' => '1.1.3.0',
+            'reference' => 'e7d13b2c7e2f2268e1424aaed02085518afa02d9',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../matthiasmullie/path-converter',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'roundcube/plugin-installer' => array(
+            'dev_requirement' => true,
+            'replaced' => array(
+                0 => '*',
+            ),
+        ),
+        'sabberworm/php-css-parser' => array(
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
+            'reference' => 'cc791ad',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../sabberworm/php-css-parser',
+            'aliases' => array(
+                0 => '9999999-dev',
+            ),
+            'dev_requirement' => false,
+        ),
+        'shama/baton' => array(
+            'dev_requirement' => true,
+            'replaced' => array(
+                0 => '*',
+            ),
+        ),
+    ),
+);

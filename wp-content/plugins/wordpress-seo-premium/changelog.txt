@@ -1,0 +1,7 @@
+*** Yoast SEO premium Changelog ***
+
+
+2024-10-08 - version 23.6
+* update -  Sets the minimum supported WordPress version to 6.5.
+* update -  Bumps the minimum required version of Yoast SEO to 23.6.
+

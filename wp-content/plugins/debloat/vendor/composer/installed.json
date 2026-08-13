@@ -1,0 +1,472 @@
+{
+    "packages": [
+        {
+            "name": "cmb2/cmb2",
+            "version": "dev-develop",
+            "version_normalized": "dev-develop",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CMB2/CMB2.git",
+                "reference": "d1f124fe3f86e452c5976aa02891b93d65fb08f1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CMB2/CMB2/zipball/d1f124fe3f86e452c5976aa02891b93d65fb08f1",
+                "reference": "d1f124fe3f86e452c5976aa02891b93d65fb08f1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">5.2.4"
+            },
+            "require-dev": {
+                "apigen/apigen": "4.1.2",
+                "awesomemotive/am-cli-tools": ">=1.3.1",
+                "nette/utils": "2.5.3",
+                "phpunit/phpunit": "^6.5",
+                "yoast/phpunit-polyfills": "^1.0"
+            },
+            "suggest": {
+                "composer/installers": "~1.0"
+            },
+            "time": "2022-12-06T18:00:45+00:00",
+            "default-branch": true,
+            "type": "wordpress-plugin",
+            "installation-source": "dist",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Justin Sternberg",
+                    "email": "justin@dsgnwrks.pro",
+                    "homepage": "https://dsgnwrks.pro",
+                    "role": "Developer"
+                },
+                {
+                    "name": "WebDevStudios",
+                    "email": "contact@webdevstudios.com",
+                    "homepage": "https://github.com/WebDevStudios",
+                    "role": "Developer"
+                }
+            ],
+            "description": "CMB2 is a metabox, custom fields, and forms library for WordPress that will blow your mind.",
+            "homepage": "https://github.com/CMB2/CMB2",
+            "keywords": [
+                "metabox",
+                "plugin",
+                "wordpress"
+            ],
+            "support": {
+                "issues": "https://github.com/CMB2/CMB2/issues",
+                "source": "http://wordpress.org/support/plugin/cmb2"
+            },
+            "install-path": "../cmb2"
+        },
+        {
+            "name": "composer/installers",
+            "version": "v1.12.0",
+            "version_normalized": "1.12.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/composer/installers.git",
+                "reference": "d20a64ed3c94748397ff5973488761b22f6d3f19"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/composer/installers/zipball/d20a64ed3c94748397ff5973488761b22f6d3f19",
+                "reference": "d20a64ed3c94748397ff5973488761b22f6d3f19",
+                "shasum": ""
+            },
+            "require": {
+                "composer-plugin-api": "^1.0 || ^2.0"
+            },
+            "replace": {
+                "roundcube/plugin-installer": "*",
+                "shama/baton": "*"
+            },
+            "require-dev": {
+                "composer/composer": "1.6.* || ^2.0",
+                "composer/semver": "^1 || ^3",
+                "phpstan/phpstan": "^0.12.55",
+                "phpstan/phpstan-phpunit": "^0.12.16",
+                "symfony/phpunit-bridge": "^4.2 || ^5",
+                "symfony/process": "^2.3"
+            },
+            "time": "2021-09-13T08:19:44+00:00",
+            "type": "composer-plugin",
+            "extra": {
+                "class": "Composer\\Installers\\Plugin",
+                "branch-alias": {
+                    "dev-main": "1.x-dev"
+                }
+            },
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Composer\\Installers\\": "src/Composer/Installers"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kyle Robinson Young",
+                    "email": "kyle@dontkry.com",
+                    "homepage": "https://github.com/shama"
+                }
+            ],
+            "description": "A multi-framework Composer library installer",
+            "homepage": "https://composer.github.io/installers/",
+            "keywords": [
+                "Craft",
+                "Dolibarr",
+                "Eliasis",
+                "Hurad",
+                "ImageCMS",
+                "Kanboard",
+                "Lan Management System",
+                "MODX Evo",
+                "MantisBT",
+                "Mautic",
+                "Maya",
+                "OXID",
+                "Plentymarkets",
+                "Porto",
+                "RadPHP",
+                "SMF",
+                "Starbug",
+                "Thelia",
+                "Whmcs",
+                "WolfCMS",
+                "agl",
+                "aimeos",
+                "annotatecms",
+                "attogram",
+                "bitrix",
+                "cakephp",
+                "chef",
+                "cockpit",
+                "codeigniter",
+                "concrete5",
+                "croogo",
+                "dokuwiki",
+                "drupal",
+                "eZ Platform",
+                "elgg",
+                "expressionengine",
+                "fuelphp",
+                "grav",
+                "installer",
+                "itop",
+                "joomla",
+                "known",
+                "kohana",
+                "laravel",
+                "lavalite",
+                "lithium",
+                "magento",
+                "majima",
+                "mako",
+                "mediawiki",
+                "miaoxing",
+                "modulework",
+                "modx",
+                "moodle",
+                "osclass",
+                "pantheon",
+                "phpbb",
+                "piwik",
+                "ppi",
+                "processwire",
+                "puppet",
+                "pxcms",
+                "reindex",
+                "roundcube",
+                "shopware",
+                "silverstripe",
+                "sydes",
+                "sylius",
+                "symfony",
+                "tastyigniter",
+                "typo3",
+                "wordpress",
+                "yawik",
+                "zend",
+                "zikula"
+            ],
+            "support": {
+                "issues": "https://github.com/composer/installers/issues",
+                "source": "https://github.com/composer/installers/tree/v1.12.0"
+            },
+            "funding": [
+                {
+                    "url": "https://packagist.com",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/composer",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/composer/composer",
+                    "type": "tidelift"
+                }
+            ],
+            "install-path": "./installers"
+        },
+        {
+            "name": "cweagans/composer-patches",
+            "version": "1.7.0",
+            "version_normalized": "1.7.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/cweagans/composer-patches.git",
+                "reference": "ae02121445ad75f4eaff800cc532b5e6233e2ddf"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/cweagans/composer-patches/zipball/ae02121445ad75f4eaff800cc532b5e6233e2ddf",
+                "reference": "ae02121445ad75f4eaff800cc532b5e6233e2ddf",
+                "shasum": ""
+            },
+            "require": {
+                "composer-plugin-api": "^1.0 || ^2.0",
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "composer/composer": "~1.0 || ~2.0",
+                "phpunit/phpunit": "~4.6"
+            },
+            "time": "2020-09-30T17:56:20+00:00",
+            "type": "composer-plugin",
+            "extra": {
+                "class": "cweagans\\Composer\\Patches"
+            },
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "cweagans\\Composer\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Cameron Eagans",
+                    "email": "me@cweagans.net"
+                }
+            ],
+            "description": "Provides a way to patch Composer packages.",
+            "support": {
+                "issues": "https://github.com/cweagans/composer-patches/issues",
+                "source": "https://github.com/cweagans/composer-patches/tree/1.7.0"
+            },
+            "install-path": "../cweagans/composer-patches"
+        },
+        {
+            "name": "matthiasmullie/minify",
+            "version": "dev-master",
+            "version_normalized": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/matthiasmullie/minify.git",
+                "reference": "ea59f2981be3bd38b5c3fd92cd5cb6c7b0cd512e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/ea59f2981be3bd38b5c3fd92cd5cb6c7b0cd512e",
+                "reference": "ea59f2981be3bd38b5c3fd92cd5cb6c7b0cd512e",
+                "shasum": ""
+            },
+            "require": {
+                "ext-pcre": "*",
+                "matthiasmullie/path-converter": "~1.1",
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": ">=2.0",
+                "matthiasmullie/scrapbook": ">=1.3",
+                "phpunit/phpunit": ">=4.8",
+                "squizlabs/php_codesniffer": ">=3.0"
+            },
+            "suggest": {
+                "psr/cache-implementation": "Cache implementation to use with Minify::cache"
+            },
+            "time": "2023-07-01T17:54:28+00:00",
+            "default-branch": true,
+            "bin": [
+                "bin/minifycss",
+                "bin/minifyjs"
+            ],
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "MatthiasMullie\\Minify\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Matthias Mullie",
+                    "email": "minify@mullie.eu",
+                    "homepage": "https://www.mullie.eu",
+                    "role": "Developer"
+                }
+            ],
+            "description": "CSS & JavaScript minifier, in PHP. Removes whitespace, strips comments, combines files (incl. @import statements and small assets in CSS files), and optimizes/shortens a few common programming patterns.",
+            "homepage": "https://github.com/matthiasmullie/minify",
+            "keywords": [
+                "JS",
+                "css",
+                "javascript",
+                "minifier",
+                "minify"
+            ],
+            "support": {
+                "issues": "https://github.com/matthiasmullie/minify/issues",
+                "source": "https://github.com/matthiasmullie/minify/tree/master"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/matthiasmullie",
+                    "type": "github"
+                }
+            ],
+            "install-path": "../matthiasmullie/minify"
+        },
+        {
+            "name": "matthiasmullie/path-converter",
+            "version": "1.1.3",
+            "version_normalized": "1.1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/matthiasmullie/path-converter.git",
+                "reference": "e7d13b2c7e2f2268e1424aaed02085518afa02d9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/matthiasmullie/path-converter/zipball/e7d13b2c7e2f2268e1424aaed02085518afa02d9",
+                "reference": "e7d13b2c7e2f2268e1424aaed02085518afa02d9",
+                "shasum": ""
+            },
+            "require": {
+                "ext-pcre": "*",
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.8"
+            },
+            "time": "2019-02-05T23:41:09+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "MatthiasMullie\\PathConverter\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Matthias Mullie",
+                    "email": "pathconverter@mullie.eu",
+                    "homepage": "http://www.mullie.eu",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Relative path converter",
+            "homepage": "http://github.com/matthiasmullie/path-converter",
+            "keywords": [
+                "converter",
+                "path",
+                "paths",
+                "relative"
+            ],
+            "support": {
+                "issues": "https://github.com/matthiasmullie/path-converter/issues",
+                "source": "https://github.com/matthiasmullie/path-converter/tree/1.1.3"
+            },
+            "install-path": "../matthiasmullie/path-converter"
+        },
+        {
+            "name": "sabberworm/php-css-parser",
+            "version": "dev-master",
+            "version_normalized": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sabberworm/PHP-CSS-Parser.git",
+                "reference": "cc791ad"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sabberworm/PHP-CSS-Parser/zipball/cc791ad",
+                "reference": "cc791ad",
+                "shasum": ""
+            },
+            "require": {
+                "ext-iconv": "*",
+                "php": ">=5.6.20"
+            },
+            "require-dev": {
+                "codacy/coverage": "^1.4.3",
+                "phpunit/phpunit": "^5.7.27"
+            },
+            "suggest": {
+                "ext-mbstring": "for parsing UTF-8 CSS"
+            },
+            "time": "2023-01-25T01:20:01+00:00",
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "patches_applied": {
+                    "1. Validate name-start code points for identifier <https://github.com/westonruter/PHP-CSS-Parser/pull/2>": "https://github.com/sabberworm/PHP-CSS-Parser/compare/cc791ad...westonruter:PHP-CSS-Parser:fix/malformed-identifier-without-tests.diff",
+                    "2. Fix parsing CSS selectors which contain commas <https://github.com/westonruter/PHP-CSS-Parser/pull/1>": "https://github.com/sabberworm/PHP-CSS-Parser/compare/cc791ad...westonruter:PHP-CSS-Parser:fix/selector-comma-parsing-without-tests.diff",
+                    "3. Parse simple expressions <https://github.com/sabberworm/PHP-CSS-Parser/pull/389>": "https://github.com/sabberworm/PHP-CSS-Parser/compare/cc791ad...westonruter:PHP-CSS-Parser:fix/expression-parsing-without-tests.diff"
+                }
+            },
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Sabberworm\\CSS\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Raphael Schweikert"
+                }
+            ],
+            "description": "Parser for CSS Files written in PHP",
+            "homepage": "https://www.sabberworm.com/blog/2010/6/10/php-css-parser",
+            "keywords": [
+                "css",
+                "parser",
+                "stylesheet"
+            ],
+            "support": {
+                "issues": "https://github.com/sabberworm/PHP-CSS-Parser/issues",
+                "source": "https://github.com/sabberworm/PHP-CSS-Parser/tree/master"
+            },
+            "install-path": "../sabberworm/php-css-parser"
+        }
+    ],
+    "dev": true,
+    "dev-package-names": [
+        "composer/installers",
+        "cweagans/composer-patches"
+    ]
+}

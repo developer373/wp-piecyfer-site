@@ -1,0 +1,40 @@
+# --- Large / regenerable content -------------------------------------------
+# Media library. Not tracked: 313 MB of binaries that git compresses poorly and
+# that this project does not modify. Backed up separately (see _project/backups).
+wp-content/uploads/
+
+# UpdraftPlus archives — already backups; tracking them would double the size.
+wp-content/updraft/
+wp-content/ai1wm-backups/
+
+# Our own DB dumps and quarantined malware samples.
+_project/backups/
+_project/quarantine/
+
+# --- Caches & build artefacts ----------------------------------------------
+wp-content/cache/
+wp-content/boost-cache/
+wp-content/smush-webp/
+wp-content/upgrade/
+wp-content/upgrade-temp-backup/
+wp-content/wp-rocket-config/
+wp-content/et-cache/
+wp-content/*-old/
+node_modules/
+vendor/bin/
+
+# --- Local environment ------------------------------------------------------
+# wp-config.php holds DB credentials and the auth salts. Never commit it.
+wp-config.php
+.env
+*.log
+debug.log
+error_log
+
+# --- OS / editor noise ------------------------------------------------------
+Thumbs.db
+desktop.ini
+.DS_Store
+.idea/
+.vscode/
+*.swp
