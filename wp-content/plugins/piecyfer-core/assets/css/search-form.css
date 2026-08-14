@@ -1,0 +1,180 @@
+/*
+ * Search form widget styles.
+ *
+ * Written from the live site's computed styles rather than copied from
+ * Elementor Pro's widget-search-form.css — same reasoning as blockquote.css.
+ *
+ * Only structural rules belong here. Colours, sizes, radii and typography all
+ * come from controls, which Elementor compiles into per-element CSS on top of
+ * this file; hard-coding any of them would beat the control. Where Pro drives a
+ * value through a custom property, the property is used here with a fallback so
+ * an unset control still renders sensibly.
+ */
+
+.elementor-search-form {
+	display: block;
+	transition: 0.2s;
+}
+
+.elementor-search-form--focus .elementor-search-form__container,
+.elementor-search-form__container {
+	display: flex;
+	transition: 0.2s;
+}
+
+.elementor-search-form__container {
+	overflow: hidden;
+	border: solid transparent;
+	border-width: 0;
+	min-height: 50px;
+}
+
+/*
+ * The input is stripped back to nothing so the container owns the frame. Two
+ * details matter: `min-width: 0` stops a long placeholder forcing the flex item
+ * wider than its container, and `appearance: none` removes Safari's inset
+ * shadow on type="search".
+ */
+.elementor-search-form__input {
+	flex-basis: 100%;
+	min-width: 0;
+	border: 0;
+	padding: 0 10px;
+	margin: 0;
+	background: transparent;
+	color: inherit;
+	line-height: 1;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.elementor-search-form__input::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.elementor-search-form__input:focus {
+	outline: 0;
+	box-shadow: none;
+}
+
+/* --- submit button ------------------------------------------------------ */
+
+/*
+ * Scoped to the container rather than written bare.
+ *
+ * The theme styles every <button> with a 4px radius, and a bare
+ * `.elementor-search-form__submit` rule loses to it — the submit button came
+ * out with rounded corners where the reference has square ones. Two class
+ * selectors beat the theme's rule without reaching for !important, which
+ * matters because a control could legitimately want to set these later.
+ */
+.elementor-search-form__container .elementor-search-form__submit {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	border: 0;
+	border-radius: 0;
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+	font-size: inherit;
+	transition: 0.2s;
+	color: var( --e-search-form-submit-text-color, #ffffff );
+	background-color: #54595f;
+}
+
+
+.elementor-search-form__submit svg {
+	fill: var( --e-search-form-submit-text-color, #ffffff );
+	width: var( --e-search-form-submit-icon-size, 16px );
+	height: var( --e-search-form-submit-icon-size, 16px );
+}
+
+.elementor-search-form__submit i {
+	font-size: var( --e-search-form-submit-icon-size, 16px );
+}
+
+/* A text button needs breathing room the icon button does not. */
+.elementor-search-form--button-type-text .elementor-search-form__submit {
+	padding: 0 1em;
+}
+
+/* --- skin: minimal ------------------------------------------------------ */
+
+.elementor-search-form--skin-minimal .elementor-search-form__icon {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	opacity: 0.6;
+	font-size: var( --e-search-form-icon-size-minimal, 15px );
+}
+
+.elementor-search-form--skin-minimal .elementor-search-form__icon svg {
+	width: var( --e-search-form-icon-size-minimal, 15px );
+	height: var( --e-search-form-icon-size-minimal, 15px );
+	fill: currentColor;
+}
+
+/* --- skin: full screen -------------------------------------------------- */
+
+.elementor-search-form--skin-full_screen .elementor-search-form__toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	width: var( --e-search-form-toggle-size, 33px );
+	height: var( --e-search-form-toggle-size, 33px );
+	font-size: var( --e-search-form-toggle-size, 33px );
+	color: var( --e-search-form-toggle-color, #54595f );
+	background-color: var( --e-search-form-toggle-background-color, transparent );
+	border: var( --e-search-form-toggle-border-width, 0 ) solid var( --e-search-form-toggle-color, #54595f );
+	border-radius: var( --e-search-form-toggle-border-radius, 0 );
+	transition: 0.2s;
+}
+
+.elementor-search-form--skin-full_screen .elementor-search-form__toggle i,
+.elementor-search-form--skin-full_screen .elementor-search-form__toggle svg {
+	font-size: var( --e-search-form-toggle-icon-size, 0.55em );
+	width: var( --e-search-form-toggle-icon-size, 0.55em );
+	height: var( --e-search-form-toggle-icon-size, 0.55em );
+	fill: currentColor;
+}
+
+/*
+ * The full-screen container is an overlay, hidden until the toggle is used.
+ * `visibility` rather than `display` so the transition can run.
+ */
+.elementor-search-form--skin-full_screen .elementor-search-form__container {
+	position: fixed;
+	inset: 0;
+	z-index: 9998;
+	align-items: center;
+	justify-content: center;
+	padding: 0 15%;
+	opacity: 0;
+	visibility: hidden;
+	transition: 0.3s;
+}
+
+.elementor-search-form--skin-full_screen.elementor-search-form--full-screen .elementor-search-form__container {
+	opacity: 1;
+	visibility: visible;
+}
+
+.elementor-search-form--skin-full_screen input[type="search"].elementor-search-form__input {
+	padding: 0.5em;
+	text-align: center;
+	border-style: solid;
+	border-width: 0 0 1px 0;
+}
+
+.elementor-search-form--skin-full_screen .dialog-lightbox-close-button {
+	position: absolute;
+	top: 1em;
+	inset-inline-end: 1em;
+	cursor: pointer;
+	font-size: 2em;
+	display: flex;
+}

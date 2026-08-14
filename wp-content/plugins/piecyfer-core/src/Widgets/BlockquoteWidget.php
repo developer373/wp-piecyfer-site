@@ -246,7 +246,7 @@ final class BlockquoteWidget extends AbstractWidget {
 
 	private function register_content_style_controls(): void {
 		$this->start_controls_section(
-			'section_style_content',
+			'section_content_style',
 			array(
 				'label' => esc_html__( 'Content', 'piecyfer-core' ),
 				'tab'   => Controls_Manager::TAB_STYLE,
@@ -334,11 +334,26 @@ final class BlockquoteWidget extends AbstractWidget {
 
 	private function register_button_style_controls(): void {
 		$this->start_controls_section(
-			'section_style_button',
+			/*
+			 * Pro calls this section `section_button_style`, and the id is not
+			 * cosmetic: third-party code injects controls at
+			 * `elementor/element/blockquote/section_button_style/before_section_end`,
+			 * which is how per-element Custom CSS and Motion FX attach. A
+			 * renamed section silently drops those injections.
+			 */
+			'section_button_style',
 			array(
-				'label'     => esc_html__( 'Button', 'piecyfer-core' ),
-				'tab'       => Controls_Manager::TAB_STYLE,
-				'condition' => array( 'tweet_button' => 'yes' ),
+				'label' => esc_html__( 'Button', 'piecyfer-core' ),
+				'tab'   => Controls_Manager::TAB_STYLE,
+				/*
+				 * Deliberately NOT conditioned on `tweet_button`, matching Pro.
+				 * Adding that condition looked harmless and was not: Elementor's
+				 * get_active_settings() strips every control whose section
+				 * condition fails, so `button_color_source` lost its value and
+				 * its `prefix_class` never reached the wrapper. Both blockquotes
+				 * on the blog post rendered without
+				 * `elementor-blockquote--button-color-official`.
+				 */
 			)
 		);
 
@@ -458,7 +473,7 @@ final class BlockquoteWidget extends AbstractWidget {
 
 	private function register_border_skin_controls(): void {
 		$this->start_controls_section(
-			'section_style_border',
+			'section_border_style',
 			array(
 				'label'     => esc_html__( 'Border', 'piecyfer-core' ),
 				'tab'       => Controls_Manager::TAB_STYLE,
@@ -565,7 +580,7 @@ final class BlockquoteWidget extends AbstractWidget {
 
 	private function register_boxed_skin_controls(): void {
 		$this->start_controls_section(
-			'section_style_box',
+			'section_box_style',
 			array(
 				'label'     => esc_html__( 'Box', 'piecyfer-core' ),
 				'tab'       => Controls_Manager::TAB_STYLE,
@@ -668,7 +683,7 @@ final class BlockquoteWidget extends AbstractWidget {
 
 	private function register_quotation_skin_controls(): void {
 		$this->start_controls_section(
-			'section_style_quotation',
+			'section_quote_style',
 			array(
 				'label'     => esc_html__( 'Quotation Mark', 'piecyfer-core' ),
 				'tab'       => Controls_Manager::TAB_STYLE,
@@ -688,10 +703,19 @@ final class BlockquoteWidget extends AbstractWidget {
 		$this->add_responsive_control(
 			'quote_size',
 			array(
-				'label'     => esc_html__( 'Size', 'piecyfer-core' ),
-				'type'      => Controls_Manager::SLIDER,
-				'default'   => array( 'size' => 0.5 ),
-				'range'     => array( 'px' => array( 'min' => 0.1, 'max' => 2, 'step' => 0.1 ) ),
+				'label' => esc_html__( 'Size', 'piecyfer-core' ),
+				'type'  => Controls_Manager::SLIDER,
+				/*
+				 * Default size 1, giving calc(1 * 100) = 100px — not 0.5.
+				 *
+				 * Getting this wrong shortened the quotation mark from 100px to
+				 * 50px, which shortened the whole page by exactly 30px on every
+				 * viewport. A default is not cosmetic when a control feeds a
+				 * calc(): it is the rendered value for every instance that never
+				 * set one, which is all four here.
+				 */
+				'default'   => array( 'size' => 1 ),
+				'range'     => array( 'px' => array( 'min' => 0.5, 'max' => 2, 'step' => 0.1 ) ),
 				'selectors' => array(
 					'{{WRAPPER}} .elementor-blockquote:before' => 'font-size: calc({{SIZE}}{{UNIT}} * 100)',
 				),

@@ -1,35 +1,76 @@
 /*
  * Blockquote widget styles.
  *
- * Written from the computed styles of the live pages rather than copied out of
- * Elementor Pro's widget-blockquote.css. Pro is GPL so copying would be legal,
- * but the copy on this server came from a nulled build, and re-shipping code of
- * unknown provenance is the exact dependency this plugin exists to remove.
+ * Written rather than copied from Elementor Pro's widget-blockquote.css. Pro is
+ * GPL so copying would be legal, but the copy on this server came from a nulled
+ * build, and re-shipping code of unknown provenance is the exact dependency
+ * this plugin exists to remove.
  *
- * The values below were read off the rendered site with
- * getComputedStyle() while Pro was still active, so the target is observed
- * behaviour, not a guess — and the pixel harness proves the result.
+ * Most values were read off the rendered site with getComputedStyle() while Pro
+ * was still active. That was not sufficient on its own: computed styles show
+ * the result, not why. The reset below produces #3f444b text, but the probe
+ * simply reported #3f444b and the first version of this file assumed it was
+ * inherited — so the text rendered in the theme's #676767 instead. Pro's
+ * stylesheet was then read to find the rule responsible, and its behaviour
+ * reproduced here.
+ *
+ * Either way the pixel harness is what proves the result.
  *
  * Elementor generates per-element rules from the widget's controls on top of
  * this file. Anything a control can set is therefore left at a sensible base
  * here and overridden per instance; hard-coding it would beat the control.
  */
 
-.elementor-blockquote {
-	margin: 0;
+/*
+ * Reset the blockquote element itself.
+ *
+ * This block is why reading computed styles alone was not enough. Themes style
+ * <blockquote> heavily — this one gives it a colour, a border and quote marks —
+ * and the widget has to undo all of that before its own controls mean anything.
+ * The computed-style probe showed the *result* (#3f444b text) without revealing
+ * that a reset was producing it, so the first version of this file inherited
+ * the theme's #676767 instead and the text came out the wrong colour.
+ *
+ * `color` is a real default here rather than a control value: the text-colour
+ * control's global default only emits CSS when someone sets it, so with no
+ * value at all this is what the text uses.
+ */
+.elementor-widget-blockquote blockquote {
+	background: transparent;
+	border: 0;
+	color: #3f444b;
+	font-size: 100%;
 	font-style: normal;
-	transition-property: border, background-color, box-shadow;
-	transition-duration: 0.3s;
+	margin: 0;
+	outline: 0;
+	padding: 0;
+	quotes: none;
+	vertical-align: baseline;
 }
 
-.elementor-blockquote__content {
-	margin: 0;
+/* Themes commonly add decorative quote marks via ::before/::after. The
+ * quotation skin draws its own, so any inherited ones must go. */
+.elementor-widget-blockquote blockquote:before,
+.elementor-widget-blockquote blockquote:after,
+.elementor-widget-blockquote blockquote cite:before,
+.elementor-widget-blockquote blockquote cite:after,
+.elementor-widget-blockquote blockquote .e-q-footer:before,
+.elementor-widget-blockquote blockquote .e-q-footer:after {
+	content: none;
+}
+
+.elementor-blockquote {
+	transition: 0.3s;
+}
+
+.elementor-blockquote__content,
+.elementor-blockquote__author {
+	font-style: normal;
+	margin-bottom: 0;
 }
 
 .elementor-blockquote__author {
 	font-weight: 700;
-	font-style: normal;
-	display: block;
 }
 
 /*
@@ -47,10 +88,11 @@
 /* --- skin: border ------------------------------------------------------- */
 
 .elementor-blockquote--skin-border .elementor-blockquote {
+	border-color: #f9fafa;
 	border-style: solid;
 	border-width: 0;
-	border-left-width: 7px;
-	padding-left: 20px;
+	border-inline-start-width: 7px;
+	padding-inline-start: 20px;
 }
 
 body.rtl .elementor-blockquote--skin-border .elementor-blockquote {
@@ -69,6 +111,7 @@ body.rtl .elementor-blockquote--skin-border .elementor-blockquote {
  */
 .elementor-blockquote--skin-quotation .elementor-blockquote::before {
 	content: "\201C";
+	color: #f9fafa;
 	display: block;
 	font-family: "Times New Roman", Times, serif;
 	font-size: 100px;
@@ -84,6 +127,7 @@ body.rtl .elementor-blockquote--skin-border .elementor-blockquote {
 /* --- skin: boxed -------------------------------------------------------- */
 
 .elementor-blockquote--skin-boxed .elementor-blockquote {
+	background-color: #f9fafa;
 	padding: 30px;
 }
 

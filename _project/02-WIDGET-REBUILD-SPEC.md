@@ -217,6 +217,37 @@ Pro is only deactivated at the very end, when every widget it owns has already b
 verified. At that point the final comparison should show **zero** difference, because nothing of
 Pro's is still rendering anything.
 
+### The loop is only valid with Elementor's element cache cleared first
+
+`e_element_cache` is **active** on this site. It stores the rendered HTML of an entire document
+in `_elementor_element_cache` postmeta for 24 hours, along with the style and script handles that
+render enqueued. While that cache is warm, **Elementor does not call the widgets at all** — it
+echoes the stored HTML and enqueues from the stored list.
+
+That breaks the verify loop in the worst possible direction: it produces **false passes**. A
+capture can report a widget byte-identical when our widget never executed, and an edit to a
+widget appears to do nothing. It cost a full debugging round here — three separate and genuinely
+correct fixes to `search-form` and `theme-site-logo` looked completely inert, and the temptation
+was to go rewrite code that was already right.
+
+Disabling the experiment is not the answer: it changes which stylesheets a page enqueues, so the
+site would stop matching the baseline for reasons unrelated to any widget.
+
+`capture.js` therefore clears the cache before every run, and treats a failure to do so as fatal
+rather than as a warning. Note this also means **`piecyfer-core`'s own automatic cache clearing is
+not sufficient** — its signature covers the widget and stylesheet *lists*, so adding a widget
+invalidates the cache but editing one does not.
+
+Two symptoms worth recognising, because they look like widget bugs and are not:
+
+- **Stylesheet order differs but the set is identical.** The cached path enqueues from a stored
+  list, the live path enqueues as each widget renders. Compare the sorted set of `id="*-css"`
+  handles before believing a reordering is a regression.
+- **A stylesheet appears that the baseline never had.** `post-8519.css` did. Template 8519 is
+  pulled into the published Blog Post Template by an `[elementor-template]` shortcode, and the
+  baseline's asset list had simply never recorded it. Clearing the cache made Elementor recompute
+  correctly. That is a stale-cache defect in the baseline being fixed, not a regression.
+
 ## Dynamic tags are a prerequisite, not a late step
 
 Originally scheduled at 4k. That was wrong, discovered while reading the actual saved settings

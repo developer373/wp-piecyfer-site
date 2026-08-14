@@ -36,6 +36,7 @@ final class Plugin {
 		Widgets\PostContentWidget::class,
 		Widgets\PostCommentsWidget::class,
 		Widgets\BlockquoteWidget::class,
+		Widgets\SearchFormWidget::class,
 	);
 
 	public static function instance(): Plugin {
@@ -66,6 +67,11 @@ final class Plugin {
 		// after Pro, so ours win while Pro is still installed and each one can
 		// be verified against the baseline before anything depends on it.
 		DynamicTags\Manager::init();
+
+		// Drop Pro's stylesheet for every widget we have taken over, so a
+		// passing comparison means our CSS carries the widget on its own rather
+		// than merely coexisting with Pro's.
+		ProStyleGuard::init();
 		add_action( 'elementor/frontend/after_enqueue_styles', array( $this, 'enqueue_frontend' ) );
 
 		// Registration must happen on both the front end and in the editor, and
@@ -73,6 +79,36 @@ final class Plugin {
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_styles' ), 5 );
 		add_action( 'elementor/editor/before_enqueue_scripts', array( $this, 'register_styles' ), 5 );
 		add_action( 'admin_notices', array( $this, 'maybe_warn_untested_elementor' ) );
+		add_action( 'init', array( $this, 'maybe_clear_elementor_cache' ), 20 );
+	}
+
+	/**
+	 * Clear Elementor's caches when the set of widgets or stylesheets we own
+	 * changes.
+	 *
+	 * Since 3.24 Elementor records the exact list of style and script handles a
+	 * page needs in `_elementor_page_assets` postmeta, and enqueues from that
+	 * list rather than from the live widgets. Taking a widget over therefore has
+	 * no effect on already-cached pages: the header template's cached list still
+	 * named Pro's `widget-search-form`, so our stylesheet was never enqueued and
+	 * the widget rendered unstyled the moment Pro's stylesheet was suppressed.
+	 *
+	 * The signature covers both lists, so adding a widget or renaming a
+	 * stylesheet invalidates the cache exactly once, on the next request.
+	 */
+	public function maybe_clear_elementor_cache(): void {
+		$signature = md5( wp_json_encode( array( self::WIDGETS, self::STYLES, VERSION ) ) );
+
+		if ( get_option( 'piecyfer_core_asset_signature' ) === $signature ) {
+			return;
+		}
+
+		if ( isset( \Elementor\Plugin::$instance->files_manager ) ) {
+			\Elementor\Plugin::$instance->files_manager->clear_cache();
+		}
+
+		update_option( 'piecyfer_core_asset_signature', $signature, false );
+		$this->log( 'widget/style set changed — cleared Elementor cache' );
 	}
 
 	/**
@@ -123,7 +159,8 @@ final class Plugin {
 	 * @var array<string,string> handle => file under assets/css/
 	 */
 	private const STYLES = array(
-		'piecyfer-blockquote' => 'blockquote.css',
+		'piecyfer-blockquote'  => 'blockquote.css',
+		'piecyfer-search-form' => 'search-form.css',
 	);
 
 	/**

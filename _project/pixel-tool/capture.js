@@ -15,6 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { execFileSync } = require('child_process');
 const { chromium } = require('playwright');
 const { BASE, PATHS, QUICK, VIEWPORTS, slugify } = require('./urls');
 const { normalise } = require('./normalise');
@@ -548,7 +549,42 @@ async function capturePage(browser, p, i, total) {
   return record;
 }
 
+/**
+ * Clear Elementor's caches before capturing. NOT an optimisation — a
+ * correctness requirement.
+ *
+ * The `e_element_cache` experiment is active on this site, and it caches the
+ * *rendered HTML* of a whole document in `_elementor_element_cache` postmeta
+ * for 24 hours, together with the list of style and script handles that render
+ * enqueued. While that cache is warm, Elementor never calls the widgets at all.
+ *
+ * So editing a widget and re-capturing shows the OLD markup, and a capture can
+ * "prove" a widget identical when the widget never ran. That is the harness
+ * lying in the most dangerous direction — a false pass. It cost a full
+ * debugging round: three separate, genuinely-correct fixes appeared to have no
+ * effect whatsoever.
+ *
+ * Turning the experiment off instead is not an option: it changes which
+ * stylesheets a page enqueues, so the site would no longer match the baseline.
+ *
+ * A failure here is fatal on purpose. Skipping the clear silently is exactly
+ * the failure mode this exists to prevent.
+ */
+function clearElementorCache() {
+  const script = path.join(__dirname, '..', 'scripts', 'clear-elementor-cache.php');
+  const php = process.env.PHP_BIN || 'C:/xampp/php/php.exe';
+  const out = execFileSync(php, [script], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  const summary = out.split('\n').filter(l => /^_elementor|^generated/.test(l)).join(' | ');
+  console.log(`elementor cache cleared: ${summary}`);
+}
+
 (async () => {
+  if (!process.argv.includes('--no-cache-clear')) {
+    clearElementorCache();
+  } else {
+    console.log('WARNING: --no-cache-clear — cached widget HTML may be captured instead of live output');
+  }
+
   // --quick: the 8-page representative subset, for checking after each small
   // change. The full 39-page set is the gate at the end of a phase.
   const all = quick ? QUICK : PATHS;

@@ -160,16 +160,24 @@ final class SiteLogoWidget extends Widget_Image {
 			}
 		}
 		?>
-		<?php if ( $has_caption ) : ?><figure class="wp-caption"><?php endif; ?>
-		<?php if ( $link ) : ?><a <?php $this->print_render_attribute_string( 'link' ); ?>><?php endif; ?>
+		<?php if ( $has_caption ) : ?>
+		<figure class="wp-caption">
+	<?php endif; ?>
+		<?php if ( $link ) : ?>
+		<a <?php $this->print_render_attribute_string( 'link' ); ?>>
+	<?php endif; ?>
 		<?php Group_Control_Image_Size::print_attachment_image_html( $settings ); ?>
-		<?php if ( $link ) : ?></a><?php endif; ?>
+		<?php if ( $link ) : ?>
+		</a>
+	<?php endif; ?>
 		<?php if ( $has_caption ) : ?>
 			<figcaption class="widget-image-caption wp-caption-text"><?php
 				echo wp_kses_post( (string) wp_get_attachment_caption( $settings['image']['id'] ) );
 			?></figcaption>
-		</figure>
 		<?php endif; ?>
+		<?php if ( $has_caption ) : ?>
+		</figure>
+	<?php endif; ?>
 		<?php
 	}
 
@@ -190,11 +198,12 @@ final class SiteLogoWidget extends Widget_Image {
 				return empty( $settings['link']['url'] ) ? false : $settings['link'];
 
 			case 'site_url':
-				// Pro resolves this through its `site-url` dynamic tag. That tag
-				// is not one of the nine this site actually uses, so calling
-				// home_url() directly avoids registering a tag purely as an
-				// indirection — the value is identical.
-				return array( 'url' => home_url( '/' ) );
+				// Pro resolves this through its `site-url` dynamic tag, which is
+				// `home_url()` with no argument. Calling it directly avoids
+				// registering a tag purely as an indirection, but it has to be
+				// the *same* call: `home_url( '/' )` appends a trailing slash and
+				// changed the logo's href on every page.
+				return array( 'url' => home_url() );
 
 			default:
 				return array( 'url' => $settings['image']['url'] );
