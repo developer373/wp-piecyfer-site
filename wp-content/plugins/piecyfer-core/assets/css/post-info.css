@@ -1,0 +1,38 @@
+/**
+ * Replacement for Elementor Pro's `widget-post-info` stylesheet.
+ *
+ * Written from the rendered structure, not copied from the nulled install.
+ * Deliberately small: the list layout itself belongs to Elementor's free
+ * `widget-icon-list`, which post-info reuses and which we keep depending on.
+ * Only the handful of rules Pro adds on top live here.
+ */
+
+/* Terms render as a nested span; without this it would break onto its own line
+   inside the meta item. */
+.elementor-post-info__terms-list {
+	display: inline-block;
+}
+
+/* The author avatar is round. */
+.elementor-post-info .elementor-icon-list-icon .elementor-avatar {
+	border-radius: 100%;
+}
+
+/* The divider is an :after pseudo-element on each item. Under centre alignment
+   the icon-list stylesheet gives it auto margins, which would centre the rule
+   itself rather than leave it spanning the item. */
+.elementor-widget-post-info.elementor-align-center .elementor-icon-list-item:after {
+	margin: initial;
+}
+
+/* inline-block gives the text a box for the divider to sit against, while the
+   link and the "Before" prefix inside it must stay plain inline so they do not
+   introduce their own line boxes. */
+.elementor-icon-list-items .elementor-icon-list-item .elementor-icon-list-text {
+	display: inline-block;
+}
+
+.elementor-icon-list-items .elementor-icon-list-item .elementor-icon-list-text a,
+.elementor-icon-list-items .elementor-icon-list-item .elementor-icon-list-text span {
+	display: inline;
+}

@@ -37,6 +37,7 @@ final class Plugin {
 		Widgets\PostCommentsWidget::class,
 		Widgets\BlockquoteWidget::class,
 		Widgets\SearchFormWidget::class,
+		Widgets\PostInfoWidget::class,
 	);
 
 	public static function instance(): Plugin {
@@ -161,6 +162,7 @@ final class Plugin {
 	private const STYLES = array(
 		'piecyfer-blockquote'  => 'blockquote.css',
 		'piecyfer-search-form' => 'search-form.css',
+		'piecyfer-post-info'   => 'post-info.css',
 	);
 
 	/**

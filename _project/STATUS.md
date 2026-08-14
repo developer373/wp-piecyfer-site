@@ -145,6 +145,45 @@ imported from production along with the database:
 
 Because of these, a comparison against `baseline` can never legitimately reach *IDENTICAL*.
 
+### `e_element_cache` turned off — it was corrupting three things at once
+
+Chasing the last markup difference on the blog post turned up something much larger than the
+comment form. Elementor caches rendered HTML **per document**, and the header and single-post
+Theme Builder templates are each *one* document shared by every page that uses them. So whichever
+page warms the cache decides what every other page's header says, for the full 24-hour TTL.
+
+Proven by request, same URL both times:
+
+| Cache warmed by | `queried_id` | `comment_post_ID` | nav `current-menu-item` |
+|---|---|---|---|
+| the blog post itself | 993554 ✅ | 993554 ✅ | none ✅ |
+| Home, then the blog post | **146** ❌ | **993554→wrong post** ❌ | **Home, on a blog post** ❌ |
+
+Three live defects from one cause:
+
+1. **Nav highlighting** — the wrong menu item marked current on every page. On `/our-team/` the
+   baseline marks **Home** active; it is now **Our Team**. Worth being precise about how visible
+   this is: the `elementor-item-active` rule on this site styles
+   `.elementor-nav-menu--dropdown a.elementor-item-active`, i.e. the *mobile dropdown*, which is
+   collapsed in every screenshot. So this is wrong markup, wrong semantics for assistive tech and
+   a wrong highlight for anyone who opens the mobile menu — but not a change the pixel comparison
+   sees, which is exactly why it survived until now.
+2. **Elementor forms** — `queried_id` and `referer_title` hidden fields carry the warming page, so
+   every submission is attributed to the wrong page.
+3. **Comment forms** — comments filed against whichever post warmed the cache.
+
+A per-element opt-out would have to be applied to the nav menu, all nine forms and the comments —
+most of the dynamic surface of the site — and would break again the next time a dynamic widget is
+added. The experiment is **off** as of 2026-08-14 (`scripts/set-experiment.php`, which also clears
+the postmeta: stale entries stay valid-looking for 24h and are read before anything else, so
+without that the change appears to do nothing for a day).
+
+Verified after: `queried_id`, `comment_post_ID` and `current-menu-item` are correct on every page,
+independent of visit order.
+
+This also removes the order-dependence from the harness — captures no longer depend on which page
+was visited first.
+
 ---
 
 ## The approach that makes this safe
@@ -195,21 +234,6 @@ Remaining, roughly in order of effort:
 ---
 
 ## Open decisions
-
-0. **`e_element_cache` — a live bug, not a preference.** The single-post Theme Builder template
-   is one Elementor document, so its cached HTML is stored against the *template* and reused for
-   **every** blog post. That includes the comment form. Measured on
-   `building-high-performing-web-apps…` (post 993554):
-
-   | | `comment_post_ID` | cancel-reply link |
-   |---|---|---|
-   | cache warm | **994789** | `/boosting-sales-with-a-powerful-crm/` |
-   | cache cleared | 993554 ✅ | `/building-high-performing-web-apps…/` ✅ |
-
-   A reader commenting on one article has the comment filed against another. Pre-existing, and it
-   will behave the same on the live site. Recommendation: **turn the experiment off.** It is not
-   done yet because it also changes which stylesheets a page enqueues, so it moves the reference
-   point for every remaining widget — worth doing deliberately rather than as a side effect.
 
 1. **Theme** — buy a VamTam licence (~$69), or build `piecyfer-theme`? My recommendation is to
    build our own: the header, footer, single, archive, search and 404 are all Elementor Theme

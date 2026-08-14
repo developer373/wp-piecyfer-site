@@ -217,12 +217,17 @@ Pro is only deactivated at the very end, when every widget it owns has already b
 verified. At that point the final comparison should show **zero** difference, because nothing of
 Pro's is still rendering anything.
 
-### The loop is only valid with Elementor's element cache cleared first
+### The loop is only valid with Elementor's caches cleared first
 
-`e_element_cache` is **active** on this site. It stores the rendered HTML of an entire document
-in `_elementor_element_cache` postmeta for 24 hours, along with the style and script handles that
-render enqueued. While that cache is warm, **Elementor does not call the widgets at all** — it
-echoes the stored HTML and enqueues from the stored list.
+> **Update, 2026-08-14:** `e_element_cache` is now **off** — it was corrupting nav highlighting,
+> form metadata and comment targets site-wide (see `STATUS.md`). The rest of this section is kept
+> because the failure mode it describes is the single most expensive one this project has hit, and
+> because `capture.js` still clears the remaining CSS and asset caches before every run.
+
+`e_element_cache` stored the rendered HTML of an entire document in `_elementor_element_cache`
+postmeta for 24 hours, along with the style and script handles that render enqueued. While that
+cache was warm, **Elementor did not call the widgets at all** — it echoed the stored HTML and
+enqueued from the stored list.
 
 That breaks the verify loop in the worst possible direction: it produces **false passes**. A
 capture can report a widget byte-identical when our widget never executed, and an edit to a
@@ -230,13 +235,15 @@ widget appears to do nothing. It cost a full debugging round here — three sepa
 correct fixes to `search-form` and `theme-site-logo` looked completely inert, and the temptation
 was to go rewrite code that was already right.
 
-Disabling the experiment is not the answer: it changes which stylesheets a page enqueues, so the
-site would stop matching the baseline for reasons unrelated to any widget.
+Disabling the experiment was initially rejected on the grounds that it changes which stylesheets a
+page enqueues, and so moves the reference point. That was the wrong call, and only looked
+defensible while the damage seemed limited to rendering: the cache was also serving the wrong post
+id, the wrong form metadata and the wrong menu highlight. Correctness outranks a stable diff.
 
-`capture.js` therefore clears the cache before every run, and treats a failure to do so as fatal
-rather than as a warning. Note this also means **`piecyfer-core`'s own automatic cache clearing is
-not sufficient** — its signature covers the widget and stylesheet *lists*, so adding a widget
-invalidates the cache but editing one does not.
+`capture.js` clears Elementor's caches before every run regardless, and treats a failure to do so
+as fatal rather than as a warning. Note this also means **`piecyfer-core`'s own automatic cache
+clearing is not sufficient** — its signature covers the widget and stylesheet *lists*, so adding a
+widget invalidates the cache but editing one does not.
 
 Two symptoms worth recognising, because they look like widget bugs and are not:
 
