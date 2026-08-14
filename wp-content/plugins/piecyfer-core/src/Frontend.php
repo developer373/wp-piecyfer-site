@@ -79,6 +79,7 @@ final class Frontend {
 		'piecyfer-handler-testimonial-carousel' => 'testimonial-carousel.js',
 		'piecyfer-handler-search-form'          => 'search-form.js',
 		'piecyfer-handler-gallery'              => 'gallery.js',
+		'piecyfer-handler-form'                 => 'form.js',
 	);
 
 	/**

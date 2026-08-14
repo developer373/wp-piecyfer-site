@@ -122,7 +122,7 @@ final class Plugin {
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_styles' ), 5 );
 		add_action( 'elementor/editor/before_enqueue_scripts', array( $this, 'register_styles' ), 5 );
 		add_action( 'admin_notices', array( $this, 'maybe_warn_untested_elementor' ) );
-		add_action( 'init', array( $this, 'maybe_clear_elementor_cache' ), 20 );
+		add_action( 'admin_init', array( $this, 'maybe_clear_elementor_cache' ), 20 );
 
 		/*
 		 * Form back end — src/Forms/.
@@ -138,6 +138,30 @@ final class Plugin {
 		 * full interlock and the cut-over checklist.
 		 */
 		Forms\Module::init();
+
+		/*
+		 * Frontend JS layer — src/Frontend.php.
+		 *
+		 * Self-gating behind PIECYFER_CORE_FRONTEND_JS (default OFF).
+		 * Safe to wire in now; remains dormant until cutover.
+		 */
+		Frontend::init();
+
+		/*
+		 * Theme Builder — src/ThemeBuilder/Module.php.
+		 *
+		 * Self-gating behind PIECYFER_THEME_BUILDER (default OFF) and
+		 * refuses to boot while Elementor Pro is active.
+		 */
+		ThemeBuilder\Module::boot();
+
+		/*
+		 * Popup — src/Popup/Module.php.
+		 *
+		 * Self-gating behind PIECYFER_POPUP (default OFF) and
+		 * refuses to boot while Elementor Pro is active.
+		 */
+		Popup\Module::boot();
 	}
 
 	/**
@@ -151,8 +175,9 @@ final class Plugin {
 	 * named Pro's `widget-search-form`, so our stylesheet was never enqueued and
 	 * the widget rendered unstyled the moment Pro's stylesheet was suppressed.
 	 *
-	 * The signature covers both lists, so adding a widget or renaming a
-	 * stylesheet invalidates the cache exactly once, on the next request.
+	 * Hooked to admin_init and CLI so it never clears CSS on a visitor front-end
+	 * request (which previously caused missing header/footer styles on the request
+	 * it fired on).
 	 */
 	public function maybe_clear_elementor_cache(): void {
 		$signature = md5( wp_json_encode( array( self::WIDGETS, self::STYLES, VERSION ) ) );
