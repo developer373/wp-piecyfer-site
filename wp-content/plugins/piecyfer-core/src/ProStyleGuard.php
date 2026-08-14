@@ -42,6 +42,7 @@ final class ProStyleGuard {
 		'gallery'              => 'widget-gallery',
 		'testimonial-carousel' => 'widget-testimonial-carousel',
 		'nav-menu'             => 'widget-nav-menu',
+		'form'                 => 'widget-form',
 		/*
 		 * Not a widget name — a second stylesheet the carousel widgets share, so
 		 * it is listed against the widget that pulls it in. Pro registers it as

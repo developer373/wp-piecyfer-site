@@ -42,6 +42,7 @@ final class Plugin {
 		Widgets\GalleryWidget::class,
 		Widgets\TestimonialCarouselWidget::class,
 		Widgets\NavMenuWidget::class,
+		Widgets\FormWidget::class,
 	);
 
 	/**
@@ -212,6 +213,7 @@ final class Plugin {
 		// Also carries the `e--pointer-*` geometry and the hide-scroll keyframe
 		// that Pro's gallery filter bar borrows from nav-menu's stylesheet.
 		'piecyfer-nav-menu'              => 'nav-menu.css',
+		'piecyfer-form'                  => 'form.css',
 	);
 
 	/**

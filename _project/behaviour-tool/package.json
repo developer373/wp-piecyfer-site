@@ -1,0 +1,25 @@
+{
+  "name": "piecyfer-behaviour-tool",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Record and diff what the site DOES, not what it looks like. Companion to ../pixel-tool, which is blind to behaviour.",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node run.js"
+  },
+  "//dependencies": [
+    "Deliberately EMPTY. Playwright is resolved from ../pixel-tool/node_modules",
+    "by an explicit relative require in run.js, so there is no npm install step",
+    "here and no second 300MB Chromium download.",
+    "",
+    "The reason is not disk space. Two independent installs drift onto two",
+    "different Chromium builds, and at that point 'the behaviour changed' and",
+    "'the browser changed' become impossible to tell apart. Sharing one install",
+    "means both harnesses always report on the same browser.",
+    "",
+    "If ../pixel-tool/node_modules is ever missing, run `npm install` in",
+    "_project/pixel-tool; run.js exits 2 with that instruction rather than",
+    "failing obscurely."
+  ],
+  "dependencies": {}
+}
