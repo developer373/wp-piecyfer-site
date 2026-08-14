@@ -13,11 +13,23 @@
  * compared against is worse than no baseline.
  */
 function normalise(html) {
-  return html
+  return sortInlineStyles(
+    html
+    // The harness injects its own freeze stylesheet, which page.content()
+    // captures. Without stripping it, editing those rules registers as a
+    // markup change on every page — the tool diffing itself.
+    // Matched either by the marker or by `caret-color: transparent`, which
+    // only the freeze stylesheet sets — so snapshots taken before the marker
+    // existed are handled too.
+    .replace(/<style[^>]*>(?:(?!<\/style>)[\s\S])*?(?:PIXEL-TOOL-FREEZE|caret-color:\s*transparent\s*!important)(?:(?!<\/style>)[\s\S])*?<\/style>/gi, '')
     // nonces and one-time tokens
     .replace(/(nonce["':=\s]+)[a-f0-9]{8,12}/gi, '$1__NONCE__')
     .replace(/(_wpnonce=)[a-f0-9]{8,12}/gi, '$1__NONCE__')
     .replace(/("(?:nonce|_?ajax_nonce|rest_nonce)"\s*:\s*")[^"]+/gi, '$1__NONCE__')
+    // Elementor emits a whole `"nonces": { … }` object whose keys are feature
+    // names rather than anything containing "nonce", e.g.
+    // "floatingButtonsClickTracking". Blank the object wholesale.
+    .replace(/("nonces"\s*:\s*\{)[^}]*/g, '$1__NONCES__')
     // asset cache-busters
     .replace(/([?&]ver=)[^"'&\s]+/gi, '$1__VER__')
     // elementor / plugin generated ids that are random per render
@@ -49,7 +61,35 @@ function normalise(html) {
     .replace(/\r\n/g, '\n')
     .replace(/[ \t]+$/gm, '')
     .replace(/\n{3,}/g, '\n\n')
-    .trim();
+    .trim()
+  );
+}
+
+/**
+ * Sort the declarations inside every inline `style="…"` attribute.
+ *
+ * Elementor's motion-effects layer sets `--translateY` and `transform` from
+ * JavaScript, and the two land in whichever order the script happened to run:
+ *
+ *   style="… --translateY: 0px; transform: translateY(var(--translateY));"
+ *   style="… transform: translateY(var(--translateY)); --translateY: 0px;"
+ *
+ * Identical to the browser, different as text. Sorting makes the comparison
+ * order-independent.
+ *
+ * Caveat worth stating: declaration order *can* be meaningful when a property
+ * is declared twice as a fallback. None of the inline styles on this site do
+ * that, and a duplicate-property inline style would be a bug in its own right,
+ * but this is a deliberate reduction in what we check.
+ */
+function sortInlineStyles(html) {
+  return html.replace(/style="([^"]*)"/g, (whole, body) => {
+    if (!body.includes(';')) return whole;
+    const parts = body.split(';').map(s => s.trim()).filter(Boolean);
+    if (parts.length < 2) return whole;
+    parts.sort();
+    return `style="${parts.join('; ')};"`;
+  });
 }
 
 module.exports = { normalise };

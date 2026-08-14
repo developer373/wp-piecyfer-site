@@ -58,6 +58,13 @@ const shotDir = path.join(outDir, 'shots');
  * CSS animations/transitions, carousels, lazy-load fades, caret blink.
  */
 const FREEZE_CSS = `
+  /* PIXEL-TOOL-FREEZE
+   *
+   * This block is injected by the harness and lands in page.content(), so it
+   * would otherwise show up as a markup change every time these rules are
+   * edited — the harness diffing itself. normalise() strips any <style>
+   * carrying this marker.
+   */
   *, *::before, *::after {
     animation-duration: 0s !important;
     animation-delay: 0s !important;
@@ -103,6 +110,25 @@ const FREEZE_CSS = `
    * non-deterministic pixels are not. The map is third-party content we are
    * not migrating, so nothing of ours goes unchecked.
    */
+  /*
+   * Neutralise scroll-driven motion effects.
+   *
+   * Elementor's motion-fx layers recompute --translateY and a scale transform
+   * from the scroll position, so a decorative parallax layer came out at a
+   * different scale in each capture — 0.04% of the page, but enough to fail a
+   * comparison. There is no "correct" static value to wait for: the effect is
+   * a function of scroll, and a full-page screenshot has no single scroll
+   * position.
+   *
+   * What we give up is small and was never really checkable in a static
+   * screenshot. The settings behind the effect are still compared, because the
+   * inline style carrying them is part of the markup diff.
+   */
+  .elementor-motion-effects-layer {
+    transform: none !important;
+    --translateY: 0px !important;
+  }
+
   .elementor-widget-google_maps,
   .elementor-custom-embed { background: #e5e3df !important; }
   iframe[src*="google.com/maps"],
@@ -265,6 +291,27 @@ async function settle(page) {
     );
   }).catch(() => {});
 
+  // Now that every image is in cache, make layout-dependent handlers run again.
+  //
+  // Elementor's posts handler compares each thumbnail's aspect ratio to its
+  // container and toggles `elementor-fit-height` accordingly. It runs on image
+  // load, so if it fired before an image had dimensions the class never
+  // appeared — leaving the blog listing bistable: same URL, two possible
+  // renderings, each internally stable. Neither the image counters nor
+  // screenshot-until-stable could see it, because both states were settled;
+  // only one was finished.
+  //
+  // A resize event is how Elementor itself re-triggers these handlers, so this
+  // asks for the same recalculation the browser would do, with everything
+  // loaded.
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('resize'));
+    if (window.jQuery) {
+      window.jQuery(window).trigger('resize');
+    }
+  }).catch(() => {});
+  await page.waitForTimeout(500);
+
   // Poll until three consecutive identical signatures, or give up.
   //
   // The carousel taming runs on *every* iteration, not once. Swiper in loop
@@ -308,6 +355,14 @@ async function settle(page) {
         imgs.length,
         imgs.filter(im => im.complete && im.naturalWidth > 0).length,
         document.body.scrollHeight,
+        // Total markup length catches DOM changes the counters miss — most
+        // importantly a class or inline style toggled by JS after load. The
+        // blog listing turned out to be bistable: a script adds a class that
+        // rounds the card corners and resizes the thumbnail, and a capture
+        // taken before it landed was internally stable, so neither the counters
+        // nor screenshot-until-stable noticed. Both states were "settled";
+        // only one was finished.
+        document.documentElement.outerHTML.length,
       ].join(':');
     }).catch(() => null);
 
