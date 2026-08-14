@@ -1,7 +1,7 @@
 {
   "label": "baseline",
   "base": "http://localhost/piecyfer",
-  "capturedAt": "2026-08-13T20:40:08.526Z",
+  "capturedAt": "2026-08-14T00:48:58.126Z",
   "pages": [
     {
       "path": "/",
@@ -20,8 +20,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 443511,
-      "ms": 108310
+      "htmlBytes": 440106,
+      "ms": 83391
     },
     {
       "path": "/home/",
@@ -40,8 +40,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 443511,
-      "ms": 98244
+      "htmlBytes": 440125,
+      "ms": 99426
     },
     {
       "path": "/about-piecyfer/",
@@ -60,8 +60,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 251133,
-      "ms": 58081
+      "htmlBytes": 228032,
+      "ms": 57479
     },
     {
       "path": "/our-team/",
@@ -80,8 +80,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 257152,
-      "ms": 54528
+      "htmlBytes": 234431,
+      "ms": 52306
     },
     {
       "path": "/why-choose-us/",
@@ -100,8 +100,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 262768,
-      "ms": 51454
+      "htmlBytes": 239679,
+      "ms": 52748
     },
     {
       "path": "/contact-us/",
@@ -120,8 +120,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 293397,
-      "ms": 49337
+      "htmlBytes": 271587,
+      "ms": 51962
     },
     {
       "path": "/hire-an-expert/",
@@ -140,8 +140,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 343564,
-      "ms": 65322
+      "htmlBytes": 321804,
+      "ms": 62636
     },
     {
       "path": "/privacy-policy/",
@@ -160,8 +160,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 236046,
-      "ms": 47188
+      "htmlBytes": 213239,
+      "ms": 52119
     },
     {
       "path": "/terms-conditions/",
@@ -180,8 +180,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 237091,
-      "ms": 45207
+      "htmlBytes": 214273,
+      "ms": 49797
     },
     {
       "path": "/web-app-development/",
@@ -200,8 +200,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 281041,
-      "ms": 55608
+      "htmlBytes": 259273,
+      "ms": 84881
     },
     {
       "path": "/mobile-app-development/",
@@ -220,8 +220,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 260229,
-      "ms": 51603
+      "htmlBytes": 238472,
+      "ms": 54566
     },
     {
       "path": "/enterprise-software-development/",
@@ -240,8 +240,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 273511,
-      "ms": 54143
+      "htmlBytes": 251754,
+      "ms": 53563
     },
     {
       "path": "/software-quality-testing/",
@@ -260,8 +260,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 273187,
-      "ms": 52826
+      "htmlBytes": 251427,
+      "ms": 56713
     },
     {
       "path": "/software-maintenance-and-support/",
@@ -280,8 +280,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 313549,
-      "ms": 53237
+      "htmlBytes": 291782,
+      "ms": 56226
     },
     {
       "path": "/software-migration/",
@@ -300,8 +300,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 271973,
-      "ms": 51918
+      "htmlBytes": 250211,
+      "ms": 55267
     },
     {
       "path": "/software-re-engineering/",
@@ -320,8 +320,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 273658,
-      "ms": 46809
+      "htmlBytes": 251887,
+      "ms": 53189
     },
     {
       "path": "/cloud-services/",
@@ -340,8 +340,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 273242,
-      "ms": 53919
+      "htmlBytes": 251475,
+      "ms": 54759
     },
     {
       "path": "/cms-solutions/",
@@ -360,8 +360,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 272249,
-      "ms": 60831
+      "htmlBytes": 250483,
+      "ms": 54327
     },
     {
       "path": "/crm-solutions/",
@@ -380,8 +380,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 272490,
-      "ms": 55952
+      "htmlBytes": 250732,
+      "ms": 50891
     },
     {
       "path": "/digital-marketing/",
@@ -400,8 +400,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 341087,
-      "ms": 62641
+      "htmlBytes": 319309,
+      "ms": 62825
     },
     {
       "path": "/emerging-tech/",
@@ -420,8 +420,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 365465,
-      "ms": 63650
+      "htmlBytes": 343707,
+      "ms": 96215
     },
     {
       "path": "/blogs/",
@@ -440,8 +440,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 260474,
-      "ms": 57463
+      "htmlBytes": 237218,
+      "ms": 57856
     },
     {
       "path": "/boosting-sales-with-a-powerful-crm-a-guide-for-us-businesses/",
@@ -460,8 +460,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 283756,
-      "ms": 58374
+      "htmlBytes": 260417,
+      "ms": 57907
     },
     {
       "path": "/building-high-performing-web-apps-10-easy-yet-important-tips/",
@@ -480,8 +480,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 280659,
-      "ms": 58450
+      "htmlBytes": 257319,
+      "ms": 55922
     },
     {
       "path": "/creating-engaging-mobile-apps-for-the-us-market-best-practices/",
@@ -500,8 +500,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 284533,
-      "ms": 59792
+      "htmlBytes": 261185,
+      "ms": 55686
     },
     {
       "path": "/crm-trends-in-2025-what-to-expect-in-the-future/",
@@ -520,8 +520,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 290095,
-      "ms": 57798
+      "htmlBytes": 266757,
+      "ms": 58222
     },
     {
       "path": "/mobile-app-development-in-the-age-of-ai-opportunities-and-challenges/",
@@ -540,8 +540,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 280827,
-      "ms": 54767
+      "htmlBytes": 257477,
+      "ms": 85844
     },
     {
       "path": "/sales-teams-spend-70-of-their-day-not-selling-heres-the-ai-stack-that-fixes-it/",
@@ -560,8 +560,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 289371,
-      "ms": 57725
+      "htmlBytes": 266023,
+      "ms": 60246
     },
     {
       "path": "/streamlining-operations-with-erp-softwares-real-world-case-studies/",
@@ -580,8 +580,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 275131,
-      "ms": 53500
+      "htmlBytes": 251792,
+      "ms": 56523
     },
     {
       "path": "/tailored-enterprise-software-solutions-a-guide-for-us-businesses/",
@@ -600,8 +600,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 285850,
-      "ms": 58756
+      "htmlBytes": 262496,
+      "ms": 57245
     },
     {
       "path": "/the-88-problem-why-most-ai-agent-pilots-never-reach-production-and-what-nvidias-latest-push-actually-solves/",
@@ -620,8 +620,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 290987,
-      "ms": 57947
+      "htmlBytes": 267648,
+      "ms": 56953
     },
     {
       "path": "/the-benefits-of-progressive-web-apps-for-us-businesses/",
@@ -640,8 +640,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 288523,
-      "ms": 56429
+      "htmlBytes": 265177,
+      "ms": 57495
     },
     {
       "path": "/the-legacy-integration-wall-why-60-of-ai-projects-stall-before-they-ship/",
@@ -660,8 +660,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 286767,
-      "ms": 57938
+      "htmlBytes": 263402,
+      "ms": 61464
     },
     {
       "path": "/we-reviewed-50-enterprise-ai-deployments-the-successful-ones-had-one-thing-in-common/",
@@ -680,8 +680,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 284896,
-      "ms": 58071
+      "htmlBytes": 261557,
+      "ms": 56797
     },
     {
       "path": "/why-ai-native-companies-are-outperforming-traditional-software-businesses/",
@@ -700,8 +700,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 274967,
-      "ms": 58019
+      "htmlBytes": 251628,
+      "ms": 84064
     },
     {
       "path": "/why-healthcare-companies-are-finally-ditching-legacy-systems-in-2026/",
@@ -720,8 +720,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 287291,
-      "ms": 57392
+      "htmlBytes": 263964,
+      "ms": 59158
     },
     {
       "path": "/why-healthcare-software-fails-without-security-first-architecture/",
@@ -740,8 +740,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 288295,
-      "ms": 72488
+      "htmlBytes": 264946,
+      "ms": 59484
     },
     {
       "path": "/?s=software",
@@ -760,8 +760,8 @@
       },
       "consoleErrors": [],
       "failedRequests": [],
-      "htmlBytes": 250738,
-      "ms": 67551
+      "htmlBytes": 227230,
+      "ms": 55899
     },
     {
       "path": "/this-url-does-not-exist-404-test/",
@@ -786,9 +786,9 @@
       "failedRequests": [
         "404 /this-url-does-not-exist-404-test/"
       ],
-      "htmlBytes": 237020,
-      "ms": 41797
+      "htmlBytes": 213684,
+      "ms": 49654
     }
   ],
-  "completedAt": "2026-08-13T21:18:21.743Z"
+  "completedAt": "2026-08-14T01:28:40.349Z"
 }

@@ -47,8 +47,17 @@ const slugsA = slugsIn(dirA);
 const slugsB = slugsIn(dirB);
 const isSubset = slugsB.size < slugsA.size && [...slugsB].every(s => slugsA.has(s));
 
+// Artefacts proven to differ between two captures of an unchanged site. They
+// are still compared and still reported; they just do not fail the run. See
+// known-flaky.json for the evidence behind each entry.
+let knownFlaky = {};
+try {
+  knownFlaky = JSON.parse(fs.readFileSync(path.join(__dirname, 'known-flaky.json'), 'utf8')).artefacts || {};
+} catch (e) { /* absent or malformed: treat everything as significant */ }
+
 const lines = [];
-let htmlChanged = 0, shotsChanged = 0, missing = 0, compared = 0, skipped = 0;
+const flakyLines = [];
+let htmlChanged = 0, shotsChanged = 0, missing = 0, compared = 0, skipped = 0, flakyHits = 0;
 
 // ------------------------------------------------------------------ markup
 lines.push('## Markup differences\n');
@@ -109,12 +118,29 @@ for (const f of shotsA) {
   });
   const ratio = n / (ia.width * ia.height);
   if (ratio > RATIO_TOLERANCE) {
-    shotsChanged++;
     fs.writeFileSync(path.join(outDir, f.replace(/\.png$/, '.diff.png')), PNG.sync.write(diff));
-    lines.push(`- **${f}** — ${n.toLocaleString()} px differ (${(ratio * 100).toFixed(3)}%) → \`${f.replace(/\.png$/, '.diff.png')}\``);
+    const entry = `- **${f}** — ${n.toLocaleString()} px differ (${(ratio * 100).toFixed(3)}%) → \`${f.replace(/\.png$/, '.diff.png')}\``;
+
+    if (knownFlaky[f]) {
+      flakyHits++;
+      flakyLines.push(`${entry}\n    _known flaky: ${knownFlaky[f].reason}_`);
+    } else {
+      shotsChanged++;
+      lines.push(entry);
+    }
   }
 }
 if (shotsChanged === 0) lines.push('_None — all screenshots identical within tolerance._');
+
+if (flakyHits) {
+  lines.push('\n### Known-flaky artefacts (reported, not failing)\n');
+  lines.push(...flakyLines);
+  lines.push(
+    '\n_Each of these was proven to differ between two captures of an unchanged site. ' +
+    'If one starts differing by a much larger amount than recorded, re-run the control ' +
+    'experiment rather than assuming it is still the same flake._'
+  );
+}
 
 // ------------------------------------------------- console & broken assets
 lines.push('\n## New console errors\n');
@@ -159,6 +185,7 @@ const header =
   `| Screenshots compared | ${compared} |\n` +
   `| Pages with markup changes | ${htmlChanged} |\n` +
   `| Screenshots with visual changes | ${shotsChanged} |\n` +
+  ( flakyHits ? `| Known-flaky artefacts (not failing) | ${flakyHits} |\n` : '' ) +
   `| Missing artefacts | ${missing} |\n` +
   `| New console errors | ${newErrors} |\n` +
   `| Newly broken assets | ${newBroken} |\n` +

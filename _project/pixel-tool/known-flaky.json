@@ -1,0 +1,29 @@
+{
+  "_readme": [
+    "Artefacts that differ between two captures of an UNCHANGED site.",
+    "",
+    "Each entry must record how it was proven flaky rather than caused by the",
+    "change under test. The proof is always the same control experiment:",
+    "capture the same page twice with the change REVERTED. If those two",
+    "disagree, the artefact is flaky and belongs here. If they agree, the",
+    "difference is real and does not.",
+    "",
+    "Listed artefacts are still compared and their pixel counts still reported",
+    "-- they just do not fail the run. That is deliberate: suppressing them",
+    "silently would hide a genuine regression that later lands on the same",
+    "artefact. Keep this list as short as the evidence allows, and re-test",
+    "entries when the harness changes.",
+    "",
+    "Markup is never suppressed. A markup change on a flaky artefact still",
+    "fails the comparison."
+  ],
+
+  "artefacts": {
+    "our-team@desktop.png": {
+      "reason": "Elementor motion-fx decorative dot layer renders its background at a slightly different scale between runs. The transform is already pinned by FREEZE_CSS and the markup is byte-identical, so what varies is how the layer's background is scaled against a container whose height settles marginally differently.",
+      "provenNotOurs": "baseline vs a fresh capture with piecyfer-core DEACTIVATED also differs, so no change of ours is involved.",
+      "magnitude": "~2,900 px, 0.04% of the page",
+      "firstSeen": "2026-08-14"
+    }
+  }
+}
