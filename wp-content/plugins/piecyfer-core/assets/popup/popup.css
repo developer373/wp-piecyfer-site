@@ -1,0 +1,97 @@
+/*
+ * PieCyfer popup stylesheet — replaces
+ * elementor-pro/assets/css/conditionals/popup.css.
+ *
+ * Enqueued under Pro's own handle, `e-popup-style`, so the printed
+ * <link id="e-popup-style-css"> keeps its id across the cutover and the only
+ * change the pixel harness sees is the href.
+ *
+ * Everything here styles a DOM that does not exist in the server's output. The
+ * markup PHP prints is a plain
+ *
+ *     <div data-elementor-type="popup" data-elementor-id="7718" …>
+ *
+ * which the JavaScript hides, detaches, and re-inserts inside a DialogsManager
+ * "lightbox" widget. `.elementor-popup-modal`, `.dialog-widget-content`,
+ * `.dialog-message` and `.dialog-close-button` are all built at runtime.
+ */
+
+/*
+ * Load-bearing, and the single most important rule in this file.
+ *
+ * The popup's markup is printed into the page at wp_footer, in the open. Without
+ * this rule the whole popup renders inline at the bottom of every page until the
+ * JavaScript detaches it — a flash of full-page content on every load, and a
+ * permanent one for anybody with JS disabled.
+ *
+ * `.elementor-edit-area` is the editor's own wrapper: inside the editor the
+ * popup must stay visible so it can be edited.
+ */
+[data-elementor-type=popup]:not(.elementor-edit-area) {
+  display: none;
+}
+
+[data-elementor-type=popup] .elementor-section-wrap:not(:empty) + #elementor-add-new-section {
+  display: none;
+}
+
+.elementor-popup-modal {
+  display: flex;
+  /*
+   * The modal root covers the viewport, so it would otherwise swallow every
+   * click on the page behind an overlay-less popup. The `overlay` control turns
+   * pointer events back on; see Document::register_layout_section().
+   */
+  pointer-events: none;
+  background-color: transparent;
+  user-select: auto;
+}
+
+.elementor-popup-modal .dialog-header, .elementor-popup-modal .dialog-buttons-wrapper {
+  display: none;
+}
+
+/*
+ * The close button starts hidden and the `close_button` control switches it to
+ * `display: flex`. That inversion is why turning the control off needs no rule
+ * of its own.
+ */
+.elementor-popup-modal .dialog-close-button {
+  display: none;
+  top: 20px;
+  margin-top: 0;
+  inset-inline-end: 20px;
+  opacity: 1;
+  z-index: 9999;
+  pointer-events: all;
+}
+
+.elementor-popup-modal .dialog-close-button svg {
+  fill: #1f2124;
+  height: 1em;
+  width: 1em;
+}
+
+.elementor-popup-modal .dialog-widget-content {
+  background-color: #FFFFFF;
+  width: initial;
+  overflow: visible;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 0;
+  box-shadow: none;
+  pointer-events: all;
+}
+
+.elementor-popup-modal .dialog-message {
+  width: 640px;
+  max-width: 100vw;
+  max-height: 100vh;
+  padding: 0;
+  overflow: auto;
+  display: flex;
+}
+
+.elementor-popup-modal .elementor {
+  width: 100%;
+}

@@ -1,0 +1,19 @@
+/*
+Theme Name: PieCyfer
+Theme URI: https://piecyfer.com/
+Author: PieCyfer
+Author URI: https://piecyfer.com/
+Description: The PieCyfer site theme. A deliberately small classic theme: Elementor Theme Builder owns the header, footer, single, archive, search and 404 documents, so this theme contributes the document wrappers, the design tokens, four stylesheets and the site JavaScript, and nothing else. Replaces the nulled (VamTam) Tecnologia theme and its companion plugin.
+Version: 1.0.0
+Requires at least: 6.0
+Tested up to: 6.8
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: piecyfer-theme
+Tags: one-column, full-width-template, featured-images, threaded-comments, translation-ready
+
+This stylesheet carries the theme header only and is deliberately NOT enqueued;
+the theme's CSS lives in assets/css/. The previous theme did the same, so
+enqueueing it here would add a stylesheet the site has never loaded.
+*/
