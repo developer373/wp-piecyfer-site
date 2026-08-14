@@ -43,6 +43,8 @@ final class Plugin {
 		Widgets\TestimonialCarouselWidget::class,
 		Widgets\NavMenuWidget::class,
 		Widgets\FormWidget::class,
+		Widgets\PostsWidget::class,
+		Widgets\ArchivePostsWidget::class,
 	);
 
 	/**
@@ -214,6 +216,7 @@ final class Plugin {
 		// that Pro's gallery filter bar borrows from nav-menu's stylesheet.
 		'piecyfer-nav-menu'              => 'nav-menu.css',
 		'piecyfer-form'                  => 'form.css',
+		'piecyfer-posts'                 => 'posts.css',
 	);
 
 	/**

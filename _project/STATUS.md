@@ -303,10 +303,19 @@ What de-risks it, and why it is worth the care:
   against files Pro generated, and the document-type registration — the whole reason those
   selectors stay `.elementor-171` rather than `body.elementor-page-171` — goes untested.
 
-Two things will fail at cutover unless built first: **archive-posts**, or `/category/*` and `/?s=`
-render an empty middle; and **popup 7718**, which has no display conditions and currently rides
-Pro's popup module into the manual queue. The popup appears on every captured page, so every
-baseline comparison fails until it is ported.
+**Correction — the popup claim above was wrong.** Popup 7718 does *not* appear in any capture, and
+its absence would not have failed a single comparison. `capture.js` records the post-JS DOM, and
+`popup.js` detaches the wrapper on init, so the markup only ever exists in the raw server response.
+Its display settings are literally empty — no triggers, no timing — so it never opens by itself; it
+opens only when a visitor clicks one of six buttons. What the baseline *does* hold, and what the
+port must keep, is those 5 action-hash hrefs on `/` and the `e-popup-style-css` link.
+
+The real cutover blocker in that area is **`post-7718.css`**, which is in `<head>` today and which
+nothing we can find is responsible for enqueuing — neither Pro's nor our locations manager, since
+both iterate conditions-matched documents and 7718 has no conditions. If it turns out to be
+Pro-owned, the popup loses all its styling at cutover. Trace it before flipping the switch.
+
+**archive-posts** was the other blocker and is now done, so `/category/*` and `/?s=` are covered.
 
 ---
 

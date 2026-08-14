@@ -1,0 +1,661 @@
+/**
+ * PieCyfer Core — posts / archive-posts widgets.
+ *
+ * Replaces Elementor Pro's `widget-posts` stylesheet. Written from the rendered
+ * structure rather than copied from Pro's minified bundle.
+ *
+ * ## What this file does NOT style
+ *
+ * Pro ships the `portfolio` widget's rules in the same stylesheet. That widget
+ * is not ported and has zero instances on this site, and its rules could not
+ * help it anyway: this file is enqueued by `get_style_depends()` on the two
+ * widgets below, so it only reaches a page that already renders a posts widget.
+ * A portfolio widget would ask for Pro's `widget-posts` handle, which
+ * ProStyleGuard suppresses. If `portfolio` is ever ported, its rules belong in
+ * its own stylesheet, not here.
+ *
+ * Nothing here styles `.vamtam-post__categories`, `.vamtam-post__tags` or the
+ * four `--vamtam-*` custom properties. Those belong to the theme
+ * (`themes/tecnologia/vamtam/assets/css/dist/elementor/elementor-all.css`) and
+ * the theme decision is a later phase. Our job is to keep emitting the class
+ * names and custom properties the theme targets — which the markup comparison
+ * in `_project/scripts/posts-markup-diff.php` proves we do.
+ *
+ * ## Two class names in here are written by JavaScript, not by PHP
+ *
+ * `elementor-has-item-ratio` (on the container) and `elementor-fit-height` (on
+ * a thumbnail) are added by the front-end handler after it reads the ratio back
+ * out of `getComputedStyle(el, ':after').content`. No server code emits them.
+ * The rules below must exist for the JS to have something to switch on.
+ *
+ * ## The em dash is not a typo
+ *
+ * `--load-more—spacing` uses U+2014 EM DASH, not a hyphen. It is Pro's own
+ * property name, it is what `PostsBaseWidget::register_load_more_message_style_controls()`
+ * writes into the generated CSS, and both ends have to agree. Do not "correct"
+ * it in either place.
+ *
+ * Hard-coded colours (#777, #adadad, #eaeaea, #69727d, #fff) are Pro's
+ * fallbacks. Every one is overridden per-widget by Elementor's generated CSS
+ * once the matching control is set; they only show through on a widget nobody
+ * has styled.
+ */
+
+/* -------------------------------------------------------------------------
+ * 1. WIDGET WRAPPER
+ *
+ * The ratio is published to JavaScript through `{{WRAPPER}}:after { content }`
+ * — a real pseudo-element with real content, which would otherwise be painted
+ * as a stray decimal number under the grid.
+ * ---------------------------------------------------------------------- */
+
+.elementor-widget-posts:after,
+.elementor-widget-archive-posts:after {
+	display: none;
+}
+
+/* -------------------------------------------------------------------------
+ * 2. THE GRID CONTAINER
+ *
+ * Masonry positions items absolutely from JS, so the items must not be
+ * stretched to a shared row height; every other layout wants exactly that.
+ * ---------------------------------------------------------------------- */
+
+.elementor-posts-container.elementor-posts-masonry {
+	align-items: flex-start;
+}
+
+.elementor-posts-container:not(.elementor-posts-masonry) {
+	align-items: stretch;
+}
+
+.elementor-posts-container .elementor-post {
+	margin: 0;
+	padding: 0;
+}
+
+/* `--read-more-alignment` is set to 1 by the `read_more_alignment` control.
+   Growing the excerpt — not the text block — is what pushes the Read More link
+   to a common baseline across cards of unequal length. Default 0 keeps the
+   excerpt its natural height. */
+.elementor-posts-container .elementor-post__excerpt {
+	flex-grow: var( --read-more-alignment, 0 );
+}
+
+/* -------------------------------------------------------------------------
+ * 3. THUMBNAILS
+ * ---------------------------------------------------------------------- */
+
+.elementor-posts-container .elementor-post__thumbnail {
+	overflow: hidden;
+}
+
+.elementor-posts-container .elementor-post__thumbnail img {
+	display: block;
+	width: 100%;
+	max-width: none;
+	max-height: none;
+	transition: filter 0.3s;
+}
+
+.elementor-posts-container .elementor-post__thumbnail__link {
+	display: block;
+	position: relative;
+	width: 100%;
+}
+
+/*
+ * Fixed-ratio mode. The link keeps the ratio (padding-bottom is written by the
+ * `item_ratio` control onto `.elementor-post__thumbnail`), and the thumbnail
+ * fills it absolutely.
+ *
+ * The half-pixel offsets and the 1.01 scale are a sub-pixel rounding guard: at
+ * fractional widths a centred, translated image otherwise leaves a hairline of
+ * background along one edge.
+ */
+.elementor-posts-container.elementor-has-item-ratio .elementor-post__thumbnail {
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+
+.elementor-posts-container.elementor-has-item-ratio .elementor-post__thumbnail img {
+	position: absolute;
+	top: calc( 50% + 1px );
+	left: calc( 50% + 1px );
+	height: auto;
+	transform: scale( 1.01 ) translate( -50%, -50% );
+}
+
+/* `elementor-fit-height` is added by the handler when the image is taller than
+   its box, so the constrained axis swaps. */
+.elementor-posts-container.elementor-has-item-ratio .elementor-post__thumbnail.elementor-fit-height img {
+	width: auto;
+	height: 100%;
+}
+
+/* -------------------------------------------------------------------------
+ * 4. THE POST ITEM
+ * ---------------------------------------------------------------------- */
+
+.elementor-posts .elementor-post {
+	display: flex;
+	flex-direction: column;
+	transition-duration: 0.25s;
+	transition-property: background, border, box-shadow;
+}
+
+.elementor-posts .elementor-post__thumbnail {
+	position: relative;
+}
+
+/* `--item-display` is flipped to `flex` by the `read_more_alignment` control;
+   until then the text block is a plain block and flex-grow is inert. */
+.elementor-posts .elementor-post__text {
+	display: var( --item-display, block );
+	flex-direction: column;
+	flex-grow: 1;
+}
+
+.elementor-posts .elementor-post__title {
+	margin: 0;
+	font-size: 18px;
+}
+
+.elementor-posts .elementor-post__excerpt {
+	margin-bottom: 10px;
+}
+
+.elementor-posts .elementor-post__excerpt p {
+	margin: 0;
+	color: #777;
+	font-size: 14px;
+	line-height: 1.5em;
+}
+
+.elementor-posts .elementor-post__meta-data {
+	margin-bottom: 13px;
+	color: #adadad;
+	font-size: 12px;
+	line-height: 1.3em;
+}
+
+/* align-self keeps the link at its own width inside the column, so the
+   underline and any hover background hug the text rather than the card. */
+.elementor-posts .elementor-post__read-more {
+	align-self: flex-start;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------
+ * 5. SKIN-SCOPED RULES
+ *
+ * Exactly one rule is scoped to a skin, and its reach on this site is
+ * counter-intuitive. `archive-posts` renders `--skin-classic` even under the
+ * `vamtam_classic` skin, because Posts_Archive_Skin_Classic::get_container_class()
+ * hard-codes it, while `posts` renders `--skin-vamtam_classic`. So this rule
+ * applies to the category, author and search archives and NOT to the blog
+ * listing. That asymmetry is live behaviour, reproduced deliberately in
+ * ArchiveClassicSkin — see 07-POSTS-SPEC.md §1.1.
+ * ---------------------------------------------------------------------- */
+
+.elementor-posts--skin-classic .elementor-post {
+	overflow: hidden;
+}
+
+.elementor-posts--skin-full_content article {
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.elementor-posts--skin-full_content article .elementor-post__thumbnail {
+	padding-bottom: 0;
+}
+
+.elementor-posts.elementor-posts--skin-archive_full_content article.elementor-post {
+	display: block;
+}
+
+/* The full-content skins render whole posts, which can contain their own links
+   and their own Elementor widgets. In the editor that would swallow clicks
+   meant for the canvas. */
+body.elementor-editor-active .elementor-posts--skin-full_content,
+body.elementor-editor-active .elementor-posts--skin-archive_full_content {
+	pointer-events: none;
+}
+
+body.elementor-editor-active .elementor-posts--skin-full_content .elementor-post__thumbnail__link,
+body.elementor-editor-active .elementor-posts--skin-archive_full_content .elementor-post__thumbnail__link {
+	display: none;
+}
+
+body.elementor-editor-active .elementor-posts--show-thumbnail .elementor-post__thumbnail__link {
+	display: block;
+}
+
+/* -------------------------------------------------------------------------
+ * 6. ALIGNMENT  (`alignment` control, prefix_class `elementor-posts--align-`)
+ * ---------------------------------------------------------------------- */
+
+.elementor-posts--align-left .elementor-post {
+	text-align: left;
+}
+
+.elementor-posts--align-center .elementor-post {
+	text-align: center;
+}
+
+.elementor-posts--align-right .elementor-post {
+	text-align: right;
+}
+
+/* -------------------------------------------------------------------------
+ * 7. IMAGE POSITION  (`thumbnail` control, prefix_class
+ *    `elementor-posts--thumbnail-`)
+ *
+ * `top` stacks; `left` / `right` turn the item into a row and reorder the
+ * thumbnail around the text. Two live instances depend on this: 93/0debbbe
+ * uses `right`, and the search template uses `none`.
+ * ---------------------------------------------------------------------- */
+
+.elementor-posts--thumbnail-top .elementor-post__thumbnail__link {
+	margin-bottom: 20px;
+}
+
+.elementor-posts--thumbnail-top .elementor-post__text {
+	width: 100%;
+}
+
+/* Under a fixed image width the auto margins are what actually honour the
+   alignment choice, because the link is a block, not inline content. */
+.elementor-posts--thumbnail-top.elementor-posts--align-left .elementor-post__thumbnail__link {
+	margin-right: auto;
+}
+
+.elementor-posts--thumbnail-top.elementor-posts--align-center .elementor-post__thumbnail__link {
+	margin-right: auto;
+	margin-left: auto;
+}
+
+.elementor-posts--thumbnail-top.elementor-posts--align-right .elementor-post__thumbnail__link {
+	margin-left: auto;
+}
+
+.elementor-posts--thumbnail-left .elementor-post,
+.elementor-posts--thumbnail-right .elementor-post {
+	flex-direction: row;
+}
+
+.elementor-posts--thumbnail-left .elementor-post__thumbnail__link,
+.elementor-posts--thumbnail-right .elementor-post__thumbnail__link {
+	flex-shrink: 0;
+	width: 25%;
+}
+
+/* `order` rather than `row-reverse`, so the text keeps its natural source order
+   for a screen reader while the image moves. */
+.elementor-posts--thumbnail-left .elementor-post__thumbnail__link {
+	order: 0;
+	margin-right: 20px;
+}
+
+.elementor-posts--thumbnail-right .elementor-post__thumbnail__link {
+	order: 5;
+	margin-left: 20px;
+}
+
+/*
+ * `none` hides the link rather than skipping it. The skin still renders the
+ * markup in the editor (render_thumbnail() only returns early outside edit
+ * mode), so the editor needs a way to keep the slot out of the layout.
+ */
+.elementor-posts--thumbnail-none .elementor-posts-container .elementor-post__thumbnail__link {
+	display: none;
+}
+
+/* -------------------------------------------------------------------------
+ * 8. CARDS SKIN
+ *
+ * No saved instance selects `cards` or `archive_cards`, but both skins stay
+ * registered — the bucket is keyed by widget name and an unfilled slot is a
+ * slot somebody else can take. These rules exist so choosing the skin in the
+ * editor produces the layout it has always produced.
+ * ---------------------------------------------------------------------- */
+
+.elementor-posts .elementor-post__card {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	min-height: 100%;
+	overflow: hidden;
+	background-color: #fff;
+	border: 0 solid #69727d;
+	border-radius: 3px;
+	transition: all 0.25s;
+}
+
+/* preserve-3d promotes the thumbnail to its own layer, which is what keeps the
+   zoom-on-hover transitions off the main thread. */
+.elementor-posts .elementor-post__card .elementor-post__thumbnail {
+	position: relative;
+	-webkit-transform-style: preserve-3d;
+	transform-style: preserve-3d;
+}
+
+/* The extra pixel hides the seam the scaled/translated image can leave against
+   the card's rounded corner. */
+.elementor-posts .elementor-post__card .elementor-post__thumbnail img {
+	width: calc( 100% + 1px );
+}
+
+.elementor-posts .elementor-post__card .elementor-post__text {
+	margin-top: 20px;
+	margin-bottom: 0;
+	padding: 0 30px;
+}
+
+.elementor-posts .elementor-post__card .elementor-post__title {
+	font-size: 21px;
+}
+
+.elementor-posts .elementor-post__card .elementor-post__title,
+.elementor-posts .elementor-post__card .elementor-post__excerpt {
+	margin-bottom: 25px;
+}
+
+.elementor-posts .elementor-post__card .elementor-post__excerpt {
+	line-height: 1.7;
+}
+
+.elementor-posts .elementor-post__card .elementor-post__read-more {
+	display: inline-block;
+	margin-bottom: 20px;
+}
+
+.elementor-posts .elementor-post__card .elementor-post__read-more,
+.elementor-posts .elementor-post__card .elementor-post__badge {
+	text-transform: uppercase;
+}
+
+.elementor-posts .elementor-post__card .elementor-post__meta-data {
+	margin-bottom: 0;
+	padding: 15px 30px;
+	border-top: 1px solid #eaeaea;
+}
+
+.elementor-posts .elementor-post__card .elementor-post__meta-data span + span:before {
+	margin: 0 5px;
+}
+
+/* Pushes the meta bar to the foot of the card so the rule above it lines up
+   across a row. Masonry cards have no shared height, so it is excluded. */
+.elementor-posts .elementor-posts--skin-cards:not(.elementor-posts-masonry) .elementor-post__meta-data,
+.elementor-posts--thumbnail-top .elementor-posts--skin-cards:not(.elementor-posts-masonry) .elementor-post__meta-data {
+	margin-top: auto;
+}
+
+.elementor-posts .elementor-post__badge {
+	position: absolute;
+	top: 0;
+	margin: 20px;
+	padding: 0.6em 1.2em;
+	background: #69727d;
+	border-radius: 999px;
+	color: #fff;
+	font-size: 12px;
+	font-weight: 400;
+	line-height: 1;
+}
+
+/*
+ * The avatar straddles the image/text boundary: a zero-height, non-interactive
+ * strip that the image is pulled up out of, so it overlaps without reserving
+ * any space. `pointer-events` is restored on the image itself so the avatar
+ * stays clickable while the strip does not block the card beneath it.
+ */
+.elementor-posts .elementor-post__avatar {
+	position: relative;
+	top: -25px;
+	width: 100%;
+	height: 0;
+	padding: 0 30px;
+	pointer-events: none;
+}
+
+.elementor-posts .elementor-post__avatar img {
+	width: 60px;
+	border-radius: 50%;
+	transform: translateY( -50% );
+	pointer-events: all;
+}
+
+/* With no image there is nothing to overlap, so the strip becomes an ordinary
+   block again. */
+.elementor-posts--thumbnail-none .elementor-post__card .elementor-post__avatar {
+	position: static;
+	height: auto;
+	padding-top: 0;
+}
+
+.elementor-posts--thumbnail-none .elementor-post__card .elementor-post__avatar img.avatar {
+	transform: translateY( 0 );
+	vertical-align: bottom;
+}
+
+.elementor-posts--show-avatar .elementor-post__thumbnail__link {
+	margin-bottom: 25px;
+}
+
+/* -------------------------------------------------------------------------
+ * 9. CARD HOVER EFFECTS
+ * ---------------------------------------------------------------------- */
+
+.elementor-posts__hover-gradient .elementor-post__card .elementor-post__thumbnail__link:after {
+	content: "";
+	display: block;
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	height: 100%;
+	background-image: linear-gradient( 0deg, rgba( 0, 0, 0, 0.35 ), transparent 75% );
+	background-repeat: no-repeat;
+	opacity: 1;
+	transition: all 0.3s ease-out;
+}
+
+.elementor-posts__hover-gradient .elementor-post__card:hover .elementor-post__thumbnail__link:after {
+	opacity: 0.5;
+}
+
+/*
+ * Zoom animates the image's own width/height rather than a transform, because
+ * the thumbnail box is `overflow: hidden` and a transform would be clipped
+ * against the pre-zoom box. `elementor-fit-height` swaps which axis is driven,
+ * for the same reason as in section 3.
+ */
+.elementor-posts__hover-zoom-in .elementor-post__thumbnail img,
+.elementor-posts__hover-zoom-out .elementor-post__thumbnail img {
+	transition: filter 0.3s, width 1s cubic-bezier( 0, 0.25, 0.07, 1 ), height 1s cubic-bezier( 0, 0.25, 0.07, 1 );
+}
+
+.elementor-posts__hover-zoom-in .elementor-post__card .elementor-post__thumbnail.elementor-fit-height img {
+	height: 100%;
+}
+
+.elementor-posts__hover-zoom-in .elementor-post__card .elementor-post__thumbnail:not(.elementor-fit-height) img {
+	width: calc( 100% + 1px );
+}
+
+.elementor-posts__hover-zoom-in .elementor-post__card:hover .elementor-post__thumbnail.elementor-fit-height img {
+	height: 115%;
+}
+
+.elementor-posts__hover-zoom-in .elementor-post__card:hover .elementor-post__thumbnail:not(.elementor-fit-height) img {
+	width: 115%;
+}
+
+.elementor-posts__hover-zoom-out .elementor-post__card .elementor-post__thumbnail.elementor-fit-height img {
+	height: 115%;
+}
+
+.elementor-posts__hover-zoom-out .elementor-post__card .elementor-post__thumbnail:not(.elementor-fit-height) img {
+	width: 115%;
+}
+
+.elementor-posts__hover-zoom-out .elementor-post__card:hover .elementor-post__thumbnail.elementor-fit-height img {
+	height: 100%;
+}
+
+.elementor-posts__hover-zoom-out .elementor-post__card:hover .elementor-post__thumbnail:not(.elementor-fit-height) img {
+	width: calc( 100% + 1px );
+}
+
+.elementor-card-shadow-yes .elementor-post__card {
+	box-shadow: 0 0 10px 0 rgba( 0, 0, 0, 0.15 );
+}
+
+.elementor-card-shadow-yes .elementor-post__card:hover {
+	box-shadow: 0 0 30px 0 rgba( 0, 0, 0, 0.15 );
+}
+
+/* -------------------------------------------------------------------------
+ * 10. LOAD MORE
+ *
+ * Six of the fifteen saved instances use `load_more_on_click`, and no instance
+ * uses numbered pagination — so everything below is live on this site and
+ * `.elementor-pagination` never renders at all.
+ *
+ * The state classes (`e-load-more-pagination-loading`, `-end`,
+ * `e-load-more-no-spinner`) are written onto the widget wrapper by the
+ * front-end handler, not by PHP.
+ *
+ * Every rule is scoped through `> .elementor-widget-container`. That wrapper is
+ * not optional here: the `e_optimized_markup` experiment is active on this site
+ * and would remove it for a widget that opts in, which is exactly why
+ * PostsBaseWidget does not implement `has_widget_inner_wrapper()`. Two saved
+ * `custom_css` rules depend on the same wrapper.
+ * ---------------------------------------------------------------------- */
+
+.elementor-widget-posts.load-more-align-start .elementor-button-wrapper,
+.elementor-widget-archive-posts.load-more-align-start .elementor-button-wrapper {
+	text-align: start;
+}
+
+.elementor-widget-posts.load-more-align-center .elementor-button-wrapper,
+.elementor-widget-archive-posts.load-more-align-center .elementor-button-wrapper {
+	text-align: center;
+}
+
+.elementor-widget-posts.load-more-align-end .elementor-button-wrapper,
+.elementor-widget-archive-posts.load-more-align-end .elementor-button-wrapper {
+	text-align: end;
+}
+
+.elementor-widget-posts.load-more-align-justify .elementor-button,
+.elementor-widget-archive-posts.load-more-align-justify .elementor-button {
+	width: 100%;
+}
+
+.elementor-widget-posts > .elementor-widget-container > .elementor-button-wrapper,
+.elementor-widget-archive-posts > .elementor-widget-container > .elementor-button-wrapper {
+	margin-top: var( --load-more—spacing, 30px );
+}
+
+.elementor-widget-posts > .elementor-widget-container > .elementor-button-wrapper .elementor-button,
+.elementor-widget-archive-posts > .elementor-widget-container > .elementor-button-wrapper .elementor-button {
+	position: relative;
+	cursor: pointer;
+}
+
+/*
+ * The spinner lives outside the button in the markup but is displayed over it:
+ * while loading, the button's content is made invisible (not removed, so the
+ * button keeps its size) and the spinner is centred on top.
+ */
+.elementor-widget-posts > .elementor-widget-container .e-load-more-spinner,
+.elementor-widget-archive-posts > .elementor-widget-container .e-load-more-spinner {
+	display: flex;
+}
+
+.elementor-widget-posts > .elementor-widget-container > .elementor-button-wrapper .e-load-more-spinner,
+.elementor-widget-archive-posts > .elementor-widget-container > .elementor-button-wrapper .e-load-more-spinner {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin: inherit;
+	transform: translate( -50%, -50% );
+}
+
+.elementor-widget-posts > .elementor-widget-container .e-load-more-spinner i,
+.elementor-widget-posts > .elementor-widget-container .e-load-more-spinner svg,
+.elementor-widget-archive-posts > .elementor-widget-container .e-load-more-spinner i,
+.elementor-widget-archive-posts > .elementor-widget-container .e-load-more-spinner svg {
+	display: none;
+	margin: 0 auto;
+}
+
+.elementor-widget-posts > .elementor-widget-container .e-load-more-spinner i,
+.elementor-widget-archive-posts > .elementor-widget-container .e-load-more-spinner i {
+	color: var( --load-more-spinner-color );
+}
+
+.elementor-widget-posts > .elementor-widget-container .e-load-more-spinner svg,
+.elementor-widget-archive-posts > .elementor-widget-container .e-load-more-spinner svg {
+	width: 1em;
+	height: 1em;
+	fill: var( --load-more-spinner-color );
+}
+
+.elementor-widget-posts.e-load-more-pagination-loading > .elementor-widget-container,
+.elementor-widget-archive-posts.e-load-more-pagination-loading > .elementor-widget-container {
+	cursor: default;
+}
+
+.elementor-widget-posts.e-load-more-pagination-loading > .elementor-widget-container .e-load-more-spinner,
+.elementor-widget-archive-posts.e-load-more-pagination-loading > .elementor-widget-container .e-load-more-spinner {
+	margin-top: var( --load-more—spacing, 30px );
+}
+
+.elementor-widget-posts.e-load-more-pagination-loading > .elementor-widget-container .e-load-more-spinner i,
+.elementor-widget-posts.e-load-more-pagination-loading > .elementor-widget-container .e-load-more-spinner svg,
+.elementor-widget-archive-posts.e-load-more-pagination-loading > .elementor-widget-container .e-load-more-spinner i,
+.elementor-widget-archive-posts.e-load-more-pagination-loading > .elementor-widget-container .e-load-more-spinner svg {
+	display: flex;
+}
+
+.elementor-widget-posts.e-load-more-pagination-loading > .elementor-widget-container > .elementor-button-wrapper .elementor-button-content-wrapper,
+.elementor-widget-archive-posts.e-load-more-pagination-loading > .elementor-widget-container > .elementor-button-wrapper .elementor-button-content-wrapper {
+	visibility: hidden;
+}
+
+/* "Loading" with no spinner configured must not blank the button label — there
+   would be nothing left to look at. */
+.elementor-widget-posts.e-load-more-no-spinner > .elementor-widget-container > .elementor-button-wrapper .elementor-button-content-wrapper,
+.elementor-widget-archive-posts.e-load-more-no-spinner > .elementor-widget-container > .elementor-button-wrapper .elementor-button-content-wrapper {
+	visibility: visible;
+}
+
+/* Last page reached: the button is replaced by the message, which is hidden
+   until then. On this site the message is empty — the custom-message switcher
+   is unset on every instance — so what the visitor sees is the button simply
+   going away. */
+.elementor-widget-posts.e-load-more-pagination-end > .elementor-widget-container > .elementor-button-wrapper,
+.elementor-widget-archive-posts.e-load-more-pagination-end > .elementor-widget-container > .elementor-button-wrapper {
+	display: none;
+}
+
+.elementor-widget-posts > .elementor-widget-container .e-load-more-message,
+.elementor-widget-archive-posts > .elementor-widget-container .e-load-more-message {
+	display: none;
+	margin-top: var( --load-more—spacing, 30px );
+	color: var( --load-more-message-color );
+	text-align: var( --load-more-message-alignment, center );
+}
+
+.elementor-widget-posts.e-load-more-pagination-end > .elementor-widget-container > .e-load-more-message,
+.elementor-widget-archive-posts.e-load-more-pagination-end > .elementor-widget-container > .e-load-more-message {
+	display: block;
+}

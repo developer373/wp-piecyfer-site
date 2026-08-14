@@ -154,10 +154,13 @@ foreach ( $expected as $class ) {
  * third-party skin is a decision on the record rather than an oversight.
  */
 $allowed_foreign_skins = array(
-	// Still VamTam's until `posts` / `archive-posts` are rebuilt. Tracked in
-	// _project/07-POSTS-SPEC.md; remove these two lines when they are ours.
-	'posts:vamtam_classic',
-	'archive-posts:vamtam_classic',
+	/*
+	 * Empty, and it must stay that way unless someone deliberately adds an
+	 * entry. The two VamTam skins that used to sit here came out the moment
+	 * posts/archive-posts were registered — leaving them would have meant the
+	 * gate happily approving a run where VamTam's skin, not ours, was drawing
+	 * every post.
+	 */
 );
 
 echo "\n=== SKIN GATE ===\n";
