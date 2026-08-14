@@ -327,3 +327,49 @@ rendering. Another false pass, and the most expensive one yet: it would have shi
 
 Fixed by registering above VamTam and by making `scripts/which-implementation.php` a gate rather
 than a report — it must confirm our class actually serves every name in `Plugin::WIDGETS`.
+
+---
+
+## Resume here — paused 2026-08-14
+
+**The site is healthy and the repo is clean.** Home and /contact-us/ both 200, no PHP errors,
+both takeover gates green (14 widgets served by piecyfer-core, every skin accounted for), zero
+uncommitted tracked changes at `e48d7913`.
+
+Everything built but not yet switched on — the Theme Builder, the JavaScript layer — is behind a
+default-off switch and nothing calls its boot/init. The running site does not touch that code.
+
+### Work in progress on disk, deliberately NOT committed
+
+Four agents were stopped mid-task. Their output is untracked, incomplete, and inert — nothing
+loads it. Treat these as drafts to finish, not as work to trust:
+
+| Path | State |
+|---|---|
+| `src/Widgets/PostsWidget.php`, `src/Skins/` | control parity reported exact, markup comparison not run |
+| `themes/piecyfer-theme/` | templates part-written |
+| `src/Popup/` | control coverage check not run |
+| `_project/behaviour-tool/` | tests written, **the `pro-active` reference run never completed** |
+
+### Do these first, in this order
+
+1. **Record the behaviour reference while Pro still works.** `_project/behaviour-tool/` exists but
+   `results/pro-active.json` does not. This is the only window to capture what the site actually
+   *does* — once Pro is deactivated the reference is unrecoverable. Everything about the JS layer
+   depends on it.
+2. **Verify the JS layer against that reference.** It is written and syntax-clean and has never
+   been executed. Syntax-clean is not working.
+3. **Re-run the visual control on a quiet machine** (task #20). `p4g-form2` showed two visual
+   diffs — `blogs@tablet` at exactly 208,645 px and `our-team@desktop` at 2,905 px — both while
+   four agents were running, which is the documented cause. Likely load, *not proven*.
+4. Finish `posts` / `archive-posts`, then the form back end.
+
+### Do not forget
+
+- The cutover is **atomic**: Pro out, Theme Builder and JS layer on, in one commit, and only once
+  posts, archive-posts, the form back end, the popup and the JS layer are all done.
+- Our own `maybe_clear_elementor_cache()` still strips the header and footer stylesheets from the
+  request it fires on (task #19). Confirmed, reproduced, then confirmed clean on the next request.
+  On a live site that is the first visitor after a deploy.
+- 32 real CVs under `wp-content/uploads/elementor/forms` still fetch with HTTP 200 and no
+  authentication (task #15).
