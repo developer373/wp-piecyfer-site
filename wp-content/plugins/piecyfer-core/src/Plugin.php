@@ -123,6 +123,21 @@ final class Plugin {
 		add_action( 'elementor/editor/before_enqueue_scripts', array( $this, 'register_styles' ), 5 );
 		add_action( 'admin_notices', array( $this, 'maybe_warn_untested_elementor' ) );
 		add_action( 'init', array( $this, 'maybe_clear_elementor_cache' ), 20 );
+
+		/*
+		 * Form back end — src/Forms/.
+		 *
+		 * Module::init() is a no-op unless the master switch is on:
+		 *
+		 *     define( 'PIECYFER_FORMS_ENABLED', true );        // wp-config.php
+		 * or  add_filter( 'piecyfer/forms/enabled', '__return_true' );
+		 *
+		 * Even when enabled, it refuses to register the AJAX endpoint while
+		 * Elementor Pro's forms module is loaded — two handlers on the same
+		 * action would send every submission twice. See Forms\Module for the
+		 * full interlock and the cut-over checklist.
+		 */
+		Forms\Module::init();
 	}
 
 	/**
