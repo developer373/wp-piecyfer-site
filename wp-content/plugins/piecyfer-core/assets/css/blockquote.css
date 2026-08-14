@@ -1,0 +1,191 @@
+/*
+ * Blockquote widget styles.
+ *
+ * Written from the computed styles of the live pages rather than copied out of
+ * Elementor Pro's widget-blockquote.css. Pro is GPL so copying would be legal,
+ * but the copy on this server came from a nulled build, and re-shipping code of
+ * unknown provenance is the exact dependency this plugin exists to remove.
+ *
+ * The values below were read off the rendered site with
+ * getComputedStyle() while Pro was still active, so the target is observed
+ * behaviour, not a guess — and the pixel harness proves the result.
+ *
+ * Elementor generates per-element rules from the widget's controls on top of
+ * this file. Anything a control can set is therefore left at a sensible base
+ * here and overridden per instance; hard-coding it would beat the control.
+ */
+
+.elementor-blockquote {
+	margin: 0;
+	font-style: normal;
+	transition-property: border, background-color, box-shadow;
+	transition-duration: 0.3s;
+}
+
+.elementor-blockquote__content {
+	margin: 0;
+}
+
+.elementor-blockquote__author {
+	font-weight: 700;
+	font-style: normal;
+	display: block;
+}
+
+/*
+ * The footer holds the author and the tweet button. It is flex with
+ * space-between so the button sits opposite the citation; with the button off
+ * — as it is on every instance on this site — the citation simply sits alone.
+ */
+.e-q-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: 12px;
+}
+
+/* --- skin: border ------------------------------------------------------- */
+
+.elementor-blockquote--skin-border .elementor-blockquote {
+	border-style: solid;
+	border-width: 0;
+	border-left-width: 7px;
+	padding-left: 20px;
+}
+
+body.rtl .elementor-blockquote--skin-border .elementor-blockquote {
+	border-left-width: 0;
+	border-right-width: 7px;
+	padding-left: 0;
+	padding-right: 20px;
+}
+
+/* --- skin: quotation ---------------------------------------------------- */
+
+/*
+ * The opening quotation mark is a ::before, not an image: 100px Times New Roman
+ * at weight 900, clipped to 0.6em tall so the glyph's descender does not push
+ * the content down. Both the size and the clip are what the live site computes.
+ */
+.elementor-blockquote--skin-quotation .elementor-blockquote::before {
+	content: "\201C";
+	display: block;
+	font-family: "Times New Roman", Times, serif;
+	font-size: 100px;
+	font-weight: 900;
+	line-height: 1;
+	height: 0.6em;
+}
+
+.elementor-blockquote--skin-quotation .elementor-blockquote__content {
+	margin-top: 15px;
+}
+
+/* --- skin: boxed -------------------------------------------------------- */
+
+.elementor-blockquote--skin-boxed .elementor-blockquote {
+	padding: 30px;
+}
+
+/* --- skin: clean -------------------------------------------------------- */
+
+/* Deliberately empty of layout: "clean" is the absence of a frame. Content
+ * typography still comes from the controls. */
+
+/* --- alignment ---------------------------------------------------------- */
+
+.elementor-blockquote--align-left .elementor-blockquote {
+	text-align: left;
+}
+
+.elementor-blockquote--align-center .elementor-blockquote {
+	text-align: center;
+}
+
+.elementor-blockquote--align-center .e-q-footer {
+	justify-content: center;
+	flex-direction: column;
+}
+
+.elementor-blockquote--align-right .elementor-blockquote {
+	text-align: right;
+}
+
+.elementor-blockquote--align-right .e-q-footer {
+	flex-direction: row-reverse;
+}
+
+/* --- tweet button ------------------------------------------------------- */
+
+.elementor-blockquote__tweet-button {
+	display: flex;
+	align-items: center;
+	position: relative;
+	justify-content: center;
+	overflow: hidden;
+	text-decoration: none;
+	font-size: 15px;
+	transition-property: background-color, color;
+	transition-duration: 0.2s;
+	flex-shrink: 0;
+}
+
+.elementor-blockquote__tweet-button span {
+	font-size: 1em;
+}
+
+.elementor-blockquote__tweet-button i,
+.elementor-blockquote__tweet-button svg {
+	font-size: 1em;
+	width: 1em;
+	height: 1em;
+}
+
+.elementor-blockquote__tweet-button i + span,
+.elementor-blockquote__tweet-button svg + span {
+	margin-left: 0.5em;
+}
+
+.elementor-blockquote--button-skin-classic .elementor-blockquote__tweet-button {
+	padding: 0.7em 1.2em;
+	border-radius: 100em;
+}
+
+.elementor-blockquote--button-skin-bubble .elementor-blockquote__tweet-button {
+	padding: 0.7em 1.2em;
+	border-radius: 0.3em;
+}
+
+.elementor-blockquote--button-skin-bubble .elementor-blockquote__tweet-button::before {
+	content: "";
+	position: absolute;
+	inset-inline-start: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	border: 0.5em solid transparent;
+}
+
+.elementor-blockquote--button-skin-link .elementor-blockquote__tweet-button {
+	background: transparent;
+	padding: 0;
+}
+
+/* The "official" colour source is Twitter's own palette; "custom" is driven
+ * entirely by controls, so it must not be given values here. */
+.elementor-blockquote--button-color-official .elementor-blockquote__tweet-button {
+	background-color: #1da1f2;
+	color: #fff;
+}
+
+.elementor-blockquote--button-color-official .elementor-blockquote__tweet-button svg {
+	fill: #fff;
+}
+
+.elementor-blockquote--button-color-official.elementor-blockquote--button-skin-link .elementor-blockquote__tweet-button {
+	background-color: transparent;
+	color: #1da1f2;
+}
+
+.elementor-blockquote--button-color-official.elementor-blockquote--button-skin-link .elementor-blockquote__tweet-button svg {
+	fill: #1da1f2;
+}

@@ -174,10 +174,14 @@ final class SiteLogoWidget extends Widget_Image {
 	}
 
 	/**
+	 * Must stay `protected` and untyped in its parameter: Widget_Image declares
+	 * `protected function get_link_url( $settings )`, and PHP rejects both a
+	 * narrower visibility and an added parameter type on an override.
+	 *
 	 * @param array<string,mixed> $settings
 	 * @return array{url:string}|false
 	 */
-	private function get_link_url( array $settings ) {
+	protected function get_link_url( $settings ) {
 		switch ( $settings['link_to'] ?? '' ) {
 			case 'none':
 				return false;

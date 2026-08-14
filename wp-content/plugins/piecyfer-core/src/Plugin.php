@@ -30,6 +30,12 @@ final class Plugin {
 	 */
 	private const WIDGETS = array(
 		Widgets\Template::class,
+		Widgets\PostTitleWidget::class,
+		Widgets\ArchiveTitleWidget::class,
+		Widgets\SiteLogoWidget::class,
+		Widgets\PostContentWidget::class,
+		Widgets\PostCommentsWidget::class,
+		Widgets\BlockquoteWidget::class,
 	);
 
 	public static function instance(): Plugin {
@@ -61,6 +67,11 @@ final class Plugin {
 		// be verified against the baseline before anything depends on it.
 		DynamicTags\Manager::init();
 		add_action( 'elementor/frontend/after_enqueue_styles', array( $this, 'enqueue_frontend' ) );
+
+		// Registration must happen on both the front end and in the editor, and
+		// before Elementor resolves each widget's get_style_depends().
+		add_action( 'wp_enqueue_scripts', array( $this, 'register_styles' ), 5 );
+		add_action( 'elementor/editor/before_enqueue_scripts', array( $this, 'register_styles' ), 5 );
 		add_action( 'admin_notices', array( $this, 'maybe_warn_untested_elementor' ) );
 	}
 
@@ -101,15 +112,49 @@ final class Plugin {
 	}
 
 	/**
+	 * Stylesheets, keyed by handle.
+	 *
+	 * Registered — not enqueued. Each widget names the handles it needs in
+	 * get_style_depends(), and Elementor enqueues them only on pages where that
+	 * widget actually appears. Elementor Pro ships one stylesheet per widget but
+	 * loads them more eagerly; owning this code lets us be strict about it,
+	 * which is a page-weight win that costs nothing.
+	 *
+	 * @var array<string,string> handle => file under assets/css/
+	 */
+	private const STYLES = array(
+		'piecyfer-blockquote' => 'blockquote.css',
+	);
+
+	/**
+	 * Register stylesheets early enough for get_style_depends() to resolve them.
+	 *
+	 * Version is the file's mtime rather than the plugin version, so editing a
+	 * stylesheet busts the cache during development without a version bump —
+	 * and two deploys of the same version never serve stale CSS.
+	 */
+	public function register_styles(): void {
+		foreach ( self::STYLES as $handle => $file ) {
+			$path = PIECYFER_CORE_DIR . 'assets/css/' . $file;
+			if ( ! file_exists( $path ) ) {
+				$this->log( "missing stylesheet: {$file}" );
+				continue;
+			}
+			wp_register_style(
+				$handle,
+				PIECYFER_CORE_URL . 'assets/css/' . $file,
+				array(),
+				(string) filemtime( $path )
+			);
+		}
+	}
+
+	/**
 	 * Front-end assets.
 	 *
-	 * Intentionally does nothing yet. When widgets land, each one enqueues its
-	 * own CSS/JS only on pages where it is actually present — the conditional
-	 * loading Elementor Pro does not do, and one of the free performance wins
-	 * of owning this code.
+	 * Nothing global by design — everything is per-widget via get_style_depends().
 	 */
 	public function enqueue_frontend(): void {
-		// No global stylesheet by design. See Widgets\AbstractWidget::enqueue_assets().
 	}
 
 	/**
