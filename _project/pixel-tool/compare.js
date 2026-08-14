@@ -73,6 +73,38 @@ for (const f of htmlA) {
   const sb = fs.readFileSync(pb, 'utf8');
   if (sa === sb) continue;
 
+  // Asset ORDER, with an identical set, is reported but does not fail.
+  //
+  // Elementor records the style and script handles a page needs in
+  // `_elementor_page_assets` and enqueues from that stored list on later
+  // requests, while the first request after a cache clear enqueues them as each
+  // widget renders. The two orders differ. Which one a capture lands on is a
+  // timing accident, so two runs of an UNCHANGED site can disagree on ordering
+  // alone — it happened here on the search page, with a 0 byte delta.
+  //
+  // The SET is what carries meaning: a handle appearing or disappearing is a
+  // real change and still fails, as does any other markup difference. Reordering
+  // independent per-widget assets does not change the cascade, and the pixel
+  // comparison is the arbiter of that anyway.
+  //
+  // Only self-contained single-line tags are lifted out. Multi-line inline
+  // scripts stay in the remainder and are still compared in place, so this
+  // cannot quietly absorb a change to what a script actually does.
+  //
+  // Reported rather than suppressed, for the same reason as known-flaky
+  // artefacts: silence would hide a real regression that later lands here.
+  const assetRe = /^\s*(?:<link rel="stylesheet"[^>]*>|<script id="[^"]*" src="[^"]*"><\/script>)\s*$/;
+  const split = s => {
+    const assets = [], rest = [];
+    for (const l of s.split('\n')) (assetRe.test(l) ? assets : rest).push(l);
+    return { assets: assets.slice().sort(), rest };
+  };
+  const A = split(sa), B = split(sb);
+  if (A.rest.join('\n') === B.rest.join('\n') && A.assets.join('\n') === B.assets.join('\n')) {
+    lines.push(`- **${f}** — asset order only; the set of style/script handles is identical (not counted as a change)`);
+    continue;
+  }
+
   htmlChanged++;
   const la = sa.split('\n'), lb = sb.split('\n');
   const changes = [];

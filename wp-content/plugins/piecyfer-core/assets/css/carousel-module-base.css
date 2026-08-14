@@ -1,0 +1,207 @@
+/**
+ * PieCyfer replacement for Elementor Pro's `widget-carousel-module-base`.
+ *
+ * The layer every Pro carousel shares: slide chrome, the stretch-to-equal-height
+ * wrapper, and arrow placement. Written from scratch rather than copied out of
+ * the Pro install — see _project/02-WIDGET-REBUILD-SPEC.md.
+ *
+ * Pro scopes almost everything here to `.elementor-widget-reviews` and
+ * `.elementor-widget-testimonial-carousel` together. Only testimonial-carousel
+ * is replaced so far, but the `reviews` selectors are kept: they cost nothing,
+ * they document the shape of the original, and dropping them would make this
+ * file wrong the day `reviews` is rebuilt. The `media-carousel` arrow rules are
+ * kept for the same reason.
+ *
+ * Swiper's own layout (`.swiper`, `.swiper-wrapper`, transforms, the pagination
+ * bullets themselves) is Elementor FREE's `e-swiper` and is NOT duplicated here.
+ */
+
+/* -------------------------------------------------------------------------- */
+/* Slide chrome                                                               */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Bullets sit on top of slide content, so they get an explicit light colour and
+ * a default cursor — they are decoration until Swiper makes them clickable.
+ */
+.swiper-pagination-bullets {
+	color: #fff;
+	cursor: default;
+}
+
+/*
+ * `border-style: solid` with zero width is what makes the slide_border_size and
+ * slide_border_color controls work: those emit width and colour only, so without
+ * a style declared here nothing would ever be painted.
+ *
+ * `will-change: transform` is load-bearing on long carousels — it promotes the
+ * slide to its own layer so Swiper's translate does not repaint the whole strip.
+ */
+.swiper-slide {
+	border-style: solid;
+	border-width: 0;
+	overflow: hidden;
+	transition-duration: 0.5s;
+	transition-property: border, background, transform;
+	will-change: transform;
+}
+
+/*
+ * Resting state for the overlay animations shared with Pro's media carousel.
+ * Expressed as `:not(:hover)` rather than a `:hover` rule so the animation has
+ * somewhere to return to when the pointer leaves.
+ */
+.swiper-slide:not(:hover) .e-overlay-animation-fade {
+	opacity: 0;
+}
+
+.swiper-slide:not(:hover) .e-overlay-animation-slide-up {
+	transform: translateY(100%);
+}
+
+.swiper-slide:not(:hover) .e-overlay-animation-slide-down {
+	transform: translateY(-100%);
+}
+
+.swiper-slide:not(:hover) .e-overlay-animation-slide-right {
+	transform: translateX(-100%);
+}
+
+.swiper-slide:not(:hover) .e-overlay-animation-slide-left {
+	transform: translateX(100%);
+}
+
+.swiper-slide:not(:hover) .e-overlay-animation-zoom-in {
+	opacity: 0;
+	transform: scale(0.5);
+}
+
+/*
+ * Slide content is authored HTML, so a link inside it must behave like a link in
+ * running text and not like a block. Buttons are the one exception.
+ */
+.swiper-slide a {
+	display: inline;
+}
+
+.swiper-slide a.elementor-button {
+	display: inline-block;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Testimonial / reviews carousels                                            */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * The 95% default width leaves a gutter for the arrows, and the extra 40px is
+ * removed when arrows are actually shown. The `width` control overrides both of
+ * these per instance — instance-level CSS wins on specificity because Elementor
+ * emits it with the `.elementor-<id>` wrapper — so these are defaults only.
+ */
+.elementor-widget-reviews .elementor-arrows-yes .elementor-main-swiper,
+.elementor-widget-testimonial-carousel .elementor-arrows-yes .elementor-main-swiper {
+	width: calc(95% - 40px);
+}
+
+.elementor-widget-reviews .elementor-main-swiper,
+.elementor-widget-testimonial-carousel .elementor-main-swiper {
+	width: 95%;
+}
+
+/*
+ * `align-items: stretch` plus `height: auto` on the slide is what gives every
+ * testimonial the same height as the tallest one in view. Swiper sets a fixed
+ * height by default; these two undo that.
+ */
+.elementor-widget-reviews .swiper-wrapper,
+.elementor-widget-testimonial-carousel .swiper-wrapper {
+	align-items: stretch;
+	display: flex;
+}
+
+.elementor-widget-reviews .swiper-slide,
+.elementor-widget-testimonial-carousel .swiper-slide {
+	height: auto;
+}
+
+/*
+ * Reserve room below the slides for bullets and fraction pagination, which are
+ * absolutely positioned by Swiper and would otherwise overlap the last line of
+ * text. Progress-bar pagination sits on the top edge and needs no reserve.
+ *
+ * Both `.swiper` and `.swiper-container` are targeted because the container
+ * class depends on Elementor's `e_swiper_latest` experiment, and the widget
+ * reads the same flag when rendering.
+ */
+.elementor-widget-reviews.elementor-pagination-type-bullets .swiper,
+.elementor-widget-reviews.elementor-pagination-type-bullets .swiper-container,
+.elementor-widget-reviews.elementor-pagination-type-fraction .swiper,
+.elementor-widget-reviews.elementor-pagination-type-fraction .swiper-container,
+.elementor-widget-testimonial-carousel.elementor-pagination-type-bullets .swiper,
+.elementor-widget-testimonial-carousel.elementor-pagination-type-bullets .swiper-container,
+.elementor-widget-testimonial-carousel.elementor-pagination-type-fraction .swiper,
+.elementor-widget-testimonial-carousel.elementor-pagination-type-fraction .swiper-container {
+	padding-bottom: 40px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Arrow placement                                                            */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * `right: unset` / `left: unset` rather than `auto`: `e-swiper` sets both edges
+ * on the navigation buttons, and `auto` would still participate in the
+ * absolute-positioning resolution. `unset` removes the declaration outright.
+ *
+ * The `-rtl` variants swap prev and next so the arrow that means "back" stays on
+ * the side the reading direction expects.
+ */
+.elementor-widget-reviews .elementor-swiper-button-prev,
+.elementor-widget-reviews .swiper-container-rtl .elementor-swiper-button-next,
+.elementor-widget-reviews .swiper-rtl .elementor-swiper-button-next,
+.elementor-widget-testimonial-carousel .elementor-swiper-button-prev,
+.elementor-widget-testimonial-carousel .swiper-container-rtl .elementor-swiper-button-next,
+.elementor-widget-testimonial-carousel .swiper-rtl .elementor-swiper-button-next {
+	left: 0;
+	right: unset;
+}
+
+.elementor-widget-reviews .elementor-swiper-button-next,
+.elementor-widget-reviews .swiper-container-rtl .elementor-swiper-button-prev,
+.elementor-widget-reviews .swiper-rtl .elementor-swiper-button-prev,
+.elementor-widget-testimonial-carousel .elementor-swiper-button-next,
+.elementor-widget-testimonial-carousel .swiper-container-rtl .elementor-swiper-button-prev,
+.elementor-widget-testimonial-carousel .swiper-rtl .elementor-swiper-button-prev {
+	left: unset;
+	right: 0;
+}
+
+/*
+ * When bullets are shown the container grew by 40px (above), so the arrows are
+ * lifted by half of that to stay centred on the slides rather than on the
+ * padded box.
+ */
+.elementor-widget-reviews.elementor-pagination-type-bullets .elementor-swiper-button-next,
+.elementor-widget-reviews.elementor-pagination-type-bullets .elementor-swiper-button-prev,
+.elementor-widget-testimonial-carousel.elementor-pagination-type-bullets .elementor-swiper-button-next,
+.elementor-widget-testimonial-carousel.elementor-pagination-type-bullets .elementor-swiper-button-prev {
+	top: calc(50% - 40px / 2);
+}
+
+/*
+ * Media carousel keeps its arrows inside the frame, so they are inset by 10px
+ * instead of sitting flush against the edge.
+ */
+.elementor-widget-media-carousel .elementor-swiper-button-prev,
+.elementor-widget-media-carousel .swiper-container-rtl .elementor-swiper-button-next,
+.elementor-widget-media-carousel .swiper-rtl .elementor-swiper-button-next {
+	left: 10px;
+	right: unset;
+}
+
+.elementor-widget-media-carousel .elementor-swiper-button-next,
+.elementor-widget-media-carousel .swiper-container-rtl .elementor-swiper-button-prev,
+.elementor-widget-media-carousel .swiper-rtl .elementor-swiper-button-prev {
+	left: unset;
+	right: 10px;
+}

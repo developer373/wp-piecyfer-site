@@ -54,6 +54,21 @@ const PATHS = [
   '/why-healthcare-software-fails-without-security-first-architecture/',
 
   // --- theme-builder routes that no page URL would otherwise reach ---
+  //
+  // The archive template was the one Theme Builder document with NO coverage at
+  // all, which matters more than it sounds: it is also the only location Pro
+  // takes over through `template_include` rather than through the theme's own
+  // `elementor_theme_do_location()` calls, so it exercises a code path nothing
+  // else here touches. Replacing Theme Builder without these would have been
+  // done blind.
+  '/category/erp/',                     // archive template, 9 posts
+  '/category/crm/',                     // archive template, 2 posts — a short grid lays out differently
+  '/blogs/page/2/',                     // the posts widget's pagination, untested until now
+  // author.php and attachment.php render the THEME's own markup and have no
+  // Theme Builder template at all, so they are the one place a theme swap can
+  // change real output with nothing watching. Author covers the same code path
+  // as attachment and is reachable without depending on a specific media id.
+  '/author/webdeveloper373/',
   '/?s=software',                       // search-results template
   '/this-url-does-not-exist-404-test/', // error-404 template
 ];
@@ -80,6 +95,7 @@ const QUICK = [
   '/blogs/',
   '/building-high-performing-web-apps-10-easy-yet-important-tips/',
   '/web-app-development/',
+  '/category/erp/',
   '/?s=software',
   '/this-url-does-not-exist-404-test/',
 ];

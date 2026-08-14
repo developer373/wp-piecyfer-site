@@ -18,13 +18,14 @@
     "fails the comparison."
   ],
 
-  "artefacts": {
+  "_retired": {
     "our-team@desktop.png": {
-      "reason": "Elementor motion-fx decorative dot layer renders its background at a slightly different scale between runs. The transform is already pinned by FREEZE_CSS and the markup is byte-identical, so what varies is how the layer's background is scaled against a container whose height settles marginally differently.",
-      "provenNotOurs": "baseline vs a fresh capture with piecyfer-core DEACTIVATED also differs, so no change of ours is involved.",
-      "magnitude": "~2,900 px, 0.04% of the page",
-      "firstSeen": "2026-08-14",
-      "retest2026-08-14": "No longer reproduces between two current captures: the cc4-a vs cc4-b control is identical on all 24 screenshots. It still differs against `baseline`, which was captured before the harness cleared Elementor's element cache and before the resize dispatch moved inside the settle loop. Kept until a cache-cleared reference snapshot exists to compare against; if it stays quiet there, delete this entry rather than carrying it forward."
+      "wasReason": "Elementor motion-fx decorative dot layer rendered its background at a slightly different scale between runs — ~2,900 px, 0.04% of the page.",
+      "retiredOn": "2026-08-14",
+      "why": "It stopped reproducing once the settle loop dispatched its resize on every pass instead of once before the loop, and once captures cleared Elementor's element cache. Proven over the full ref-a vs ref-b control: 117 screenshots, 0 visual differences, and this artefact silent — under concurrent agent load, which is the condition that used to provoke it. Kept here as a record rather than deleted, so that if it ever returns we know it is a regression and not a new discovery."
     }
+  },
+
+  "artefacts": {
   }
 }

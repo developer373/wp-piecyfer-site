@@ -86,3 +86,68 @@ foreach ( $widgets as $instance ) {
 	}
 }
 printf( "  widgets owned by piecyfer-core: %d of %d registered\n", $ours, count( $widgets ) );
+
+/*
+ * The gate. Everything above is a report; this is the part that fails.
+ *
+ * A widget can be listed in Plugin::WIDGETS, load without error, and still not
+ * be the class that renders — the registry is a plain array keyed on widget
+ * name, so the last registration wins. VamTam's companion plugin calls
+ * unregister()/register() at priority 100 for six names, three of which are
+ * ours. If we lose that race the page looks exactly the same, because Pro's or
+ * VamTam's widget draws it, and the pixel comparison passes. That is the most
+ * dangerous failure this project has: a green result for a takeover that never
+ * happened.
+ *
+ * So: every name in Plugin::WIDGETS must actually resolve to a PieCyfer class.
+ * Non-zero exit otherwise, so it can gate a verification run.
+ */
+echo "\n=== TAKEOVER GATE ===\n";
+
+if ( ! class_exists( '\PieCyfer\Core\Plugin' ) || ! method_exists( '\PieCyfer\Core\Plugin', 'widget_classes' ) ) {
+	echo "  (piecyfer-core is not loaded, or Plugin::widget_classes() is gone — gate cannot run)\n";
+	exit( 2 );
+}
+
+// Which class is serving each registered widget name, keyed by class.
+$serving = array();
+foreach ( $widgets as $name => $instance ) {
+	$serving[ get_class( $instance ) ] = $name;
+}
+
+$expected = \PieCyfer\Core\Plugin::widget_classes();
+$failures = array();
+
+foreach ( $expected as $class ) {
+	if ( isset( $serving[ $class ] ) ) {
+		printf( "  %-40s ok (serving '%s')\n", $class, $serving[ $class ] );
+		continue;
+	}
+
+	// Registered but displaced: find who holds the name we wanted.
+	$name = 'unknown';
+	if ( class_exists( $class ) ) {
+		try {
+			$name = ( new $class() )->get_name();
+		} catch ( \Throwable $e ) {
+			$name = 'unknown';
+		}
+	}
+	$holder = isset( $widgets[ $name ] ) ? get_class( $widgets[ $name ] ) : 'nothing — not registered';
+
+	$failures[ $class ] = sprintf( "'%s' is served by %s", $name, $holder );
+	printf( "  %-40s FAIL — %s\n", $class, $failures[ $class ] );
+}
+
+if ( $failures ) {
+	printf(
+		"\n  %d of %d declared widget(s) did NOT take over. Do not trust any comparison run in this state:\n" .
+		"  the page will look correct because someone else's widget is drawing it.\n",
+		count( $failures ),
+		count( $expected )
+	);
+	exit( 1 );
+}
+
+printf( "\n  all %d declared widget(s) are served by piecyfer-core\n", count( $expected ) );
+exit( 0 );

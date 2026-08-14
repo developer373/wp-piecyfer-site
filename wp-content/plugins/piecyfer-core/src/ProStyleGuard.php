@@ -36,9 +36,31 @@ final class ProStyleGuard {
 	 * @var array<string,string> our widget name => Pro style handle
 	 */
 	private const SUPERSEDED = array(
-		'blockquote'  => 'widget-blockquote',
-		'search-form' => 'widget-search-form',
+		'blockquote'           => 'widget-blockquote',
+		'search-form'          => 'widget-search-form',
+		'call-to-action'       => 'widget-call-to-action',
+		'gallery'              => 'widget-gallery',
+		'testimonial-carousel' => 'widget-testimonial-carousel',
+		/*
+		 * Not a widget name — a second stylesheet the carousel widgets share, so
+		 * it is listed against the widget that pulls it in. Pro registers it as
+		 * its own handle, and Elementor enqueues it independently, so it has to
+		 * be suppressed independently too.
+		 */
+		'testimonial-carousel/module-base' => 'widget-carousel-module-base',
 	);
+
+	/*
+	 * `widget-post-info` is deliberately absent. It was never enqueued once our
+	 * post-info widget took over — Elementor enqueues a widget's stylesheet from
+	 * the rendering widget's own get_style_depends(), and ours does not ask for
+	 * Pro's. The capture proved it: `widget-post-info-css` left the page without
+	 * any help from this class. Listing it anyway would be dead configuration
+	 * that implies a dependency we do not have.
+	 *
+	 * Blockquote and search-form DO need suppressing, because something else in
+	 * Pro's stack enqueues those two regardless of what renders.
+	 */
 
 	public static function init(): void {
 		/*

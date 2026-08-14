@@ -1,0 +1,491 @@
+/*
+ * Call to Action widget styles.
+ *
+ * Written out from the rendered structure and Elementor Pro's
+ * widget-call-to-action.min.css rather than copied from it: the copy on this
+ * server came from a nulled build, and re-shipping code of unknown provenance is
+ * the exact dependency this plugin exists to remove.
+ *
+ * Rule order below follows Pro's, because several declarations here are resolved
+ * by source order rather than specificity (see the .elementor-cta__content
+ * colour note). Reordering for tidiness would change the rendered result.
+ *
+ * NOT in this file, on purpose:
+ *   - .elementor-animated-content / .elementor-animated-item--* — those live in
+ *     the `e-transitions` stylesheet, which the widget still depends on.
+ *   - anything a control can set. Elementor compiles the controls into
+ *     per-element CSS on top of this file; hard-coding a value here would beat
+ *     the control for every instance that never set one.
+ */
+
+/*
+ * Both the widget container and the CTA clip their content. The bg layer is
+ * scaled on hover (see the transform rules at the bottom) and would otherwise
+ * spill over the column edge.
+ */
+.elementor-cta,
+.elementor-widget-call-to-action .elementor-widget-container {
+	overflow: hidden;
+}
+
+.elementor-cta {
+	display: flex;
+	position: relative;
+	transition: 0.5s;
+}
+
+/* --- skin: classic ------------------------------------------------------ */
+
+/*
+ * Classic stacks a real image block above/beside a solid content block, so both
+ * children take full width and wrap. This is the skin all three instances on
+ * this site use — with no bg image, which is why they render content only.
+ */
+.elementor-cta--skin-classic .elementor-cta {
+	flex-wrap: wrap;
+}
+
+.elementor-cta--skin-classic .elementor-cta__bg-wrapper {
+	min-height: 200px;
+	position: relative;
+	width: 100%;
+}
+
+.elementor-cta--skin-classic .elementor-cta__content {
+	background-color: #f9fafa;
+	transition: all 0.4s;
+	width: 100%;
+}
+
+/*
+ * Classic puts content on a light panel, so the items flip to dark ink. This
+ * overrides the white set further down on the generic .elementor-cta__content-item
+ * rule by specificity, not by order.
+ */
+.elementor-cta--skin-classic .elementor-cta__content-item,
+.elementor-cta--skin-classic .elementor-cta__content-item .elementor-icon {
+	border-color: #3f444b;
+	color: #3f444b;
+	fill: #3f444b;
+}
+
+.elementor-cta--skin-classic .elementor-cta__button.elementor-button {
+	border-color: #3f444b;
+	color: #3f444b;
+}
+
+/* --- skin: cover -------------------------------------------------------- */
+
+/*
+ * Cover lays the image behind the content instead of beside it: the bg wrapper
+ * is absolutely positioned over the whole box, so the CTA itself goes back to
+ * block layout and the content sits on top via z-index.
+ */
+.elementor-cta--skin-cover .elementor-cta {
+	display: block;
+}
+
+.elementor-cta--skin-cover .elementor-cta__bg-wrapper {
+	bottom: 0;
+	left: 0;
+	position: absolute;
+	right: 0;
+	top: 0;
+	transition: all 0.4s;
+	width: 100%;
+}
+
+.elementor-cta--skin-cover .elementor-cta__content {
+	min-height: 280px;
+}
+
+.elementor-cta--skin-cover .elementor-cta__button.elementor-button,
+.elementor-cta--skin-cover .elementor-cta__content-item,
+.elementor-cta--skin-cover .elementor-cta__content-item .elementor-icon {
+	border-color: #fff;
+	color: #fff;
+}
+
+/* --- image position (classic skin) -------------------------------------- */
+
+/*
+ * Driven by the `layout` control's prefix_class `elementor-cta-%s-layout-image-`.
+ * With the desktop (empty) placeholder that produces the double hyphen below;
+ * the per-breakpoint variants are at the end of this file.
+ */
+.elementor-cta--layout-image-above .elementor-cta,
+.elementor-cta--layout-image-below .elementor-cta {
+	flex-wrap: wrap;
+}
+
+.elementor-cta--layout-image-above .elementor-cta__bg-wrapper,
+.elementor-cta--layout-image-below .elementor-cta__bg-wrapper {
+	width: 100%;
+}
+
+.elementor-cta--layout-image-above .elementor-cta {
+	flex-direction: column;
+}
+
+.elementor-cta--layout-image-below .elementor-cta {
+	flex-direction: column-reverse;
+}
+
+.elementor-cta--layout-image-left .elementor-cta,
+.elementor-cta--layout-image-right .elementor-cta {
+	flex-wrap: nowrap;
+}
+
+/*
+ * Side-by-side: the image keeps at least half the width (the `image_min_width`
+ * control raises this per instance) and the content takes the rest.
+ */
+.elementor-cta--layout-image-left .elementor-cta__bg-wrapper,
+.elementor-cta--layout-image-right .elementor-cta__bg-wrapper {
+	min-width: 50%;
+	width: auto;
+}
+
+.elementor-cta--layout-image-left .elementor-cta__content,
+.elementor-cta--layout-image-right .elementor-cta__content {
+	flex-grow: 1;
+}
+
+.elementor-cta--layout-image-left .elementor-cta {
+	flex-direction: row;
+}
+
+.elementor-cta--layout-image-right .elementor-cta {
+	flex-direction: row-reverse;
+}
+
+/* --- background layers -------------------------------------------------- */
+
+.elementor-cta__bg,
+.elementor-cta__bg-overlay {
+	bottom: 0;
+	left: 0;
+	position: absolute;
+	right: 0;
+	top: 0;
+	transition: all 0.4s;
+}
+
+.elementor-cta__bg-wrapper {
+	overflow: hidden;
+	z-index: 1;
+}
+
+.elementor-cta__bg {
+	background-position: 50%;
+	background-size: cover;
+	z-index: 1;
+}
+
+/* The tint sits between the image and the content. */
+.elementor-cta__bg-overlay {
+	z-index: 2;
+}
+
+/* --- button ------------------------------------------------------------- */
+
+/*
+ * Doubled class to outrank Elementor's own .elementor-button. The CTA button is
+ * an outline button by default; the auto margins centre it inside the flex
+ * column regardless of the content's text-align.
+ */
+.elementor-cta__button.elementor-button {
+	align-self: center;
+	background: transparent;
+	border: 2px solid #fff;
+	cursor: pointer;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.elementor-cta__button.elementor-button:hover {
+	background: transparent;
+	text-decoration: none;
+}
+
+/* --- content ------------------------------------------------------------ */
+
+.elementor-cta__title {
+	font-size: 23px;
+}
+
+/*
+ * The content box is the flex container the vertical-position control targets:
+ * align-content/align-items are what `elementor-cta--valign-*` overrides below.
+ */
+.elementor-cta__content {
+	align-content: center;
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	overflow: hidden;
+	padding: 35px;
+	width: 100%;
+	z-index: 1;
+}
+
+/*
+ * Order-dependent: this repeats .elementor-cta__content deliberately so the
+ * white ink and the relative/transition context apply to the container and the
+ * items in one place, after the layout rule above.
+ */
+.elementor-cta__content,
+.elementor-cta__content-item {
+	color: #fff;
+	position: relative;
+	transition: 0.5s;
+}
+
+/* Full-width rows so each item stacks; the flex-wrap above does the stacking. */
+.elementor-cta__content-item {
+	margin: 0;
+	width: 100%;
+}
+
+.elementor-cta__content-item:not(:last-child) {
+	margin-bottom: 15px;
+}
+
+.elementor-cta__content-item .elementor-icon {
+	color: #fff;
+}
+
+/* --- vertical position -------------------------------------------------- */
+
+/* From the `vertical_position` control's prefix_class. */
+.elementor-cta--valign-top .elementor-cta__content {
+	align-content: flex-start;
+	align-items: flex-start;
+}
+
+.elementor-cta--valign-middle .elementor-cta__content {
+	align-content: center;
+	align-items: center;
+}
+
+.elementor-cta--valign-bottom .elementor-cta__content {
+	align-content: flex-end;
+	align-items: flex-end;
+}
+
+/*
+ * The default hover tint. The `overlay_color_hover` control overrides it per
+ * instance, so this only shows when nobody set one.
+ */
+.elementor-cta:hover .elementor-cta__bg-overlay {
+	background-color: rgba(0, 0, 0, 0.3);
+}
+
+/*
+ * Touch devices do not hover. The pointer cursor is the only remaining hint
+ * that the box reacts, so it is added below the tablet breakpoint.
+ */
+@media (max-width: 1024px) {
+	.elementor-cta {
+		cursor: pointer;
+	}
+}
+
+/* --- image position, per breakpoint ------------------------------------- */
+
+/*
+ * Only the two breakpoints this site has enabled are emitted. Pro's build also
+ * ships widescreen / laptop / tablet_extra / mobile_extra blocks, but on a
+ * default breakpoint set it writes them as `(min-width: -1)` / `(max-width: -1)`
+ * — invalid media values that never match. Reproducing dead rules would only
+ * make this file harder to read. If custom breakpoints are ever turned on for
+ * this site, the matching blocks have to be added here by hand; Pro solved that
+ * by generating a second stylesheet, which is not something a static file can do.
+ */
+
+@media (max-width: 1024px) {
+	.elementor-cta--tablet-layout-image-above .elementor-cta,
+	.elementor-cta--tablet-layout-image-below .elementor-cta {
+		flex-wrap: wrap;
+	}
+
+	.elementor-cta--tablet-layout-image-above .elementor-cta__bg-wrapper,
+	.elementor-cta--tablet-layout-image-below .elementor-cta__bg-wrapper {
+		width: 100%;
+	}
+
+	.elementor-cta--tablet-layout-image-above .elementor-cta {
+		flex-direction: column;
+	}
+
+	.elementor-cta--tablet-layout-image-below .elementor-cta {
+		flex-direction: column-reverse;
+	}
+
+	.elementor-cta--tablet-layout-image-left .elementor-cta,
+	.elementor-cta--tablet-layout-image-right .elementor-cta {
+		flex-wrap: nowrap;
+	}
+
+	.elementor-cta--tablet-layout-image-left .elementor-cta__bg-wrapper,
+	.elementor-cta--tablet-layout-image-right .elementor-cta__bg-wrapper {
+		min-width: 50%;
+		width: auto;
+	}
+
+	.elementor-cta--tablet-layout-image-left .elementor-cta__content,
+	.elementor-cta--tablet-layout-image-right .elementor-cta__content {
+		flex-grow: 1;
+	}
+
+	.elementor-cta--tablet-layout-image-left .elementor-cta {
+		flex-direction: row;
+	}
+
+	.elementor-cta--tablet-layout-image-right .elementor-cta {
+		flex-direction: row-reverse;
+	}
+}
+
+@media (max-width: 767px) {
+	.elementor-cta--mobile-layout-image-above .elementor-cta,
+	.elementor-cta--mobile-layout-image-below .elementor-cta {
+		flex-wrap: wrap;
+	}
+
+	.elementor-cta--mobile-layout-image-above .elementor-cta__bg-wrapper,
+	.elementor-cta--mobile-layout-image-below .elementor-cta__bg-wrapper {
+		width: 100%;
+	}
+
+	.elementor-cta--mobile-layout-image-above .elementor-cta {
+		flex-direction: column;
+	}
+
+	.elementor-cta--mobile-layout-image-below .elementor-cta {
+		flex-direction: column-reverse;
+	}
+
+	.elementor-cta--mobile-layout-image-left .elementor-cta,
+	.elementor-cta--mobile-layout-image-right .elementor-cta {
+		flex-wrap: nowrap;
+	}
+
+	.elementor-cta--mobile-layout-image-left .elementor-cta__bg-wrapper,
+	.elementor-cta--mobile-layout-image-right .elementor-cta__bg-wrapper {
+		min-width: 50%;
+		width: auto;
+	}
+
+	.elementor-cta--mobile-layout-image-left .elementor-cta__content,
+	.elementor-cta--mobile-layout-image-right .elementor-cta__content {
+		flex-grow: 1;
+	}
+
+	.elementor-cta--mobile-layout-image-left .elementor-cta {
+		flex-direction: row;
+	}
+
+	.elementor-cta--mobile-layout-image-right .elementor-cta {
+		flex-direction: row-reverse;
+	}
+}
+
+/* --- ribbon ------------------------------------------------------------- */
+
+/*
+ * The ribbon is a 150px square clipped at the corner of the box; the inner strip
+ * is rotated -45deg inside it and made 200% wide so its ends run past the
+ * diagonal and the visible band has square edges.
+ *
+ * The outer square's `transform: rotate(90deg)` is what moves it between the
+ * corners — the inner strip's own transform never changes side. The
+ * `ribbon_distance` control rewrites the inner transform wholesale, including a
+ * different value under RTL, so the translate values here are only the default.
+ */
+.elementor-ribbon {
+	height: 150px;
+	left: auto;
+	overflow: hidden;
+	position: absolute;
+	right: 0;
+	top: 0;
+	transform: rotate(90deg);
+	width: 150px;
+	z-index: 1;
+}
+
+.elementor-ribbon-inner {
+	background: #000;
+	color: #fff;
+	font-size: 13px;
+	font-weight: 800;
+	left: 0;
+	line-height: 2;
+	margin-top: 35px;
+	text-align: center;
+	text-transform: uppercase;
+	transform: translateY(-50%) translateX(-50%) translateX(35px) rotate(-45deg);
+	width: 200%;
+}
+
+.elementor-ribbon.elementor-ribbon-left {
+	left: 0;
+	right: auto;
+	transform: rotate(0);
+}
+
+.elementor-ribbon.elementor-ribbon-right {
+	left: auto;
+	right: 0;
+	transform: rotate(90deg);
+}
+
+/* --- background hover transforms ---------------------------------------- */
+
+/*
+ * From the `transformation` control, which emits two classes at once:
+ * `elementor-bg-transform` plus `elementor-bg-transform-<value>`.
+ *
+ * The move-* variants start pre-scaled to 1.2 and pre-offset, so the hover state
+ * can slide the image without ever exposing an edge — that is why the resting
+ * state carries a transform at all. The duration comes from `effect_duration`.
+ */
+.elementor-bg-transform .elementor-bg {
+	will-change: transform;
+}
+
+.elementor-bg-transform-zoom-in:hover .elementor-bg,
+.elementor-bg-transform-zoom-out .elementor-bg {
+	transform: scale(1.2);
+}
+
+.elementor-bg-transform-zoom-out:hover .elementor-bg {
+	transform: scale(1);
+}
+
+.elementor-bg-transform-move-left .elementor-bg {
+	transform: scale(1.2) translateX(8%);
+}
+
+.elementor-bg-transform-move-left:hover .elementor-bg,
+.elementor-bg-transform-move-right .elementor-bg {
+	transform: scale(1.2) translateX(-8%);
+}
+
+.elementor-bg-transform-move-right:hover .elementor-bg {
+	transform: scale(1.2) translateX(8%);
+}
+
+.elementor-bg-transform-move-up .elementor-bg {
+	transform: scale(1.2) translateY(8%);
+}
+
+.elementor-bg-transform-move-down .elementor-bg,
+.elementor-bg-transform-move-up:hover .elementor-bg {
+	transform: scale(1.2) translateY(-8%);
+}
+
+.elementor-bg-transform-move-down:hover .elementor-bg {
+	transform: scale(1.2) translateY(8%);
+}

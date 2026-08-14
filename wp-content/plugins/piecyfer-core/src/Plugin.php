@@ -38,7 +38,25 @@ final class Plugin {
 		Widgets\BlockquoteWidget::class,
 		Widgets\SearchFormWidget::class,
 		Widgets\PostInfoWidget::class,
+		Widgets\CallToActionWidget::class,
+		Widgets\GalleryWidget::class,
+		Widgets\TestimonialCarouselWidget::class,
 	);
+
+	/**
+	 * The widget classes this plugin claims, for the takeover gate.
+	 *
+	 * Exposed so `scripts/which-implementation.php` can assert that every class
+	 * listed here is the one Elementor actually ends up rendering. Reading the
+	 * constant reflectively from outside would work too, but it would break
+	 * silently the day the constant is renamed — and a silently-skipped gate is
+	 * worse than no gate.
+	 *
+	 * @return string[]
+	 */
+	public static function widget_classes(): array {
+		return self::WIDGETS;
+	}
 
 	public static function instance(): Plugin {
 		return self::$instance ??= new self();
@@ -61,7 +79,27 @@ final class Plugin {
 		 * back. This ordering is what makes the migration reversible at every
 		 * single step.
 		 */
-		add_action( 'elementor/widgets/register', array( $this, 'register_widgets' ), 20 );
+		/*
+		 * Priority 150, not 20.
+		 *
+		 * 20 was chosen to land after Pro's default 10, which is true but not
+		 * sufficient. VamTam's companion plugin registers at **100**, and for six
+		 * widget names it does:
+		 *
+		 *     $widgets_manager->unregister( 'nav-menu' );
+		 *     $widgets_manager->register( new Vamtam_Widget_Nav_Menu );
+		 *
+		 * (`nav-menu`, `posts`, `archive-posts`, `login`, `button`, `tabs` —
+		 * includes/widgets/*.php in vamtam-elementor-integration-tecnologia.)
+		 * Three of those are ours to replace and are the largest ones left.
+		 *
+		 * At 20 our replacements would have been unregistered again a moment
+		 * later, rendered nothing, and the pixel comparison would still have
+		 * passed — because VamTam's widget was drawing the page. A false pass
+		 * that would have shipped. `scripts/which-implementation.php` is the
+		 * gate that catches this class of failure; run it for every widget.
+		 */
+		add_action( 'elementor/widgets/register', array( $this, 'register_widgets' ), 150 );
 		add_action( 'elementor/elements/categories_registered', array( $this, 'register_categories' ) );
 
 		// Dynamic tags register at priority 20 for the same reason as widgets:
@@ -160,9 +198,16 @@ final class Plugin {
 	 * @var array<string,string> handle => file under assets/css/
 	 */
 	private const STYLES = array(
-		'piecyfer-blockquote'  => 'blockquote.css',
-		'piecyfer-search-form' => 'search-form.css',
-		'piecyfer-post-info'   => 'post-info.css',
+		'piecyfer-blockquote'             => 'blockquote.css',
+		'piecyfer-search-form'           => 'search-form.css',
+		'piecyfer-post-info'             => 'post-info.css',
+		'piecyfer-call-to-action'        => 'call-to-action.css',
+		'piecyfer-gallery'               => 'gallery.css',
+		'piecyfer-testimonial-carousel'  => 'testimonial-carousel.css',
+		// Shared by testimonial-carousel and, once rebuilt, the other carousel
+		// widgets. Registered separately because Pro ships it as its own handle
+		// and more than one widget depends on it.
+		'piecyfer-carousel-module-base'  => 'carousel-module-base.css',
 	);
 
 	/**

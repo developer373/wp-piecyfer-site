@@ -233,12 +233,62 @@ Remaining, roughly in order of effort:
 
 ---
 
-## Open decisions
+## Decisions taken
 
-1. **Theme** — buy a VamTam licence (~$69), or build `piecyfer-theme`? My recommendation is to
-   build our own: the header, footer, single, archive, search and 404 are all Elementor Theme
-   Builder documents, so the theme does far less than it appears to. Nothing is blocked on this
-   until Phase 5.
-2. **Live site** — currently down. When it comes back,
-   `_project/scripts/piecyfer-malware-cleanup.php` is ready and proven; it needs the same
-   credential rotation listed in `01-REBUILD-PLAN.md` §1.2.
+**2026-08-14 — the objective is that no nulled code remains.** Not "the site works"; every
+unlicensed package leaves. That is what makes this future-proof, because unlicensed packages are
+why the site was compromised in the first place: they receive no security updates and the backdoor
+arrives inside the download.
+
+### Target end state
+
+| Keep | Build | Delete |
+|---|---|---|
+| `elementor` (free) | `piecyfer-core` — widgets, dynamic tags, Theme Builder, Popup | `elementor-pro` 🔴 nulled |
+| `all-in-one-seo-pack` | `piecyfer-theme` — replaces the nulled theme | `elementskit` (Pro) 🔴 nulled |
+| `broken-link-checker-seo` | | `themes/tecnologia` 🔴 nulled |
+| `click-to-chat-for-whatsapp` | | `vamtam-elementor-integration-tecnologia` |
+| `google-analytics-for-wordpress` | | `object-cache-pro` 🔴 nulled |
+| `updraftplus` | | `redis-cache`, `wp-rocket` 🔴, `debloat` |
+| `wp-mail-smtp` | | `optinmonster` 🔴 nulled |
+| | | `wordpress-seo` + `wordpress-seo-premium` 🔴 — **inactive**; AIOSEO is the live SEO |
+
+**SEO stays.** AIOSEO and the broken-link checker are not touched. The two Yoast installs are a
+different matter: they are inactive, so removing them cannot affect SEO, and Yoast Premium is
+nulled. Leaving dormant nulled code on disk is exactly the mistake that let `wp-file-manager` in.
+
+**Caching goes.** Object Cache Pro is nulled; Redis, WP Rocket and Debloat are redundant with it
+gone. Performance is Phase 6 and will be done with code we own.
+
+### 1. Theme — decided: build `piecyfer-theme`
+
+A licence would legitimise the theme but not the problem. The header, footer, single, archive,
+search and 404 are all Elementor Theme Builder documents, so the theme does far less than it
+appears to — see `05-THEME-SPEC.md`. The companion plugin is the harder half: it subclasses six
+Elementor widgets at priority 100 and injects controls into others.
+
+### 2. Live site
+
+Up again as of 2026-08-14, but **we are not touching it**: the work is completed locally and
+deployed once it is finished. `_project/scripts/piecyfer-malware-cleanup.php` is ready and proven
+for that deployment, and needs the credential rotation in `01-REBUILD-PLAN.md` §1.2.
+
+---
+
+## The registration-priority trap (found before it bit us)
+
+`piecyfer-core` registers widgets at priority **20**, chosen to beat Pro's default 10. But VamTam's
+companion plugin registers at **100**, and for six widget names it does:
+
+```php
+$widgets_manager->unregister( 'nav-menu' );
+$widgets_manager->register( new Vamtam_Widget_Nav_Menu );
+```
+
+`nav-menu`, `posts`, `archive-posts`, `login`, `button`, `tabs`. Three of those are ours to
+replace and are the largest ones left. At priority 20 our replacements would have been silently
+unregistered — and the pixel comparison would have passed, because VamTam's widget was still
+rendering. Another false pass, and the most expensive one yet: it would have shipped.
+
+Fixed by registering above VamTam and by making `scripts/which-implementation.php` a gate rather
+than a report — it must confirm our class actually serves every name in `Plugin::WIDGETS`.

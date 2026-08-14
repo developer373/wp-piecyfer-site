@@ -1,0 +1,529 @@
+/**
+ * PieCyfer replacement for Elementor Pro's `widget-testimonial-carousel`.
+ *
+ * Written from scratch, not copied out of the Pro install — see
+ * _project/02-WIDGET-REBUILD-SPEC.md. Loads alongside `e-swiper` (Elementor
+ * FREE, untouched) and assets/css/carousel-module-base.css.
+ *
+ * How the class names come about, because it is not obvious from the markup:
+ *
+ *   - `skin`      -> `.elementor-testimonial--skin-<default|bubble>`
+ *   - `layout`    -> `.elementor-testimonial--layout-<image_inline|…>`
+ *   - `alignment` -> `.elementor-testimonial--align-<left|center|right>` on
+ *                    desktop and `.elementor-testimonial--tablet-align-…` /
+ *                    `--mobile-align-…` per breakpoint, because the control's
+ *                    prefix_class is `elementor-testimonial-%s-align-` and
+ *                    Elementor substitutes '' / '-tablet' / '-mobile'.
+ *
+ * All three land on the widget WRAPPER; `.elementor-testimonial` is the
+ * per-slide element inside it. That is why every rule below is written as
+ * `.elementor-testimonial--layout-x .elementor-testimonial` (descendant) and
+ * never as a single compound selector.
+ *
+ * Breakpoints: this site runs Elementor's defaults with
+ * `additional_custom_breakpoints` inactive, so only tablet (<=1024px) and mobile
+ * (<=767px) exist. Pro's shipped stylesheet also emits widescreen, laptop,
+ * tablet_extra and mobile_extra blocks, but with `-1` as the breakpoint value,
+ * which makes those media queries invalid and therefore dead. They are omitted
+ * here rather than reproduced as dead code; if a custom breakpoint is ever
+ * enabled, a matching block has to be added.
+ */
+
+/* -------------------------------------------------------------------------- */
+/* Structure                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/* The avatar must never be squeezed by a long name in the flex footer. */
+.elementor-testimonial__image {
+	flex-shrink: 0;
+}
+
+/*
+ * `box-sizing: content-box` so that the image_border_width control adds to the
+ * size set by image_size instead of eating into it — a bordered 50px avatar is
+ * 50px of image plus the border, which is what the editor preview shows.
+ */
+.elementor-testimonial__image img {
+	border-radius: 999px;
+	box-sizing: content-box;
+	object-fit: cover;
+}
+
+.elementor-testimonial__footer,
+.elementor-testimonial__header {
+	display: flex;
+}
+
+/*
+ * `cite` is italic by default in every UA stylesheet; the name and title are not
+ * quotations, so that is explicitly reset here.
+ */
+.elementor-testimonial__footer cite,
+.elementor-testimonial__header cite {
+	display: flex;
+	flex-direction: column;
+	font-size: 14px;
+	font-style: normal;
+	line-height: 1.5;
+}
+
+.elementor-testimonial__name {
+	font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Layout: image_inline and image_above                                       */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Both put the avatar beside the name, so they share the horizontal footer.
+ * image_above differs only in that the whole testimonial is column-reversed
+ * further down, which lifts that same footer above the content.
+ */
+.elementor-testimonial--layout-image_above .elementor-testimonial__footer,
+.elementor-testimonial--layout-image_inline .elementor-testimonial__footer {
+	align-items: center;
+}
+
+/*
+ * Logical properties throughout: `margin-inline-start` follows the writing
+ * direction, so the gap between avatar and name stays on the correct side under
+ * RTL without a mirrored rule.
+ */
+.elementor-testimonial--layout-image_above .elementor-testimonial__image + cite,
+.elementor-testimonial--layout-image_inline .elementor-testimonial__image + cite {
+	margin-inline-start: 20px;
+}
+
+.elementor-testimonial--layout-image_above.elementor-testimonial--align-right .elementor-testimonial__footer,
+.elementor-testimonial--layout-image_inline.elementor-testimonial--align-right .elementor-testimonial__footer {
+	flex-direction: row-reverse;
+}
+
+.elementor-testimonial--layout-image_above.elementor-testimonial--align-right .elementor-testimonial__image + cite,
+.elementor-testimonial--layout-image_inline.elementor-testimonial--align-right .elementor-testimonial__image + cite {
+	margin-inline-end: 20px;
+	margin-inline-start: 0;
+}
+
+.elementor-testimonial--layout-image_above.elementor-testimonial--align-left .elementor-testimonial__footer,
+.elementor-testimonial--layout-image_inline.elementor-testimonial--align-left .elementor-testimonial__footer {
+	flex-direction: row;
+}
+
+.elementor-testimonial--layout-image_above.elementor-testimonial--align-left .elementor-testimonial__image + cite,
+.elementor-testimonial--layout-image_inline.elementor-testimonial--align-left .elementor-testimonial__image + cite {
+	margin-inline-end: 0;
+	margin-inline-start: 20px;
+}
+
+/*
+ * 25px is the default gap between quote and attribution. The `content_gap`
+ * control overrides it per instance — both carousels on this site set it (0 and
+ * 25px), so this value is only ever a fallback here.
+ */
+.elementor-testimonial--layout-image_inline .elementor-testimonial__footer {
+	margin-top: 25px;
+}
+
+/*
+ * image_above reuses the inline footer and simply reverses the column, so the
+ * markup order (content, then footer) still produces avatar-above-quote.
+ */
+.elementor-testimonial--layout-image_above .elementor-testimonial {
+	display: flex;
+	flex-direction: column-reverse;
+}
+
+.elementor-testimonial--layout-image_above .elementor-testimonial__footer {
+	margin-bottom: 25px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Layout: image_stacked                                                      */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * `flex-wrap: wrap` plus `width: 100%` on both children is what forces the name
+ * onto its own line under the avatar while keeping one flex container.
+ */
+.elementor-testimonial--layout-image_stacked .elementor-testimonial__footer {
+	flex-wrap: wrap;
+	margin-top: 25px;
+}
+
+.elementor-testimonial--layout-image_stacked .elementor-testimonial cite,
+.elementor-testimonial--layout-image_stacked .elementor-testimonial__image {
+	margin-top: 15px;
+	width: 100%;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Layout: image_left and image_right                                         */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * These two are the only layouts where the testimonial itself is a row.
+ * `align-items: stretch` keeps the avatar column the full height of the quote,
+ * which is what the bubble tail's vertical `calc()` assumes.
+ */
+.elementor-testimonial--layout-image_left .elementor-testimonial,
+.elementor-testimonial--layout-image_right .elementor-testimonial {
+	align-items: stretch;
+	display: flex;
+}
+
+.elementor-testimonial--layout-image_left .elementor-testimonial__footer,
+.elementor-testimonial--layout-image_right .elementor-testimonial__footer {
+	flex-direction: column;
+	flex-shrink: 0;
+	text-align: center;
+}
+
+.elementor-testimonial--layout-image_left .elementor-testimonial__image + cite,
+.elementor-testimonial--layout-image_right .elementor-testimonial__image + cite {
+	margin-top: 15px;
+}
+
+/*
+ * Centre alignment centres the text, not the avatar column — the column stays
+ * pinned to the top so it lines up with the first line of the quote.
+ */
+.elementor-testimonial--layout-image_left.elementor-testimonial--align-center .elementor-testimonial__footer,
+.elementor-testimonial--layout-image_right.elementor-testimonial--align-center .elementor-testimonial__footer {
+	justify-content: flex-start;
+}
+
+.elementor-testimonial--layout-image_left .elementor-testimonial {
+	flex-direction: row-reverse;
+}
+
+.elementor-testimonial--layout-image_left .elementor-testimonial__footer {
+	padding-inline-end: 20px;
+}
+
+.elementor-testimonial--layout-image_right .elementor-testimonial {
+	flex-direction: row;
+}
+
+.elementor-testimonial--layout-image_right .elementor-testimonial__footer {
+	padding-inline-start: 20px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Alignment — desktop                                                        */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Repeated verbatim per breakpoint below. It has to be: the `alignment` control
+ * is responsive and each device gets its own wrapper class, so there is no
+ * single selector that can carry all of them.
+ */
+.elementor-testimonial--align-right .elementor-testimonial {
+	text-align: right;
+}
+
+.elementor-testimonial--align-right.elementor-testimonial--layout-image_above .elementor-testimonial__footer,
+.elementor-testimonial--align-right.elementor-testimonial--layout-image_inline .elementor-testimonial__footer {
+	flex-direction: row-reverse;
+	justify-content: end;
+}
+
+.elementor-testimonial--align-right.elementor-testimonial--layout-image_above .elementor-testimonial__image + cite,
+.elementor-testimonial--align-right.elementor-testimonial--layout-image_inline .elementor-testimonial__image + cite {
+	margin-inline-end: 20px;
+	margin-inline-start: 0;
+}
+
+.elementor-testimonial--align-left .elementor-testimonial {
+	text-align: left;
+}
+
+.elementor-testimonial--align-left.elementor-testimonial--layout-image_above .elementor-testimonial__footer,
+.elementor-testimonial--align-left.elementor-testimonial--layout-image_inline .elementor-testimonial__footer {
+	flex-direction: row;
+	justify-content: start;
+}
+
+.elementor-testimonial--align-left.elementor-testimonial--layout-image_above .elementor-testimonial__image + cite,
+.elementor-testimonial--align-left.elementor-testimonial--layout-image_inline .elementor-testimonial__image + cite {
+	margin-inline-end: 0;
+	margin-inline-start: 20px;
+}
+
+.elementor-testimonial--align-center .elementor-testimonial {
+	text-align: center;
+}
+
+.elementor-testimonial--align-center.elementor-testimonial--layout-image_above .elementor-testimonial__footer,
+.elementor-testimonial--align-center.elementor-testimonial--layout-image_inline .elementor-testimonial__footer {
+	justify-content: center;
+}
+
+/*
+ * The avatar+name pair is centred as a unit, but the two lines inside the cite
+ * stay left-aligned against each other — centring them individually looks like a
+ * mistake when the name is much shorter than the title.
+ */
+.elementor-testimonial--align-center.elementor-testimonial--layout-image_inline .elementor-testimonial__image + cite {
+	text-align: start;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Skin: default                                                              */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * In these three layouts the cite is printed inside the content block rather
+ * than the footer, so it needs the block behaviour the footer would otherwise
+ * have given it.
+ */
+.elementor-testimonial--skin-default.elementor-testimonial--layout-image_above .elementor-testimonial__cite,
+.elementor-testimonial--skin-default.elementor-testimonial--layout-image_left .elementor-testimonial__cite,
+.elementor-testimonial--skin-default.elementor-testimonial--layout-image_right .elementor-testimonial__cite {
+	display: flex;
+	flex-direction: column;
+	margin-top: 25px;
+	width: 100%;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Skin: bubble                                                               */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Neither instance on this site uses the bubble skin, but the rules are written
+ * anyway: the skin control round-trips, and a skin that silently renders as a
+ * plain box the moment someone picks it in the editor is exactly the kind of
+ * regression this rebuild exists to prevent.
+ */
+.elementor-testimonial--skin-bubble .elementor-testimonial__content {
+	background-color: #f9fafa;
+	padding: 20px;
+	position: relative;
+}
+
+/*
+ * The tail is a square rotated 45deg, not a border triangle. That is what lets
+ * the `border` / `border_color` / `border_width` controls draw an outline along
+ * two of its edges and have it read as a continuous stroke around the bubble —
+ * a triangle made of borders has no edges left to style.
+ *
+ * `scaleX(.75)` flattens it so the tail is wider than it is deep.
+ */
+.elementor-testimonial--skin-bubble .elementor-testimonial__content:after {
+	background-color: #f9fafa;
+	border-width: 0;
+	box-sizing: content-box;
+	content: "";
+	display: block;
+	height: 14px;
+	position: absolute;
+	transform: scaleX(0.75) rotate(45deg);
+	width: 14px;
+}
+
+/* image_above puts the avatar on top, so the tail points up. */
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_above .elementor-testimonial__content:after {
+	bottom: calc(100% - 7px);
+	transform: scaleX(0.75) rotate(-135deg);
+}
+
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_above.elementor-testimonial--align-center .elementor-testimonial__content:after {
+	left: 50%;
+	transform: translateX(-50%) scaleX(0.75) rotate(-135deg);
+}
+
+/* Avatar below: tail points down. */
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_inline .elementor-testimonial__content:after,
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_stacked .elementor-testimonial__content:after {
+	top: calc(100% - 7px);
+}
+
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_inline.elementor-testimonial--align-center .elementor-testimonial__content:after,
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_stacked.elementor-testimonial--align-center .elementor-testimonial__content:after {
+	left: 50%;
+	transform: translateX(-50%) scaleX(0.75) rotate(45deg);
+}
+
+/*
+ * `20px + 50px / 2` is the default text padding plus half the default avatar
+ * size — it aims the tail at the middle of the avatar. Both halves are control
+ * defaults (`text_padding` and `image_size`), and the widget re-emits this
+ * calc() with the real values through the `image_size` selectors the moment
+ * either is set, so these two rules only cover the untouched case.
+ */
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_above.elementor-testimonial--align-left .elementor-testimonial__content:after,
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_inline.elementor-testimonial--align-left .elementor-testimonial__content:after,
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_stacked.elementor-testimonial--align-left .elementor-testimonial__content:after {
+	left: calc(20px + 50px / 2);
+}
+
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_above.elementor-testimonial--align-right .elementor-testimonial__content:after,
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_inline.elementor-testimonial--align-right .elementor-testimonial__content:after,
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_stacked.elementor-testimonial--align-right .elementor-testimonial__content:after {
+	right: calc(20px + 50px / 2);
+}
+
+/* Side layouts: the tail points sideways, so it is scaled on Y instead. */
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_left .elementor-testimonial__content:after {
+	left: -8px;
+	transform: scaleY(0.75) rotate(135deg);
+}
+
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_right .elementor-testimonial__content:after {
+	right: -8px;
+	transform: scaleY(0.75) rotate(-45deg);
+}
+
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_left .elementor-testimonial__content:after,
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_right .elementor-testimonial__content:after {
+	top: calc(20px + 50px / 2);
+}
+
+/*
+ * The bubble has padding, so the avatar column beside it needs matching top
+ * padding to line up with the first line of text.
+ */
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_left .elementor-testimonial__footer,
+.elementor-testimonial--skin-bubble.elementor-testimonial--layout-image_right .elementor-testimonial__footer {
+	padding-top: 20px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Alignment — tablet (<= 1024px)                                             */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 1024px) {
+
+	.elementor-testimonial--tablet-align-right .elementor-testimonial {
+		text-align: right;
+	}
+
+	.elementor-testimonial--tablet-align-right.elementor-testimonial--layout-image_above .elementor-testimonial__footer,
+	.elementor-testimonial--tablet-align-right.elementor-testimonial--layout-image_inline .elementor-testimonial__footer {
+		flex-direction: row-reverse;
+		justify-content: end;
+	}
+
+	.elementor-testimonial--tablet-align-right.elementor-testimonial--layout-image_above .elementor-testimonial__image + cite,
+	.elementor-testimonial--tablet-align-right.elementor-testimonial--layout-image_inline .elementor-testimonial__image + cite {
+		margin-inline-end: 20px;
+		margin-inline-start: 0;
+	}
+
+	.elementor-testimonial--tablet-align-left .elementor-testimonial {
+		text-align: left;
+	}
+
+	.elementor-testimonial--tablet-align-left.elementor-testimonial--layout-image_above .elementor-testimonial__footer,
+	.elementor-testimonial--tablet-align-left.elementor-testimonial--layout-image_inline .elementor-testimonial__footer {
+		flex-direction: row;
+		justify-content: start;
+	}
+
+	.elementor-testimonial--tablet-align-left.elementor-testimonial--layout-image_above .elementor-testimonial__image + cite,
+	.elementor-testimonial--tablet-align-left.elementor-testimonial--layout-image_inline .elementor-testimonial__image + cite {
+		margin-inline-end: 0;
+		margin-inline-start: 20px;
+	}
+
+	.elementor-testimonial--tablet-align-center .elementor-testimonial {
+		text-align: center;
+	}
+
+	.elementor-testimonial--tablet-align-center.elementor-testimonial--layout-image_above .elementor-testimonial__footer,
+	.elementor-testimonial--tablet-align-center.elementor-testimonial--layout-image_inline .elementor-testimonial__footer {
+		justify-content: center;
+	}
+
+	.elementor-testimonial--tablet-align-center.elementor-testimonial--layout-image_inline .elementor-testimonial__image + cite {
+		text-align: start;
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+/* Alignment — mobile (<= 767px)                                              */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+
+	.elementor-testimonial--mobile-align-right .elementor-testimonial {
+		text-align: right;
+	}
+
+	.elementor-testimonial--mobile-align-right.elementor-testimonial--layout-image_above .elementor-testimonial__footer,
+	.elementor-testimonial--mobile-align-right.elementor-testimonial--layout-image_inline .elementor-testimonial__footer {
+		flex-direction: row-reverse;
+		justify-content: end;
+	}
+
+	.elementor-testimonial--mobile-align-right.elementor-testimonial--layout-image_above .elementor-testimonial__image + cite,
+	.elementor-testimonial--mobile-align-right.elementor-testimonial--layout-image_inline .elementor-testimonial__image + cite {
+		margin-inline-end: 20px;
+		margin-inline-start: 0;
+	}
+
+	.elementor-testimonial--mobile-align-left .elementor-testimonial {
+		text-align: left;
+	}
+
+	.elementor-testimonial--mobile-align-left.elementor-testimonial--layout-image_above .elementor-testimonial__footer,
+	.elementor-testimonial--mobile-align-left.elementor-testimonial--layout-image_inline .elementor-testimonial__footer {
+		flex-direction: row;
+		justify-content: start;
+	}
+
+	.elementor-testimonial--mobile-align-left.elementor-testimonial--layout-image_above .elementor-testimonial__image + cite,
+	.elementor-testimonial--mobile-align-left.elementor-testimonial--layout-image_inline .elementor-testimonial__image + cite {
+		margin-inline-end: 0;
+		margin-inline-start: 20px;
+	}
+
+	.elementor-testimonial--mobile-align-center .elementor-testimonial {
+		text-align: center;
+	}
+
+	.elementor-testimonial--mobile-align-center.elementor-testimonial--layout-image_above .elementor-testimonial__footer,
+	.elementor-testimonial--mobile-align-center.elementor-testimonial--layout-image_inline .elementor-testimonial__footer {
+		justify-content: center;
+	}
+
+	.elementor-testimonial--mobile-align-center.elementor-testimonial--layout-image_inline .elementor-testimonial__image + cite {
+		text-align: start;
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+/* Widget-scoped defaults                                                     */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Scoped to `.elementor-widget-testimonial-carousel` rather than `.swiper-slide`
+ * so they cannot leak into the other carousels that share
+ * carousel-module-base.css.
+ *
+ * The 20px slide padding is a default the `slide_padding` control overrides;
+ * both instances here set it explicitly (0 and 24/0/48/0).
+ */
+.elementor-widget-testimonial-carousel .swiper-slide {
+	padding: 20px;
+}
+
+/*
+ * `1.3em` and italic are the quote's default voice. `content_typography`
+ * overrides them, and instance #2 does exactly that (20px, normal) — so a
+ * missing rule here would only show up on an untouched widget, which is the
+ * hardest kind of gap to notice.
+ */
+.elementor-widget-testimonial-carousel .elementor-testimonial__text {
+	font-size: 1.3em;
+	font-style: italic;
+	line-height: 1.5;
+}
+
+/* Default avatar size; the `image_size` slider overrides both dimensions. */
+.elementor-widget-testimonial-carousel .elementor-testimonial__image img {
+	height: 50px;
+	width: 50px;
+}

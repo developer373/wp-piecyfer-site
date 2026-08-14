@@ -1,0 +1,268 @@
+/*
+ * piecyfer-gallery — replaces Elementor Pro's `widget-gallery` stylesheet.
+ *
+ * Scope note, because it is easy to over-reach here: the gallery is rendered by
+ * THREE stylesheets, and this file is only one of them.
+ *
+ *   - `elementor-gallery` (Elementor FREE, assets/lib/e-gallery) owns the layout
+ *     primitives — .e-gallery-container / -grid / -justified / -masonry, the
+ *     --columns/--hgap/--vgap math and the lazyload fade. Untouched.
+ *   - `e-transitions` (Pro) owns .elementor-animated-content and the
+ *     .elementor-animated-item--* keyframes. Untouched for now.
+ *   - this file owns the .elementor-gallery-* skin Pro layers on top.
+ *
+ * Almost everything here reads a CSS custom property rather than a literal
+ * value. Those properties are written by Elementor's generated per-page CSS from
+ * the widget's `selectors` arrays (e.g. `--image-border-radius`), so the
+ * property names are a contract with GalleryWidget.php: rename one on either
+ * side and the control silently stops doing anything.
+ *
+ * Deliberately NOT included: the `e--pointer-*` filter-bar pointer geometry.
+ * Pro does not ship it here either — it lives in the nav-menu widget's
+ * stylesheet, and this file only supplies the colours and widths that shade it.
+ * Adding it would make our filter bar look different from Pro's.
+ */
+
+/* Keeps the container measurable before the e-gallery script has positioned
+   anything; without it an absolutely-positioned justified/masonry gallery
+   collapses to zero height on first paint. */
+.elementor-gallery__container {
+	min-height: 1px;
+}
+
+/* ---------------------------------------------------------------- gallery item */
+
+.elementor-gallery-item {
+	display: block;
+	position: relative;
+	/* Clips the zoom/move hover animations to the tile. */
+	overflow: hidden;
+	text-decoration: none;
+	border: solid var(--image-border-width) var(--image-border-color);
+	border-radius: var(--image-border-radius);
+}
+
+/* The overlay and the caption block both fill the tile and stack over the
+   image. */
+.elementor-gallery-item__content,
+.elementor-gallery-item__overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.elementor-gallery-item__overlay {
+	mix-blend-mode: var(--overlay-mix-blend-mode);
+	transition-duration: var(--overlay-transition-duration);
+	transition-property: mix-blend-mode, transform, opacity, background-color;
+}
+
+/* Doubled class so this wins over the plain `.e-gallery-image` transition that
+   Elementor free's library sets on the same element. */
+.elementor-gallery-item__image.e-gallery-image {
+	transition-duration: var(--image-transition-duration);
+	transition-property: filter, transform;
+}
+
+/* ------------------------------------------------------------ overlay content */
+
+.elementor-gallery-item__content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: var(--content-justify-content, center);
+	padding: var(--content-padding);
+	text-align: var(--content-text-align);
+}
+
+.elementor-gallery-item__content > div {
+	transition-duration: var(--content-transition-duration);
+}
+
+/*
+ * "Sequenced Animation": title, description and any further children stagger in
+ * rather than moving as one block. The delay is a third of the configured
+ * duration per step, which is why the divisor is fixed at 3 regardless of how
+ * many children there are.
+ */
+.elementor-gallery-item__content.elementor-gallery--sequenced-animation > div:nth-child(2) {
+	transition-delay: calc(var(--content-transition-delay) / 3);
+}
+
+.elementor-gallery-item__content.elementor-gallery--sequenced-animation > div:nth-child(3) {
+	transition-delay: calc(var(--content-transition-delay) / 3 * 2);
+}
+
+.elementor-gallery-item__content.elementor-gallery--sequenced-animation > div:nth-child(4) {
+	transition-delay: calc(var(--content-transition-delay) / 3 * 3);
+}
+
+/* White is the fallback, not the default: the colour controls have no default,
+   so an untouched gallery still reads over a dark overlay. */
+.elementor-gallery-item__title {
+	width: 100%;
+	color: var(--title-text-color, #fff);
+	font-weight: 700;
+}
+
+.elementor-gallery-item__description {
+	width: 100%;
+	color: var(--description-text-color, #fff);
+}
+
+/* --------------------------------------------------------------- filter bar */
+
+.elementor-gallery__titles-container {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: var(--titles-container-justify-content, center);
+	margin-bottom: 20px;
+}
+
+/*
+ * Pointer colouring. Every pointer style except "framed" paints its indicator
+ * with a background on the :before/:after pseudo-elements; "framed" draws
+ * borders instead, so it needs the same colours applied to border-color.
+ */
+.elementor-gallery__titles-container:not(.e--pointer-framed) .elementor-item:before,
+.elementor-gallery__titles-container:not(.e--pointer-framed) .elementor-item:after {
+	background-color: var(--galleries-pointer-bg-color-hover);
+}
+
+.elementor-gallery__titles-container:not(.e--pointer-framed) .elementor-item.elementor-item-active:before,
+.elementor-gallery__titles-container:not(.e--pointer-framed) .elementor-item.elementor-item-active:after {
+	background-color: var(--galleries-pointer-bg-color-active);
+}
+
+.elementor-gallery__titles-container.e--pointer-framed .elementor-item:before {
+	border-color: var(--galleries-pointer-bg-color-hover);
+	border-width: var(--galleries-pointer-border-width);
+}
+
+.elementor-gallery__titles-container.e--pointer-framed .elementor-item:after {
+	border-color: var(--galleries-pointer-bg-color-hover);
+}
+
+.elementor-gallery__titles-container.e--pointer-framed .elementor-item.elementor-item-active:before,
+.elementor-gallery__titles-container.e--pointer-framed .elementor-item.elementor-item-active:after {
+	border-color: var(--galleries-pointer-bg-color-active);
+}
+
+/* "Draw" and "Corners" build the frame from two L-shaped halves, so each
+   pseudo-element only gets borders on two of its four sides. */
+.elementor-gallery__titles-container.e--pointer-framed.e--animation-draw .elementor-item:before {
+	border-width: 0 0 var(--galleries-pointer-border-width) var(--galleries-pointer-border-width);
+}
+
+.elementor-gallery__titles-container.e--pointer-framed.e--animation-draw .elementor-item:after {
+	border-width: var(--galleries-pointer-border-width) var(--galleries-pointer-border-width) 0 0;
+}
+
+.elementor-gallery__titles-container.e--pointer-framed.e--animation-corners .elementor-item:before {
+	border-width: var(--galleries-pointer-border-width) 0 0 var(--galleries-pointer-border-width);
+}
+
+.elementor-gallery__titles-container.e--pointer-framed.e--animation-corners .elementor-item:after {
+	border-width: 0 var(--galleries-pointer-border-width) var(--galleries-pointer-border-width) 0;
+}
+
+/* The line pointers are sized by height rather than border-width. */
+.elementor-gallery__titles-container .e--pointer-underline .elementor-item:after,
+.elementor-gallery__titles-container .e--pointer-overline .elementor-item:before,
+.elementor-gallery__titles-container .e--pointer-double-line .elementor-item:before,
+.elementor-gallery__titles-container .e--pointer-double-line .elementor-item:after {
+	height: var(--galleries-pointer-border-width);
+}
+
+/* --space-between is declared here, not on the container, so the "Space
+   Between" control's selector ({{WRAPPER}} .elementor-gallery-title) can
+   override it on the same element. */
+.elementor-gallery-title {
+	--space-between: 10px;
+	position: relative;
+	padding: 7px 14px;
+	color: #6d7882;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.3s;
+}
+
+.elementor-gallery-title--active {
+	color: #495157;
+}
+
+/* Logical property: gives right margin in LTR and left in RTL from one rule. */
+.elementor-gallery-title:not(:last-child) {
+	margin-inline-end: var(--space-between);
+}
+
+/* Only applies once a title is actually present above the description. */
+.elementor-gallery-item__title + .elementor-gallery-item__description {
+	margin-top: var(--description-margin-top);
+}
+
+/* ------------------------------------------------------------- hover / focus */
+
+/* Widens free's `transition-property: all` on .e-gallery-item to cover the
+   border and radius that the Hover tab animates. */
+.e-gallery-item.elementor-gallery-item {
+	transition-property: all;
+}
+
+/*
+ * Reveal on hover AND on focus, so the overlay is reachable by keyboard — the
+ * render adds tabindex="0" to non-linked items with a title for exactly this.
+ *
+ * The `.elementor-animated-content` selectors in the same group are NOT
+ * hover-scoped: an entrance animation moves the element, so it must sit at full
+ * opacity from the start or it would fade and slide at once.
+ */
+.e-gallery-item.elementor-animated-content .elementor-animated-item--enter-from-top,
+.e-gallery-item.elementor-animated-content .elementor-animated-item--enter-from-right,
+.e-gallery-item.elementor-animated-content .elementor-animated-item--enter-from-bottom,
+.e-gallery-item.elementor-animated-content .elementor-animated-item--enter-from-left,
+.e-gallery-item:hover .elementor-gallery__item-overlay-bg,
+.e-gallery-item:hover .elementor-gallery__item-overlay-content,
+.e-gallery-item:hover .elementor-gallery__item-overlay-content__title,
+.e-gallery-item:hover .elementor-gallery__item-overlay-content__description,
+.e-gallery-item:focus .elementor-gallery__item-overlay-bg,
+.e-gallery-item:focus .elementor-gallery__item-overlay-content,
+.e-gallery-item:focus .elementor-gallery__item-overlay-content__title,
+.e-gallery-item:focus .elementor-gallery__item-overlay-content__description {
+	opacity: 1;
+}
+
+/*
+ * Filter-bar title colours. Order is load-bearing: the active rule must come
+ * after the hover/focus rule, because a title can be both active and hovered
+ * and the Active tab's colour is the one that should win. `a.` raises
+ * specificity over the theme's generic link colour.
+ */
+a.elementor-item.elementor-gallery-title {
+	color: var(--galleries-title-color-normal);
+}
+
+a.elementor-item.elementor-gallery-title:hover,
+a.elementor-item.elementor-gallery-title:focus,
+a.elementor-item.elementor-gallery-title.highlighted,
+a.elementor-item.elementor-gallery-title.elementor-item-active {
+	color: var(--galleries-title-color-hover);
+}
+
+a.elementor-item.elementor-gallery-title.elementor-item-active {
+	color: var(--gallery-title-color-active);
+}
+
+/* ------------------------------------------------------------ flex containers */
+
+/* Inside a Flexbox Container the widget is a flex child, so it takes its width
+   and grow factor from the container's own custom properties instead of
+   defaulting to 100%. */
+.e-con > .elementor-widget-gallery,
+.e-con-inner > .elementor-widget-gallery {
+	--flex-grow: var(--container-widget-flex-grow);
+
+	width: var(--container-widget-width);
+}
