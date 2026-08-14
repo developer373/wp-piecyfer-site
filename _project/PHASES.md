@@ -49,7 +49,26 @@ So Phase A splits:
 4. `post-7718.css` is in `<head>` and nothing we can find enqueues it. If it is Pro's, the popup
    loses all styling at cutover. **Trace this before Phase B.**
 5. The reCAPTCHA v2 and v3 keys share the same `6LcmQX` prefix, which usually means one key was
-   pasted into both fields. Verify against the Google console.
+   pasted into both fields. Verify against the Google console. (The form back end already handles
+   this safely — a missing score is treated as a configuration fault and the enquiry is accepted,
+   where Pro would reject every submission on all seven protected forms.)
+6. **`vamtam-has-theme-widget-styles` — the largest unaddressed risk in the swap.** A live page
+   carries it on 27 elements; only 3 come from `piecyfer-core`. It sits on every widget wrapper and
+   gates most of the theme's CSS, and it belongs to the *companion plugin*, not the theme. If
+   `piecyfer-core` does not emit it on the same elements, most of the site's styling vanishes the
+   moment that plugin goes.
+
+### Three one-line decisions the theme work left open, deliberately
+
+- `piecyfer-theme/style.css` says `Author: PieCyfer`, which makes the VamTam companion plugin
+  self-disable on activation. If you want the two-step swap — theme first, plugin second, each
+  verified separately — that line has to say `VamTam` for exactly one commit.
+- The tokens `<style>` id changes from `vamtam-theme-options` to `piecyfer-tokens`: an intentional
+  markup difference on 39 pages. Zero-diff discipline argues for keeping the old id through the
+  swap commit and renaming afterwards.
+- `print_late_styles()` mid-body is reproduced on purpose so the swap stays zero-diff. It is a real
+  defect — two render-blocking stylesheets inside `#main` on 17 pages — and should be deleted in a
+  separate commit once the swap is verified.
 
 ---
 
