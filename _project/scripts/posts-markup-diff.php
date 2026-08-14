@@ -25,7 +25,7 @@
  */
 
 define( 'WP_USE_THEMES', false );
-require_once 'C:/xampp/htdocs/piecyfer/wp-load.php';
+require_once 'D:/laragon/www/piecyfer/wp-load.php';
 
 if ( ! did_action( 'elementor/loaded' ) ) {
 	exit( "Elementor is not loaded.\n" );
@@ -328,7 +328,7 @@ foreach ( $jobs as $i => $job ) {
 
 echo "\n" . str_repeat( '=', 78 ) . "\nCONTEXT FIDELITY (reference render vs the real captured page)\n" . str_repeat( '=', 78 ) . "\n";
 
-$snap_dir = 'C:/xampp/htdocs/piecyfer/_project/snapshots/ref2-a/html';
+$snap_dir = 'D:/laragon/www/piecyfer/_project/snapshots/ref2-a/html';
 $seen_ctx = array();
 foreach ( $jobs as $i => $job ) {
 	$ctx = $contexts[ $job['ctx'] ];

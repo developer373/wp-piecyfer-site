@@ -24,7 +24,7 @@
  * Usage:  php fix-additional-js.php [--dry-run]
  */
 
-$root    = 'C:/xampp/htdocs/piecyfer';
+$root    = 'D:/laragon/www/piecyfer';
 $dry_run = in_array( '--dry-run', $argv, true );
 
 $config = file_get_contents( "$root/wp-config.php" );

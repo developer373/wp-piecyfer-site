@@ -14,7 +14,7 @@
  * both resolvers, and prints a table. Exit code is non-zero on any disagreement,
  * so it can gate a verification run the way which-implementation.php does.
  *
- * Usage:  C:/xampp/php/php.exe _project/scripts/theme-builder-routing.php [--verbose]
+ * Usage:  D:/laragon/bin/php/php-8.3.30-Win32-vs16-x64/php.exe _project/scripts/theme-builder-routing.php [--verbose]
  *
  * Requires Elementor Pro to still be installed — the whole point is the
  * side-by-side. Once Pro is deleted, run it one last time before removal and
@@ -22,7 +22,7 @@
  */
 
 define( 'WP_USE_THEMES', false );
-require_once 'C:/xampp/htdocs/piecyfer/wp-load.php';
+require_once 'D:/laragon/www/piecyfer/wp-load.php';
 
 $verbose = in_array( '--verbose', $argv, true );
 

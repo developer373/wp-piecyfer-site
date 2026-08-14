@@ -13,7 +13,7 @@
  */
 
 define( 'WP_USE_THEMES', false );
-require_once 'C:/xampp/htdocs/piecyfer/wp-load.php';
+require_once 'D:/laragon/www/piecyfer/wp-load.php';
 
 if ( ! did_action( 'elementor/loaded' ) ) {
 	exit( "Elementor is not loaded.\n" );

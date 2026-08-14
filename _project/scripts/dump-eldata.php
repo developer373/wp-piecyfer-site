@@ -6,7 +6,7 @@
  *
  * Usage: php dump-eldata.php > eldata.json
  */
-$root   = 'C:/xampp/htdocs/piecyfer';
+$root   = 'D:/laragon/www/piecyfer';
 $config = file_get_contents( "$root/wp-config.php" );
 function c( $config, $n, $d = null ) {
 	return preg_match( "/define\(\s*['\"]{$n}['\"]\s*,\s*['\"](.*?)['\"]\s*\)/s", $config, $m ) ? $m[1] : $d;

@@ -16,7 +16,7 @@
  * so any change can be reverted.
  */
 
-$root = 'C:/xampp/htdocs/piecyfer';
+$root = 'D:/laragon/www/piecyfer';
 
 $config = file_get_contents( "$root/wp-config.php" );
 function c( $config, $n, $d = null ) {

@@ -7,7 +7,7 @@
  */
 
 define( 'WP_USE_THEMES', false );
-require_once 'C:/xampp/htdocs/piecyfer/wp-load.php';
+require_once 'D:/laragon/www/piecyfer/wp-load.php';
 
 global $wpdb;
 

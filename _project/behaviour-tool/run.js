@@ -147,7 +147,7 @@ const resultPath = path.join(resultsDir, `${label}.json`);
  */
 function clearElementorCache() {
   const script = path.join(__dirname, '..', 'scripts', 'clear-elementor-cache.php');
-  const php = process.env.PHP_BIN || 'C:/xampp/php/php.exe';
+  const php = process.env.PHP_BIN || 'D:/laragon/bin/php/php-8.3.30-Win32-vs16-x64/php.exe';
   const out = execFileSync(php, [script], { encoding: 'utf8' });
   console.log('elementor cache cleared: ' +
     out.split('\n').filter(l => /^_elementor|^generated/.test(l)).join(' | '));
