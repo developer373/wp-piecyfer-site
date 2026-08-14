@@ -41,20 +41,27 @@ that never ran:
 | 3 | `compare.js` reported IDENTICAL for two empty snapshots |
 | 4 | Registering at priority 20 let VamTam displace our widget — the page still looked perfect |
 | 5 | Elementor keys control stacks by widget name, so probing two implementations in one process made the second inherit the first's stack |
+| 6 | `ref2-a/shots/` was never in the handover archive, so `compare.js` iterated an empty baseline, compared **0** screenshots, and still printed "all screenshots identical". Its `nothingCompared` guard only fires when the *second* snapshot is empty |
+| 7 | WordPress replaced a plugin on disk (UpdraftPlus 1.26.6 → 2.26.6.26) between two captures, unprompted, while the plugin was inactive. Site code can move on its own unless `DISALLOW_FILE_MODS` forbids it |
 
-All five are fixed or gated. Assume there is a sixth. Before believing any pass, ask what would
-have to be true for it to be meaningless, and check that.
+Six and seven were found during the Laragon restore, which is the answer to "assume there is a
+sixth": there was, and there was a seventh behind it. Both are now gated — `RESTORE.md` explains
+the reading habit that catches #6 (**always read the "Screenshots compared" row**, a verdict alone
+is not evidence) and `wp-config.php` carries the constants that close #7.
+
+Assume there is an eighth. Before believing any pass, ask what would have to be true for it to be
+meaningless, and check that.
 
 ## Gates — run these, do not skip them
 
 ```bash
 # 1. Takeover gate: is OUR class actually serving each widget and skin? Exits non-zero if not.
-C:\xampp\php\php.exe _project/scripts/which-implementation.php
+D:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.exe _project/scripts/which-implementation.php
 
 # 2. Pixel + markup. Captures 43 URLs x 3 viewports, diffs two runs.
 cd _project/pixel-tool
 node capture.js <label> [--quick]        # --quick = 9-page subset
-node compare.js ref2-a <label>
+node compare.js ref3-a <label>           # ALWAYS read "Screenshots compared" — 0 means nothing ran
 
 # 3. Behaviour — what a screenshot cannot see.
 cd _project/behaviour-tool
@@ -62,8 +69,17 @@ node run.js <label> --compare pro-active
 node run.js <label> --simulate-no-pro --compare pro-active   # falsification
 ```
 
-`ref2-a` is the current reference: 43 pages, captured with Elementor's caches cleared, proven
-stable against a second full run (117 screenshots, 0 differences).
+**`ref3-a` is the current reference**, captured on Laragon 2026-08-14: 43 pages, Elementor's caches
+cleared, proven stable against a second full run — `ref3-a` vs `ref3-b`, **129 screenshots compared,
+0 visual differences, 0 markup changes, IDENTICAL**. The comparison was also proven able to fail:
+a one-word title change injected into a copy was caught and named.
+
+`ref2-a` is **retired as a comparison target and must not be used.** Its screenshots were never in
+the handover archive, so comparing against it silently compares zero images (false-pass mechanism
+#6 above), and it predates the form and posts takeovers so its markup is stale too. Its normalised
+HTML is still useful as a historical record. Same for `p4i-posts`, with one extra caveat: it holds
+`elementor-fit-height` on three home-page thumbnails that measurement shows should not be there —
+it captured the losing side of a CSS/JS race. `RESTORE.md` has the numbers.
 
 `results/pro-active.json` in the behaviour tool records what the site *does* while Pro still
 works — 25 tests, 168 checks. **That artefact is unrecoverable once Pro is removed.** Never
@@ -86,10 +102,20 @@ delete it.
 
 ## Environment
 
-XAMPP on Windows. Site at `http://localhost/piecyfer/`, docroot `C:\xampp\htdocs\piecyfer`.
-PHP `C:\xampp\php\php.exe`, MySQL `C:\xampp\mysql\bin\mysql.exe` (db `piecyfer`, user `root`, no
-password). If pages hang but static files serve, check MariaDB — it has hung at the end of startup
-after an unclean reboot before, accepting connections but never answering.
+Laragon on Windows (moved from XAMPP 2026-08-14 — see `_project/DEPLOY.md`). Site at
+`http://localhost/piecyfer/`, docroot `D:\laragon\www\piecyfer`. The URL is deliberately unchanged
+from the XAMPP install, so `ref2-a` is still a valid comparison target and no search-replace was
+run. Ignore Laragon's `piecyfer.test` vhost.
+
+PHP `D:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.exe` (8.3.30), MySQL
+`D:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe` (MySQL 8.4.3, db `piecyfer`, user `root`,
+no password). Note this is **MySQL, not MariaDB** — the previous machine ran MariaDB. If pages hang
+but static files serve, check the database server: it has hung at the end of startup after an
+unclean reboot before, accepting connections but never answering.
+
+Version drift from the capture machine is a live risk to the harness: if a comparison shows small
+differences spread across every page rather than concentrated in one place, suspect PHP/MySQL/font
+differences and re-baseline honestly rather than widening the tolerance.
 
 ## Things that are still wrong and are known
 
