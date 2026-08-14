@@ -275,6 +275,41 @@ for that deployment, and needs the credential rotation in `01-REBUILD-PLAN.md` �
 
 ---
 
+## The Theme Builder cutover is atomic — this changes the endgame
+
+Everything in this project so far has been reversible one widget at a time. The Theme Builder
+cannot be. It is not a preference, it is a guaranteed fatal:
+
+Pro's `popup`, `floating-buttons` and `custom-code` modules each hook
+`elementor/theme/register_locations` with a callback **type-hinted on Pro's own
+`Locations_Manager`**. The moment our locations manager fires that action while Pro is installed,
+PHP throws a `TypeError` and every page dies. There is no side-by-side mode for this component,
+so `Module::boot()` refuses outright while `ELEMENTOR_PRO_VERSION` is defined.
+
+**Consequence:** Pro comes out and our Theme Builder switches on in the *same commit*. That single
+commit is the highest-risk moment in the project, and it can only be attempted once everything
+else is finished — `posts`, `archive-posts`, the form back end, the popup, and the JavaScript
+layer. If any of those is missing at that point, the page renders chrome around a hole.
+
+What de-risks it, and why it is worth the care:
+
+- **Routing is already proven offline.** `scripts/theme-builder-routing.php` resolves every
+  location through our resolver and compares against Pro's, without changing any output:
+  **44 of 44 identical**, including the specificity cases — `/privacy-policy/` correctly picks
+  footer 991509 (priority 20) over the site-wide 1273 (priority 100).
+- **The wrapper markup is proven byte-for-byte** for all eight document types, and the control-id
+  diff against Pro is empty in both directions, so the generated CSS keeps its selectors.
+- **Flush Elementor's CSS cache before comparing after cutover.** Otherwise the comparison runs
+  against files Pro generated, and the document-type registration — the whole reason those
+  selectors stay `.elementor-171` rather than `body.elementor-page-171` — goes untested.
+
+Two things will fail at cutover unless built first: **archive-posts**, or `/category/*` and `/?s=`
+render an empty middle; and **popup 7718**, which has no display conditions and currently rides
+Pro's popup module into the manual queue. The popup appears on every captured page, so every
+baseline comparison fails until it is ported.
+
+---
+
 ## The registration-priority trap (found before it bit us)
 
 `piecyfer-core` registers widgets at priority **20**, chosen to beat Pro's default 10. But VamTam's

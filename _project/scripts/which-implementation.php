@@ -139,15 +139,74 @@ foreach ( $expected as $class ) {
 	printf( "  %-40s FAIL — %s\n", $class, $failures[ $class ] );
 }
 
-if ( $failures ) {
+/*
+ * Skins are a second, independent way to lose the takeover.
+ *
+ * Owning the `posts` widget is not the same as owning what draws a post. Its
+ * output comes from a Skin, selected by the saved `_skin` setting, and skins are
+ * registered onto the widget by whoever asks — VamTam registers `vamtam_classic`
+ * onto `posts` and `archive-posts`, and all 15 saved instances select it. So we
+ * could win the widget race, render through someone else's skin, and see a
+ * perfect pixel comparison. Exactly the failure the widget gate exists for, one
+ * level down.
+ *
+ * Anything not ours must be listed here deliberately, so that keeping a
+ * third-party skin is a decision on the record rather than an oversight.
+ */
+$allowed_foreign_skins = array(
+	// Still VamTam's until `posts` / `archive-posts` are rebuilt. Tracked in
+	// _project/07-POSTS-SPEC.md; remove these two lines when they are ours.
+	'posts:vamtam_classic',
+	'archive-posts:vamtam_classic',
+);
+
+echo "\n=== SKIN GATE ===\n";
+
+$skin_failures = array();
+foreach ( $expected as $class ) {
+	$name = $serving[ $class ] ?? null;
+	if ( null === $name ) {
+		continue; // already reported by the widget gate
+	}
+
+	$skins = $widgets[ $name ]->get_skins();
+	if ( ! $skins ) {
+		continue;
+	}
+
+	foreach ( $skins as $skin_id => $skin ) {
+		$skin_class = get_class( $skin );
+		$key        = $name . ':' . $skin_id;
+
+		if ( str_starts_with( $skin_class, 'PieCyfer\\' ) ) {
+			printf( "  %-34s ok        %s\n", $key, $skin_class );
+			continue;
+		}
+
+		if ( in_array( $key, $allowed_foreign_skins, true ) ) {
+			printf( "  %-34s allowed   %s\n", $key, $skin_class );
+			continue;
+		}
+
+		$skin_failures[ $key ] = $skin_class;
+		printf( "  %-34s FAIL      %s\n", $key, $skin_class );
+	}
+}
+
+if ( ! $skin_failures ) {
+	echo "  (no unexpected third-party skins)\n";
+}
+
+if ( $failures || $skin_failures ) {
 	printf(
-		"\n  %d of %d declared widget(s) did NOT take over. Do not trust any comparison run in this state:\n" .
-		"  the page will look correct because someone else's widget is drawing it.\n",
+		"\n  %d widget(s) and %d skin(s) are not ours and not on the allow-list.\n" .
+		"  Do not trust any comparison run in this state: the page will look correct\n" .
+		"  because someone else's code is drawing it.\n",
 		count( $failures ),
-		count( $expected )
+		count( $skin_failures )
 	);
 	exit( 1 );
 }
 
-printf( "\n  all %d declared widget(s) are served by piecyfer-core\n", count( $expected ) );
+printf( "\n  all %d declared widget(s) served by piecyfer-core; every skin accounted for\n", count( $expected ) );
 exit( 0 );
