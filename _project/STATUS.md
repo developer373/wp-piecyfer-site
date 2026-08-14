@@ -349,14 +349,55 @@ loads it. Treat these as drafts to finish, not as work to trust:
 | `src/Widgets/PostsWidget.php`, `src/Skins/` | control parity reported exact, markup comparison not run |
 | `themes/piecyfer-theme/` | templates part-written |
 | `src/Popup/` | control coverage check not run |
-| `_project/behaviour-tool/` | tests written, **the `pro-active` reference run never completed** |
+| `_project/behaviour-tool/` | ✅ **correction: the run DID complete** — `results/pro-active.json`, 25 tests, 168 checks, all passing, 07:57→08:06. The agent finished about two minutes before it was stopped. |
+
+### The behaviour harness is now a proven gate, and it doubles as the JS spec
+
+`_project/behaviour-tool/` records what the site *does*, which the pixel harness cannot see. Two
+runs, and the second is the one that makes the first mean anything:
+
+| Run | Result |
+|---|---|
+| `pro-active` | 25 tests, 168 checks, **25 pass** |
+| `no-pro-preview` (`--simulate-no-pro`) | **16 pass, 9 fail** |
+
+`--simulate-no-pro` blocks Pro's scripts at the network layer without deactivating anything, so it
+is a falsification test: 25 out of 25 green proves nothing until something turns them red. It did.
+
+**The 9 that broke are the specification for our JavaScript layer:**
+
+| Test | What actually dies |
+|---|---|
+| `env-frontend-stack` | SmartMenus is not registered on jQuery |
+| `nav-toggle-mobile` / `nav-toggle-tablet` | burger renders and does nothing — `aria-expanded` never flips, dropdown height stays 0 |
+| `nav-submenu-mobile` | no `a.has-submenu` exists at all; parent items become dead `href="#"` |
+| `carousel-testimonial-init` | no Swiper instance, 0 slides known |
+| `carousel-testimonial-arrows` | arrows render, `realIndex` never moves |
+| `carousel-autoplay` | `autoplay.running` false |
+| `form-recaptcha-v3-token` | no admin-ajax POST, no token — every real submission would be rejected server-side |
+| `popup-consultation-opens` | the popup body is not in the page; it is fetched over admin-ajax by Pro's router |
+
+**The 16 that survived are just as useful** — they are *not* Pro's and need nothing from us: the
+desktop megamenu hover, all three search-form cases, the FAQ toggle, back-to-top and the ekit modal
+(ElementsKit), the empty-submit block (native HTML5 validation), and all ten console-clean checks.
+
+Two libraries were checked rather than assumed: **SmartMenus is Pro's** (already vendored into
+`assets/lib/`), and **Magnific Popup is ElementsKit's**, so it survives Pro's removal untouched.
+
+Note what this leaves: our JS layer covers nav-menu, carousel, search-form and gallery, but **the
+reCAPTCHA token and the popup are not in it** — those belong to the form back end and the popup
+module respectively.
 
 ### Do these first, in this order
 
-1. **Record the behaviour reference while Pro still works.** `_project/behaviour-tool/` exists but
-   `results/pro-active.json` does not. This is the only window to capture what the site actually
-   *does* — once Pro is deactivated the reference is unrecoverable. Everything about the JS layer
-   depends on it.
+1. ~~Record the behaviour reference while Pro still works.~~ **Done** — `results/pro-active.json`
+   holds 25 tests / 168 checks, all passing, captured while Pro was live. That artefact is
+   unrecoverable once Pro goes, and it is now safe.
+
+   The follow-up that matters more: **prove those tests can fail.** 25 out of 25 green means
+   nothing until something makes them go red. `run.js --simulate-no-pro` blocks Pro's scripts at
+   the network layer without deactivating anything, so it doubles as the falsification test and as
+   the precise specification for what our JS layer has to replace.
 2. **Verify the JS layer against that reference.** It is written and syntax-clean and has never
    been executed. Syntax-clean is not working.
 3. **Re-run the visual control on a quiet machine** (task #20). `p4g-form2` showed two visual
