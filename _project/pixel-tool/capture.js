@@ -351,6 +351,23 @@ async function settle(page) {
       });
       document.querySelectorAll('.swiper-lazy-preloader').forEach(el => el.remove());
 
+      // Re-run the layout-dependent handlers on every pass, not once before the
+      // loop.
+      //
+      // `sw.update()` above recomputes slide widths, which changes the very
+      // container each thumbnail's aspect ratio is measured against — so a
+      // fit-height decision taken before it is stale, and nothing was asking
+      // for it to be taken again. That is why the blog listing stayed bistable
+      // after the first fix: the resize fired, and then the swiper update moved
+      // the goalposts.
+      //
+      // Dispatching inside the loop means the signature cannot settle until the
+      // class toggling has settled too, because outerHTML length is part of it.
+      window.dispatchEvent(new Event('resize'));
+      if (window.jQuery) {
+        window.jQuery(window).trigger('resize');
+      }
+
       const imgs = [...document.images];
       return [
         imgs.length,
@@ -589,6 +606,18 @@ function clearElementorCache() {
   // change. The full 39-page set is the gate at the end of a phase.
   const all = quick ? QUICK : PATHS;
   let targets = only ? all.filter(p => p.includes(only)) : all;
+
+  // A --only that matches nothing must be an error, not an empty run.
+  //
+  // `--only /blogs` silently matched zero urls: Git Bash rewrites a leading
+  // slash into a Windows path before node ever sees it. The run "succeeded",
+  // wrote an empty snapshot, and comparing two of those reported IDENTICAL —
+  // a green tick for a test that never executed.
+  if (only && !targets.length) {
+    console.error(`--only "${only}" matched none of the ${all.length} urls. Nothing captured.`);
+    console.error('(Under Git Bash, drop the leading slash: --only blogs, not --only /blogs.)');
+    process.exit(2);
+  }
 
   if (!force) {
     const before = targets.length;

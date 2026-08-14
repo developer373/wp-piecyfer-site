@@ -172,7 +172,14 @@ lines.push('\n## Newly broken assets (404 / failed requests)\n');
 lines.push(brokenLines.length ? brokenLines.join('\n') : '_None._');
 
 // ----------------------------------------------------------------- report
-const clean = htmlChanged === 0 && shotsChanged === 0 && missing === 0 && newErrors === 0 && newBroken === 0;
+//
+// Comparing nothing is not a pass. Two empty snapshots satisfy every "=== 0"
+// below, so a mistyped label or a --only that matched no urls used to print a
+// green IDENTICAL and exit 0. A gate that approves an experiment which never
+// ran is worse than no gate.
+const nothingCompared = compared === 0 && slugsB.size === 0;
+const clean = !nothingCompared &&
+  htmlChanged === 0 && shotsChanged === 0 && missing === 0 && newErrors === 0 && newBroken === 0;
 const header =
   `# Pixel & markup comparison\n\n` +
   `**${a}** → **${b}**\n\n` +
@@ -189,7 +196,11 @@ const header =
   `| Missing artefacts | ${missing} |\n` +
   `| New console errors | ${newErrors} |\n` +
   `| Newly broken assets | ${newBroken} |\n` +
-  `| **Verdict** | ${clean ? '✅ **IDENTICAL**' : '⚠️ **DIFFERENCES FOUND**'} |\n\n`;
+  `| **Verdict** | ${
+    nothingCompared
+      ? '⛔ **NOTHING COMPARED** — no artefacts in `' + b + '`; this proves nothing'
+      : clean ? '✅ **IDENTICAL**' : '⚠️ **DIFFERENCES FOUND**'
+  } |\n\n`;
 
 fs.writeFileSync(path.join(outDir, 'report.md'), header + lines.join('\n') + '\n');
 console.log(header);

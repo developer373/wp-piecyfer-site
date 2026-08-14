@@ -22,8 +22,9 @@ Updated: **2026-08-14**
 | **2 — Pixel baseline & harness** | ✅ Done |
 | **3 — Plugin consolidation** | 🟡 Partial — 9 removed; caching/SEO left to you |
 | **4a — `piecyfer-core` skeleton** | ✅ Done, verified no-op |
-| **4b — dynamic tags + first widgets** | 🟡 Tags + Template **verified**; 3 more widgets written |
-| 4c–4n — remaining widgets, theme builder, form, popup | ⬜ The bulk of the work |
+| **4b — dynamic tags + first widgets** | ⚠️ Re-verification needed — signed off under a cache that faked passes |
+| **4c — blockquote + search-form** | ✅ Verified against the fixed harness |
+| 4d–4n — remaining widgets, theme builder, form, popup | ⬜ The bulk of the work |
 | 5 — Theme decision | ⬜ Blocked on your decision |
 | 6 — Performance | ⬜ Not started |
 | 7 — Technical SEO | ⬜ Not started |
@@ -99,6 +100,51 @@ would still pass.
 
 Written, not yet verified: `theme-post-title`, `theme-archive-title`, `theme-site-logo`.
 
+**Every one of these sign-offs predates the harness fix below and has to be re-checked.** Two of
+them were already proven wrong.
+
+### Phase 4c — `blockquote`, `search-form`, and a harness that was lying
+
+`e_element_cache` is active on this site. It caches an entire document's **rendered HTML** in
+`_elementor_element_cache` postmeta for 24 hours, together with the style and script handles that
+render enqueued. While that cache is warm Elementor never calls the widgets at all.
+
+The verify loop was therefore producing **false passes**: a capture could report a widget
+byte-identical when our widget had never executed. Three genuinely correct fixes appeared to have
+no effect at all, which is what finally exposed it.
+
+`capture.js` now clears the cache before every run and treats a failure to do so as fatal.
+`piecyfer-core`'s own automatic clearing is *not* sufficient — its signature covers the widget and
+stylesheet **lists**, so adding a widget invalidates the cache but editing one does not.
+
+Four real bugs were hiding behind it:
+
+| Widget | Bug |
+|---|---|
+| `search-form` | `skin` lacked `frontend_available`, so `data-settings` was missing from every page |
+| `search-form` | the icon hard-coded `aria-hidden`; Pro passes the widget's `icon` attributes (`fa fa-search`) |
+| `theme-site-logo` | `home_url( '/' )` added a trailing slash to the logo link everywhere — **was recorded as verified** |
+| `blockquote` | a `tweet_button` condition Pro does not have on `section_button_style` stripped `button_color_source`, losing `elementor-blockquote--button-color-official` — **was recorded as verified** |
+
+Five section ids also did not match Pro. That is not cosmetic: third-party code injects controls
+at `elementor/element/<widget>/<section_id>/before_section_end`, and ElementsKit does exactly
+this, so a renamed section silently drops the injection.
+
+Result: 24 screenshots, **0 visual changes**, and every remaining markup difference accounted for.
+
+### The baseline is contaminated, and the contamination is informative
+
+Clearing the cache revealed three defects **in the baseline itself**, all caused by cached HTML
+imported from production along with the database:
+
+1. An ElementsKit nav logo still pointing at `https://piecyfer.com/...` — the local site was
+   fetching that image from the live domain. Zero production URLs remain in `postmeta` now.
+2. A missing `post-8519.css`. Template 8519 is pulled into the Blog Post Template by an
+   `[elementor-template]` shortcode and the cached asset list had never recorded it.
+3. **Comment forms carrying the wrong post id** — see Open decisions.
+
+Because of these, a comparison against `baseline` can never legitimately reach *IDENTICAL*.
+
 ---
 
 ## The approach that makes this safe
@@ -149,6 +195,21 @@ Remaining, roughly in order of effort:
 ---
 
 ## Open decisions
+
+0. **`e_element_cache` — a live bug, not a preference.** The single-post Theme Builder template
+   is one Elementor document, so its cached HTML is stored against the *template* and reused for
+   **every** blog post. That includes the comment form. Measured on
+   `building-high-performing-web-apps…` (post 993554):
+
+   | | `comment_post_ID` | cancel-reply link |
+   |---|---|---|
+   | cache warm | **994789** | `/boosting-sales-with-a-powerful-crm/` |
+   | cache cleared | 993554 ✅ | `/building-high-performing-web-apps…/` ✅ |
+
+   A reader commenting on one article has the comment filed against another. Pre-existing, and it
+   will behave the same on the live site. Recommendation: **turn the experiment off.** It is not
+   done yet because it also changes which stylesheets a page enqueues, so it moves the reference
+   point for every remaining widget — worth doing deliberately rather than as a side effect.
 
 1. **Theme** — buy a VamTam licence (~$69), or build `piecyfer-theme`? My recommendation is to
    build our own: the header, footer, single, archive, search and 404 are all Elementor Theme

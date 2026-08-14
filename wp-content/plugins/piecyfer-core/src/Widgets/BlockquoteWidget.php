@@ -53,6 +53,19 @@ final class BlockquoteWidget extends AbstractWidget {
 	}
 
 	/**
+	 * Pro declares this false; `Element_Base` defaults it to **true**.
+	 *
+	 * It decides whether the element is baked into the document's element cache
+	 * or emitted as an `[elementor-element]` placeholder and re-rendered on
+	 * every request. Not overriding it therefore silently changes the caching
+	 * behaviour of the widget we are replacing, which is a difference no pixel
+	 * comparison would ever show.
+	 */
+	protected function is_dynamic_content(): bool {
+		return false;
+	}
+
+	/**
 	 * @return string[]
 	 */
 	public function get_style_depends(): array {
@@ -462,6 +475,30 @@ final class BlockquoteWidget extends AbstractWidget {
 				'range'     => array( 'px' => array( 'max' => 3, 'step' => 0.1 ) ),
 				'selectors' => array(
 					'{{WRAPPER}} .elementor-blockquote__tweet-button' => 'transition-duration: {{SIZE}}{{UNIT}};',
+				),
+			)
+		);
+
+		// Not populated anywhere on this site, so it emits no CSS today — but a
+		// missing control is a missing CSS rule the moment anyone touches the
+		// button in the editor, which is exactly the failure this project is
+		// built to avoid. Reproduced with Pro's split selector: the group styles
+		// the span and the i, while font-family alone is applied to the button.
+		$default_fonts = \Elementor\Plugin::$instance->kits_manager->get_current_settings( 'default_generic_fonts' );
+		$default_fonts = $default_fonts ? ', ' . $default_fonts : '';
+
+		$this->add_group_control(
+			Group_Control_Typography::get_type(),
+			array(
+				'name'           => 'button_typography',
+				'selector'       => '{{WRAPPER}} .elementor-blockquote__tweet-button span, {{WRAPPER}} .elementor-blockquote__tweet-button i',
+				'separator'      => 'before',
+				'fields_options' => array(
+					'font_family' => array(
+						'selectors' => array(
+							'{{WRAPPER}} .elementor-blockquote__tweet-button' => 'font-family: "{{VALUE}}"' . $default_fonts . ';',
+						),
+					),
 				),
 			)
 		);
