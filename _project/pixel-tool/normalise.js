@@ -14,6 +14,7 @@
  */
 function normalise(html) {
   return sortInlineStyles(
+    dropTransientTransitionDuration(
     html
     // The harness injects its own freeze stylesheet, which page.content()
     // captures. Without stripping it, editing those rules registers as a
@@ -62,7 +63,38 @@ function normalise(html) {
     .replace(/[ \t]+$/gm, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
-  );
+  ));
+}
+
+/**
+ * Drop `transition-duration: 0ms` from inline styles.
+ *
+ * Swiper writes this onto `.swiper-wrapper` from `setTransition(0)` and clears it
+ * again, so whether it is present depends on where the carousel happens to be in
+ * its own lifecycle at the instant `page.content()` runs. Proven flaky by the
+ * control experiment this file exists to serve: `ref3-a` vs `ref3-b`, 43 pages,
+ * unchanged site, 129 screenshots and **0** visual differences — and this one
+ * artefact disagreeing on `home.html`.
+ *
+ * Scoped deliberately to the literal `0ms`. A carousel whose transition genuinely
+ * changed to some other duration still shows up as a markup change; only the
+ * transient zero is dropped. That is the difference between normalising
+ * non-determinism and widening a tolerance, and it is the line this whole module
+ * is trying to stay on the right side of.
+ *
+ * Runs before `sortInlineStyles` so the removal cannot leave a stray `; ;` behind
+ * for the sorter to reorder into something that differs again.
+ */
+function dropTransientTransitionDuration(html) {
+  return html.replace(/style="([^"]*)"/g, (whole, body) => {
+    if (!/transition-duration:\s*0ms/i.test(body)) return whole;
+    const kept = body
+      .split(';')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .filter(d => !/^transition-duration:\s*0ms$/i.test(d));
+    return kept.length ? `style="${kept.join('; ')};"` : 'style=""';
+  });
 }
 
 /**
