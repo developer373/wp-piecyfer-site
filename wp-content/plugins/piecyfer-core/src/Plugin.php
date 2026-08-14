@@ -41,6 +41,7 @@ final class Plugin {
 		Widgets\CallToActionWidget::class,
 		Widgets\GalleryWidget::class,
 		Widgets\TestimonialCarouselWidget::class,
+		Widgets\NavMenuWidget::class,
 	);
 
 	/**
@@ -208,6 +209,9 @@ final class Plugin {
 		// widgets. Registered separately because Pro ships it as its own handle
 		// and more than one widget depends on it.
 		'piecyfer-carousel-module-base'  => 'carousel-module-base.css',
+		// Also carries the `e--pointer-*` geometry and the hide-scroll keyframe
+		// that Pro's gallery filter bar borrows from nav-menu's stylesheet.
+		'piecyfer-nav-menu'              => 'nav-menu.css',
 	);
 
 	/**
