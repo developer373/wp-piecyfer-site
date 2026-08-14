@@ -1,0 +1,194 @@
+{
+  "label": "restore-a",
+  "base": "http://localhost/piecyfer",
+  "capturedAt": "2026-08-14T14:00:49.687Z",
+  "pages": [
+    {
+      "path": "/",
+      "slug": "home-root",
+      "url": "http://localhost/piecyfer/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 439955,
+      "ms": 33480
+    },
+    {
+      "path": "/contact-us/",
+      "slug": "contact-us",
+      "url": "http://localhost/piecyfer/contact-us/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 271544,
+      "ms": 20461
+    },
+    {
+      "path": "/our-team/",
+      "slug": "our-team",
+      "url": "http://localhost/piecyfer/our-team/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 234886,
+      "ms": 22453
+    },
+    {
+      "path": "/blogs/",
+      "slug": "blogs",
+      "url": "http://localhost/piecyfer/blogs/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 237166,
+      "ms": 22232
+    },
+    {
+      "path": "/building-high-performing-web-apps-10-easy-yet-important-tips/",
+      "slug": "building-high-performing-web-apps-10-easy-yet-important-tips",
+      "url": "http://localhost/piecyfer/building-high-performing-web-apps-10-easy-yet-important-tips/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 257265,
+      "ms": 24432
+    },
+    {
+      "path": "/web-app-development/",
+      "slug": "web-app-development",
+      "url": "http://localhost/piecyfer/web-app-development/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 259937,
+      "ms": 23300
+    },
+    {
+      "path": "/category/erp/",
+      "slug": "category-erp",
+      "url": "http://localhost/piecyfer/category/erp/",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 228455,
+      "ms": 22450
+    },
+    {
+      "path": "/?s=software",
+      "slug": "s-software",
+      "url": "http://localhost/piecyfer/?s=software",
+      "viewports": {
+        "desktop": {
+          "status": 200
+        },
+        "tablet": {
+          "status": 200
+        },
+        "mobile": {
+          "status": 200
+        }
+      },
+      "consoleErrors": [],
+      "failedRequests": [],
+      "htmlBytes": 226949,
+      "ms": 22480
+    },
+    {
+      "path": "/this-url-does-not-exist-404-test/",
+      "slug": "this-url-does-not-exist-404-test",
+      "url": "http://localhost/piecyfer/this-url-does-not-exist-404-test/",
+      "viewports": {
+        "desktop": {
+          "status": 404
+        },
+        "tablet": {
+          "status": 404
+        },
+        "mobile": {
+          "status": 404
+        }
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "failedRequests": [
+        "404 /this-url-does-not-exist-404-test/"
+      ],
+      "htmlBytes": 213295,
+      "ms": 21009
+    }
+  ],
+  "completedAt": "2026-08-14T14:04:24.288Z"
+}

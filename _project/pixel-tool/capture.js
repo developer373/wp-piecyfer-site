@@ -478,6 +478,34 @@ async function capturePage(browser, p, i, total) {
         deviceScaleFactor: 1,
         reducedMotion: 'reduce',
       });
+
+      // Pin touch capability instead of inheriting the host's.
+      //
+      // Playwright's default is not "no touch" — it is "whatever the machine
+      // reports". The machine ref2-a and every snapshot up to p4i-posts were
+      // captured on reported a non-zero navigator.maxTouchPoints, so Elementor
+      //
+      //   isTouchDevice: "ontouchstart" in window || navigator.maxTouchPoints > 0
+      //
+      // was true and every <body> carried `e--ua-isTouchDevice`. On a machine
+      // without a touchscreen that class disappears and all 43 pages differ,
+      // which reads as a site regression and is not one.
+      //
+      // Do NOT reach for Playwright's `hasTouch: true` here. That satisfies
+      // Elementor but also defines `ontouchstart`, and Swiper keys off that: it
+      // switches from pointer events to touch events, dropping the
+      // `swiper-pointer-events` class and the `cursor: grab` inline style from
+      // every carousel. The reference machine had maxTouchPoints > 0 *and* no
+      // touch events, so only the property is overridden.
+      //
+      // This reproduces the reference environment rather than widening a
+      // tolerance. Changing it is a silent markup change on every page.
+      await ctx.addInitScript(() => {
+        Object.defineProperty(Navigator.prototype, 'maxTouchPoints', {
+          get: () => 10,
+          configurable: true,
+        });
+      });
       // Four documents store root-relative /wp-content/... URLs (3 team photos
       // on Our Team, 3 PDF links). Those resolve correctly on the production
       // domain-root install but 404 on this /piecyfer/ subdirectory copy.
@@ -589,7 +617,7 @@ async function capturePage(browser, p, i, total) {
  */
 function clearElementorCache() {
   const script = path.join(__dirname, '..', 'scripts', 'clear-elementor-cache.php');
-  const php = process.env.PHP_BIN || 'C:/xampp/php/php.exe';
+  const php = process.env.PHP_BIN || 'D:/laragon/bin/php/php-8.3.30-Win32-vs16-x64/php.exe';
   const out = execFileSync(php, [script], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   const summary = out.split('\n').filter(l => /^_elementor|^generated/.test(l)).join(' | ');
   console.log(`elementor cache cleared: ${summary}`);
