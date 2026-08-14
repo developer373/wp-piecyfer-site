@@ -1564,6 +1564,53 @@
                 }
             ],
             "install-path": "../vakata/jstree"
+        },
+        {
+            "name": "yahnis-elsts/plugin-update-checker",
+            "version": "dev-master",
+            "version_normalized": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "ssh://git@source.updraftplus.com:20022/team-updraft/mirrors/plugin-update-checker.git",
+                "reference": "9348efe1b7e6da99bd5951c6d0718656c1bae9d6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://source.updraftplus.com/api/v4/projects/190/packages/composer/archives/yahnis-elsts/plugin-update-checker.zip?sha=9348efe1b7e6da99bd5951c6d0718656c1bae9d6",
+                "reference": "9348efe1b7e6da99bd5951c6d0718656c1bae9d6",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": ">=5.2.0"
+            },
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "files": [
+                    "load-v4p13.php"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Yahnis Elsts",
+                    "role": "Developer",
+                    "email": "whiteshadow@w-shadow.com",
+                    "homepage": "http://w-shadow.com/"
+                }
+            ],
+            "description": "A custom update checker for WordPress plugins and themes. Useful if you can't host your plugin in the official WP repository but still want it to support automatic updates.",
+            "homepage": "https://github.com/YahnisElsts/plugin-update-checker/",
+            "keywords": [
+                "automatic updates",
+                "plugin updates",
+                "theme updates",
+                "wordpress"
+            ],
+            "install-path": "../yahnis-elsts/plugin-update-checker"
         }
     ],
     "dev": false,
