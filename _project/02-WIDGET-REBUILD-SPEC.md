@@ -258,6 +258,47 @@ Note that `popup` is not really a tag in the usual sense: it renders a link that
 Elementor Pro's popup system, so those 6 uses are blocked on the popup work rather than on the
 tag itself.
 
+## Every Pro widget also ships its own stylesheet
+
+Not in the original plan, and it changes what "replace a widget" means.
+
+Elementor Pro carries **118 widget CSS files** in `assets/css/`, and each widget declares which
+it needs:
+
+```php
+// blockquote.php
+public function get_style_depends(): array { … }   // widget-blockquote, elementor-icons-fa-brands
+```
+
+So a replacement widget that emits the right markup still renders unstyled once Pro is gone.
+Every widget below needs its stylesheet reproduced as well:
+
+| Widget | Stylesheets it depends on |
+|---|---|
+| `blockquote` | `widget-blockquote`, FA brands icons |
+| `search-form` | `widget-search-form`, FA solid icons |
+| `call-to-action` | `widget-call-to-action`, `e-transitions` |
+| `post-info` | `widget-post-info`, `widget-icon-list`, FA regular + solid |
+| `gallery` | `widget-gallery`, `elementor-gallery`, `e-transitions`, `eicon-gallery-justified` |
+| `testimonial-carousel` | `e-swiper`, `widget-testimonial-carousel`, `widget-carousel-module-base` |
+| `nav-menu` | `widget-nav-menu` |
+| `posts` / `archive-posts` | `widget-posts` |
+| `form` | `widget-form` |
+
+The widgets completed so far were unaffected precisely because they have no stylesheet of their
+own — `template`, `theme-post-content` and `post-comments` carry no CSS, and the title and
+site-logo widgets inherit the free Heading and Image styles. That is part of why they were the
+right ones to start with, and it is also why they passed on the first attempt.
+
+**These stylesheets will be written, not copied.** Elementor Pro is GPL, so copying is legally
+fine, but taking asset files out of a nulled install is exactly the dependency this project
+exists to remove — and it would leave the site carrying code of unknown provenance again. The
+pixel harness makes writing them tractable: the target is defined by the baseline, and a rule
+that is wrong shows up as changed pixels.
+
+Practically this means the CSS-bearing widgets are larger than their PHP suggests. It does not
+change the approach, only the estimate.
+
 ## Skins are needed too
 
 `post-comments` stores `_skin: "theme_comments"`. Elementor's skin system is core (free), but the
