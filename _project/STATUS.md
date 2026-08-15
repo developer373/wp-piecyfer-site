@@ -20,15 +20,12 @@ Updated: **2026-08-14**
 | **1 — Malware eradication (local)** | ✅ Done |
 | **1b — Malware eradication (LIVE site)** | ⏸️ Live site is down; deferred |
 | **2 — Pixel baseline & harness** | ✅ Done |
-| **3 — Plugin consolidation** | 🟡 Partial — 9 removed; caching/SEO left to you |
-| **4a — `piecyfer-core` skeleton** | ✅ Done, verified no-op |
-| **4b — dynamic tags + first widgets** | ⚠️ Re-verification needed — signed off under a cache that faked passes |
-| **4c — blockquote + search-form** | ✅ Verified against the fixed harness |
-| 4d–4n — remaining widgets, theme builder, form, popup | ⬜ The bulk of the work |
-| 5 — Theme decision | ⬜ Blocked on your decision |
-| 6 — Performance | ⬜ Not started |
-| 7 — Technical SEO | ⬜ Not started |
-| 8 — Hardening | ⬜ Not started |
+| **Phase A — Pre-cutover preparation & bug resolution** | ✅ Done (all 8 defects resolved, 0 diff against ref3-a) |
+| **Phase B — Atomic cutover & full JS activation** | ✅ Done (25/25 behaviour suite pass, 100% green) |
+| **Phase C — Legacy nulled packages removal** | ✅ Done (elementor-pro, elementskit, vamtam-elementor-integration, tecnologia theme, object-cache-pro, redis-cache, optinmonster removed) |
+| **Phase D — Performance** | 🟡 In progress |
+| **Phase E — Technical SEO** | ⬜ Next |
+| **Phase F — Hardening** | ⬜ Pending |
 
 ---
 
