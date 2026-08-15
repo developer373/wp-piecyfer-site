@@ -159,3 +159,29 @@ function piecyfer_content_width() {
 	}
 }
 add_action( 'after_setup_theme', 'piecyfer_content_width', 0 );
+
+/**
+ * Security: Disable XML-RPC and remove WordPress version footprint.
+ */
+add_filter( 'xmlrpc_enabled', '__return_false' );
+remove_action( 'wp_head', 'wp_generator' );
+remove_action( 'wp_head', 'rsd_link' );
+remove_action( 'wp_head', 'wlwmanifest_link' );
+
+/**
+ * Security: Send defensive HTTP response headers.
+ *
+ * @param array<string,string> $headers Default HTTP headers.
+ * @return array<string,string>
+ */
+function piecyfer_security_headers( $headers ) {
+	if ( ! is_admin() ) {
+		$headers['X-Content-Type-Options'] = 'nosniff';
+		$headers['X-Frame-Options']        = 'SAMEORIGIN';
+		$headers['X-XSS-Protection']       = '1; mode=block';
+		$headers['Referrer-Policy']         = 'strict-origin-when-cross-origin';
+	}
+	return $headers;
+}
+add_filter( 'wp_headers', 'piecyfer_security_headers' );
+
