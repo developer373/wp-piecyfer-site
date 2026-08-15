@@ -49,6 +49,39 @@
 				return elements;
 			},
 
+			onInit: function () {
+				elementorModules.frontend.handlers.Base.prototype.onInit.apply( this, arguments );
+				this.initRecaptcha();
+			},
+
+			initRecaptcha: function () {
+				var self = this;
+				var $recaptcha = self.elements.$form.find( '.elementor-g-recaptcha' );
+				if ( ! $recaptcha.length ) {
+					return;
+				}
+
+				function setup() {
+					if ( window.grecaptcha && window.grecaptcha.render ) {
+						try {
+							var settings = $recaptcha.data();
+							var isV3     = 'v3' === settings.type;
+							var widgetId = window.grecaptcha.render( $recaptcha[ 0 ], settings );
+							$recaptcha.data( 'widgetId', widgetId );
+							self.recaptchaWidgetId = widgetId;
+						} catch ( e ) {
+							if ( window.console && window.console.warn ) {
+								window.console.warn( '[piecyfer-form] reCAPTCHA render error:', e );
+							}
+						}
+					} else {
+						setTimeout( setup, 350 );
+					}
+				}
+
+				setup();
+			},
+
 			bindEvents: function () {
 				var self = this;
 
@@ -69,22 +102,33 @@
 				var $recaptcha  = $form.find( settings.selectors.recaptchaV3 );
 				var siteKey     = $recaptcha.data( 'sitekey' );
 				var action      = $recaptcha.data( 'action' ) || 'Form';
+				var widgetId    = self.recaptchaWidgetId !== undefined ? self.recaptchaWidgetId : $recaptcha.data( 'widgetId' );
 
 				self.clearMessages();
 
-				if ( $recaptcha.length && siteKey && window.grecaptcha && window.grecaptcha.execute ) {
+				if ( $recaptcha.length && window.grecaptcha && window.grecaptcha.execute ) {
 					window.grecaptcha.ready( function () {
-						window.grecaptcha.execute( siteKey, { action: action } )
-							.then( function ( token ) {
-								self.sendAjax( token );
-							} )
-							['catch']( function ( err ) {
-								if ( window.console && window.console.warn ) {
-									window.console.warn( '[piecyfer-form] reCAPTCHA execution error:', err );
-								}
-								// Fallback: send without token; server fail-open policy handles it safely.
+						try {
+							var target = widgetId !== undefined ? widgetId : siteKey;
+							var p = window.grecaptcha.execute( target, { action: action } );
+							if ( p && typeof p.then === 'function' ) {
+								p.then( function ( token ) {
+									self.sendAjax( token );
+								} )['catch']( function ( err ) {
+									if ( window.console && window.console.warn ) {
+										window.console.warn( '[piecyfer-form] reCAPTCHA execution error:', err );
+									}
+									self.sendAjax( '' );
+								} );
+							} else {
 								self.sendAjax( '' );
-							} );
+							}
+						} catch ( err ) {
+							if ( window.console && window.console.warn ) {
+								window.console.warn( '[piecyfer-form] reCAPTCHA execution exception:', err );
+							}
+							self.sendAjax( '' );
+						}
 					} );
 				} else {
 					self.sendAjax( '' );

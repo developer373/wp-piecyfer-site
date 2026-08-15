@@ -166,6 +166,14 @@ final class Frontend {
 			array( 'jquery', 'elementor-frontend' )
 		);
 
+		wp_localize_script(
+			self::CORE_HANDLE,
+			'piecyferFrontendConfig',
+			array(
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			)
+		);
+
 		foreach ( self::HANDLERS as $handle => $file ) {
 			self::register_script(
 				$handle,
