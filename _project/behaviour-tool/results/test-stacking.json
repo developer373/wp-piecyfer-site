@@ -1,0 +1,2217 @@
+{
+  "label": "test-stacking",
+  "base": "http://localhost/piecyfer",
+  "startedAt": "2026-08-15T10:50:50.021Z",
+  "playwright": "1.62.1",
+  "chromium": "151.0.7922.34",
+  "simulateNoPro": false,
+  "tests": [
+    {
+      "id": "env-frontend-stack",
+      "title": "Frontend JS stack is present and reports which handlers exist",
+      "url": "/",
+      "viewport": "desktop",
+      "asserts": "jQuery, elementorFrontend and the SmartMenus / Magnific plugins are loaded. The presence of elementorProFrontend is RECORDED, not asserted — after de-nulling it is expected to disappear, and that fact alone must not fail the suite; the individual behaviour tests are what decide.",
+      "why": "A stack that fails to boot makes every other result meaningless.",
+      "network": null,
+      "status": "pass",
+      "ms": 4673,
+      "checks": [
+        {
+          "name": "jQuery loaded",
+          "assertion": "equals",
+          "expected": "function",
+          "observed": "function",
+          "pass": true
+        },
+        {
+          "name": "elementorFrontend loaded",
+          "assertion": "equals",
+          "expected": "object",
+          "observed": "object",
+          "pass": true
+        },
+        {
+          "name": "SmartMenus plugin registered on jQuery",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "Magnific Popup registered on jQuery (ElementsKit modals)",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        }
+      ],
+      "notes": [
+        {
+          "name": "elementorProFrontend",
+          "observed": "undefined",
+          "why": "observation only — \"object\" means Pro is active, \"undefined\" means it is not"
+        }
+      ],
+      "observed": {
+        "httpStatus": 200,
+        "stack": {
+          "jQuery": "function",
+          "elementorFrontend": "object",
+          "elementorProFrontend": "undefined",
+          "smartmenus": true,
+          "magnificPopup": true,
+          "swiperCtor": "function",
+          "elementorFrontendConfigBreakpoints": true
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "nav-toggle-mobile",
+      "title": "Header burger opens and closes the dropdown menu (mobile)",
+      "url": "/",
+      "viewport": "mobile",
+      "asserts": "Exactly one .elementor-menu-toggle is visible. Clicking it sets aria-expanded=true, adds .elementor-active, flips the dropdown <nav> to aria-hidden=false and gives it a non-zero rendered height. Clicking again reverses all four.",
+      "why": "The burger is bound by Elementor Pro's nav-menu frontend handler. With no JS the markup still renders a burger icon that does nothing — visually identical, functionally dead. This is the single most damaging silent regression in the whole migration.",
+      "network": null,
+      "status": "pass",
+      "ms": 5911,
+      "checks": [
+        {
+          "name": "target visible: header burger toggle",
+          "assertion": "exactly one visible match",
+          "expected": "1 visible of \"#tabNmobNav .elementor-menu-toggle\"",
+          "observed": "1 visible of 1 total",
+          "pass": true
+        },
+        {
+          "name": "target present: dropdown nav container",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \"#tabNmobNav nav.elementor-nav-menu--dropdown\"",
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "starts collapsed (aria-expanded)",
+          "assertion": "equals",
+          "expected": "false",
+          "observed": "false",
+          "pass": true
+        },
+        {
+          "name": "starts collapsed (rendered height 0)",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "waited for: dropdown reports expanded AND has non-zero height",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 115ms",
+          "pass": true
+        },
+        {
+          "name": "aria-expanded flips to true",
+          "assertion": "equals",
+          "expected": "true",
+          "observed": "true",
+          "pass": true
+        },
+        {
+          "name": "toggle gains .elementor-active",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "dropdown nav aria-hidden flips to false",
+          "assertion": "equals",
+          "expected": "false",
+          "observed": "false",
+          "pass": true
+        },
+        {
+          "name": "dropdown has rendered height",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 199,
+          "pass": true
+        },
+        {
+          "name": "menu links are actually on screen",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 6,
+          "pass": true
+        },
+        {
+          "name": "waited for: dropdown reports collapsed AND has zero height again",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 308ms",
+          "pass": true
+        },
+        {
+          "name": "aria-expanded returns to false",
+          "assertion": "equals",
+          "expected": "false",
+          "observed": "false",
+          "pass": true
+        },
+        {
+          "name": "toggle loses .elementor-active",
+          "assertion": "equals",
+          "expected": false,
+          "observed": false,
+          "pass": true
+        },
+        {
+          "name": "dropdown height returns to 0",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        }
+      ],
+      "notes": [],
+      "observed": {
+        "httpStatus": 200,
+        "closed": {
+          "ariaExpanded": "false",
+          "toggleActive": false,
+          "navAriaHidden": "true",
+          "navHeight": 0,
+          "itemsVisible": 0
+        },
+        "opened": {
+          "ariaExpanded": "true",
+          "toggleActive": true,
+          "navAriaHidden": "false",
+          "navHeight": 199,
+          "itemsVisible": 6
+        },
+        "closedAgain": {
+          "ariaExpanded": "false",
+          "toggleActive": false,
+          "navAriaHidden": "true",
+          "navHeight": 0,
+          "itemsVisible": 0
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "nav-toggle-tablet",
+      "title": "Header burger opens and closes the dropdown menu (tablet)",
+      "url": "/",
+      "viewport": "tablet",
+      "asserts": "Exactly one .elementor-menu-toggle is visible. Clicking it sets aria-expanded=true, adds .elementor-active, flips the dropdown <nav> to aria-hidden=false and gives it a non-zero rendered height. Clicking again reverses all four.",
+      "why": "The burger is bound by Elementor Pro's nav-menu frontend handler. With no JS the markup still renders a burger icon that does nothing — visually identical, functionally dead. This is the single most damaging silent regression in the whole migration.",
+      "network": null,
+      "status": "pass",
+      "ms": 5004,
+      "checks": [
+        {
+          "name": "target visible: header burger toggle",
+          "assertion": "exactly one visible match",
+          "expected": "1 visible of \"#tabNmobNav .elementor-menu-toggle\"",
+          "observed": "1 visible of 1 total",
+          "pass": true
+        },
+        {
+          "name": "target present: dropdown nav container",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \"#tabNmobNav nav.elementor-nav-menu--dropdown\"",
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "starts collapsed (aria-expanded)",
+          "assertion": "equals",
+          "expected": "false",
+          "observed": "false",
+          "pass": true
+        },
+        {
+          "name": "starts collapsed (rendered height 0)",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "waited for: dropdown reports expanded AND has non-zero height",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 105ms",
+          "pass": true
+        },
+        {
+          "name": "aria-expanded flips to true",
+          "assertion": "equals",
+          "expected": "true",
+          "observed": "true",
+          "pass": true
+        },
+        {
+          "name": "toggle gains .elementor-active",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "dropdown nav aria-hidden flips to false",
+          "assertion": "equals",
+          "expected": "false",
+          "observed": "false",
+          "pass": true
+        },
+        {
+          "name": "dropdown has rendered height",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 172,
+          "pass": true
+        },
+        {
+          "name": "menu links are actually on screen",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 6,
+          "pass": true
+        },
+        {
+          "name": "waited for: dropdown reports collapsed AND has zero height again",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 315ms",
+          "pass": true
+        },
+        {
+          "name": "aria-expanded returns to false",
+          "assertion": "equals",
+          "expected": "false",
+          "observed": "false",
+          "pass": true
+        },
+        {
+          "name": "toggle loses .elementor-active",
+          "assertion": "equals",
+          "expected": false,
+          "observed": false,
+          "pass": true
+        },
+        {
+          "name": "dropdown height returns to 0",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        }
+      ],
+      "notes": [],
+      "observed": {
+        "httpStatus": 200,
+        "closed": {
+          "ariaExpanded": "false",
+          "toggleActive": false,
+          "navAriaHidden": "true",
+          "navHeight": 0,
+          "itemsVisible": 0
+        },
+        "opened": {
+          "ariaExpanded": "true",
+          "toggleActive": true,
+          "navAriaHidden": "false",
+          "navHeight": 172,
+          "itemsVisible": 6
+        },
+        "closedAgain": {
+          "ariaExpanded": "false",
+          "toggleActive": false,
+          "navAriaHidden": "true",
+          "navHeight": 0,
+          "itemsVisible": 0
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "nav-submenu-mobile",
+      "title": "A parent item inside the mobile dropdown reveals its sub-menu",
+      "url": "/",
+      "viewport": "mobile",
+      "asserts": "With the dropdown open, the first <a class=\"has-submenu\"> starts with aria-expanded=false and a zero-height sub-menu; clicking it sets aria-expanded=true and gives the sub-menu a non-zero height with visible links.",
+      "why": "Sub-menu expansion is SmartMenus, which Elementor Pro enqueues and initialises for the nav-menu widget. Without it the parent item is an href=\"#\" that goes nowhere and three quarters of the site becomes unreachable from the mobile menu.",
+      "network": null,
+      "status": "pass",
+      "ms": 5762,
+      "checks": [
+        {
+          "name": "target visible: header burger toggle",
+          "assertion": "exactly one visible match",
+          "expected": "1 visible of \"#tabNmobNav .elementor-menu-toggle\"",
+          "observed": "1 visible of 1 total",
+          "pass": true
+        },
+        {
+          "name": "waited for: dropdown is open",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 106ms",
+          "pass": true
+        },
+        {
+          "name": "target present: parent menu item with children",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \"#tabNmobNav nav.elementor-nav-menu--dropdown a.has-submenu\"",
+          "observed": 2,
+          "pass": true
+        },
+        {
+          "name": "sub-menu starts collapsed",
+          "assertion": "equals",
+          "expected": "false",
+          "observed": "false",
+          "pass": true
+        },
+        {
+          "name": "sub-menu starts at zero height",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "waited for: sub-menu reports expanded AND has height",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 5ms",
+          "pass": true
+        },
+        {
+          "name": "aria-expanded flips to true",
+          "assertion": "equals",
+          "expected": "true",
+          "observed": "true",
+          "pass": true
+        },
+        {
+          "name": "sub-menu gains height",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 3,
+          "pass": true
+        },
+        {
+          "name": "child links are on screen",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 3,
+          "pass": true
+        }
+      ],
+      "notes": [],
+      "observed": {
+        "httpStatus": 200,
+        "collapsed": {
+          "label": "Company",
+          "ariaExpanded": "false",
+          "subHeight": 0,
+          "subLinksVisible": 0,
+          "subAriaHidden": "true"
+        },
+        "expanded": {
+          "label": "Company",
+          "ariaExpanded": "true",
+          "subHeight": 3,
+          "subLinksVisible": 3,
+          "subAriaHidden": "false"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "nav-desktop-megamenu-hover",
+      "title": "Desktop header mega-menu opens on hover",
+      "url": "/",
+      "viewport": "desktop",
+      "asserts": "EVERY #ekit-megamenu-main-menu li.elementskit-dropdown-has (there are two: Company and Services) has a panel that is visibility:hidden / opacity:0 at rest and becomes visible with opacity 1 while its parent link is hovered. The count of dropdown parents is itself asserted, so a menu item that quietly loses its children fails rather than being skipped.",
+      "why": "This is the ONLY header navigation a desktop visitor sees on this site — the Pro nav-menu widget is 0x0 above 1024px. It is ElementsKit (free) so it should survive Pro's removal, but \"should\" is exactly the word this harness exists to replace.",
+      "network": null,
+      "status": "pass",
+      "ms": 4916,
+      "checks": [
+        {
+          "name": "target present: mega-menu parent links",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \"#ekit-megamenu-main-menu li.elementskit-dropdown-has > a\"",
+          "observed": 2,
+          "pass": true
+        },
+        {
+          "name": "both dropdown parents are present",
+          "assertion": "equals",
+          "expected": 2,
+          "observed": 2,
+          "pass": true
+        },
+        {
+          "name": "[Company] panel hidden at rest",
+          "assertion": "equals",
+          "expected": "hidden",
+          "observed": "hidden",
+          "pass": true
+        },
+        {
+          "name": "waited for: [Company] mega-menu panel is visible and fully opaque",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 71ms",
+          "pass": true
+        },
+        {
+          "name": "[Company] panel becomes visible",
+          "assertion": "equals",
+          "expected": "visible",
+          "observed": "visible",
+          "pass": true
+        },
+        {
+          "name": "[Company] panel becomes opaque",
+          "assertion": "equals",
+          "expected": "1",
+          "observed": "1",
+          "pass": true
+        },
+        {
+          "name": "[Company] panel has height",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 391,
+          "pass": true
+        },
+        {
+          "name": "waited for: [Company] panel hides again when the pointer leaves",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 8ms",
+          "pass": true
+        },
+        {
+          "name": "[Services] panel hidden at rest",
+          "assertion": "equals",
+          "expected": "hidden",
+          "observed": "hidden",
+          "pass": true
+        },
+        {
+          "name": "waited for: [Services] mega-menu panel is visible and fully opaque",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 5ms",
+          "pass": true
+        },
+        {
+          "name": "[Services] panel becomes visible",
+          "assertion": "equals",
+          "expected": "visible",
+          "observed": "visible",
+          "pass": true
+        },
+        {
+          "name": "[Services] panel becomes opaque",
+          "assertion": "equals",
+          "expected": "1",
+          "observed": "1",
+          "pass": true
+        },
+        {
+          "name": "[Services] panel has height",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 401,
+          "pass": true
+        },
+        {
+          "name": "waited for: [Services] panel hides again when the pointer leaves",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 9ms",
+          "pass": true
+        }
+      ],
+      "notes": [],
+      "observed": {
+        "httpStatus": 200,
+        "atRest[0]": {
+          "label": "Company",
+          "panelClass": "elementskit-megamenu-panel",
+          "visibility": "hidden",
+          "opacity": "0",
+          "height": 391
+        },
+        "hovered[0]": {
+          "label": "Company",
+          "panelClass": "elementskit-megamenu-panel",
+          "visibility": "visible",
+          "opacity": "1",
+          "height": 391
+        },
+        "atRest[1]": {
+          "label": "Services",
+          "panelClass": "elementskit-megamenu-panel",
+          "visibility": "hidden",
+          "opacity": "0",
+          "height": 401
+        },
+        "hovered[1]": {
+          "label": "Services",
+          "panelClass": "elementskit-megamenu-panel",
+          "visibility": "visible",
+          "opacity": "1",
+          "height": 401
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "carousel-testimonial-init",
+      "title": "Both testimonial carousels initialise a real Swiper instance",
+      "url": "/",
+      "viewport": "desktop",
+      "asserts": "Every .elementor-widget-testimonial-carousel on the home page contains a .swiper that has BOTH the swiper-initialized class and a live `.swiper` property (the Swiper instance object) with a slide count > 0.",
+      "why": "The class alone can be faked by markup. Requiring the instance object proves JS actually ran. Pro registers the testimonial-carousel handler; without it the slides stack vertically or sit frozen at slide one.",
+      "network": null,
+      "status": "pass",
+      "ms": 5009,
+      "checks": [
+        {
+          "name": "target present: testimonial carousel widget",
+          "assertion": "selector matches at least",
+          "expected": ">=2 matching \".elementor-widget-testimonial-carousel\"",
+          "observed": 2,
+          "pass": true
+        },
+        {
+          "name": "two testimonial carousels found",
+          "assertion": "equals",
+          "expected": 2,
+          "observed": 2,
+          "pass": true
+        },
+        {
+          "name": "[77b6f10] has a .swiper container",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "[77b6f10] carries swiper-initialized",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "[77b6f10] exposes a live Swiper instance",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "[77b6f10] Swiper knows about its slides",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 3,
+          "pass": true
+        },
+        {
+          "name": "[c086f5d] has a .swiper container",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "[c086f5d] carries swiper-initialized",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "[c086f5d] exposes a live Swiper instance",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "[c086f5d] Swiper knows about its slides",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 12,
+          "pass": true
+        }
+      ],
+      "notes": [],
+      "observed": {
+        "httpStatus": 200,
+        "carousels": [
+          {
+            "widgetId": "77b6f10",
+            "hasContainer": true,
+            "initialisedClass": true,
+            "hasInstance": true,
+            "slides": 3,
+            "realIndex": 0,
+            "hasArrows": false
+          },
+          {
+            "widgetId": "c086f5d",
+            "hasContainer": true,
+            "initialisedClass": true,
+            "hasInstance": true,
+            "slides": 12,
+            "realIndex": 0,
+            "hasArrows": true
+          }
+        ]
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "carousel-testimonial-arrows",
+      "title": "Testimonial carousel arrows advance and rewind the active slide",
+      "url": "/",
+      "viewport": "desktop",
+      "asserts": "On the one testimonial carousel that has navigation arrows, clicking next increments Swiper.realIndex by exactly 1 and moves .swiper-slide-active to a different element; clicking prev returns realIndex to its original value.",
+      "why": "realIndex is the carousel's own idea of where it is, so this cannot be satisfied by a CSS transition that merely looks like movement. If Pro's handler is missing, the arrows render and do nothing.",
+      "network": null,
+      "status": "pass",
+      "ms": 10059,
+      "checks": [
+        {
+          "name": "target present: testimonial carousel with arrows",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \".elementor-widget-testimonial-carousel:has(.elementor-swiper-button-next)\"",
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "target visible: next arrow",
+          "assertion": "exactly one visible match",
+          "expected": "1 visible of \".elementor-widget-testimonial-carousel:has(.elementor-swiper-button-next) .elementor-swiper-button-next\"",
+          "observed": "1 visible of 1 total",
+          "pass": true
+        },
+        {
+          "name": "target visible: prev arrow",
+          "assertion": "exactly one visible match",
+          "expected": "1 visible of \".elementor-widget-testimonial-carousel:has(.elementor-swiper-button-next) .elementor-swiper-button-prev\"",
+          "observed": "1 visible of 1 total",
+          "pass": true
+        },
+        {
+          "name": "the carousel has a live Swiper instance to drive",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "waited for: Swiper.realIndex changed and the transition finished",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 544ms",
+          "pass": true
+        },
+        {
+          "name": "next advances realIndex by exactly 1",
+          "assertion": "equals",
+          "expected": 1,
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "the active slide is a different slide",
+          "assertion": "differs from",
+          "expected": "1 / 10",
+          "observed": "2 / 10",
+          "pass": true
+        },
+        {
+          "name": "the track actually moved (Swiper translate)",
+          "assertion": "differs from",
+          "expected": -870,
+          "observed": -1740,
+          "pass": true
+        },
+        {
+          "name": "waited for: Swiper.realIndex returned to its starting value",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 526ms",
+          "pass": true
+        },
+        {
+          "name": "prev rewinds to the original slide",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "the active slide label is restored",
+          "assertion": "equals",
+          "expected": "1 / 10",
+          "observed": "1 / 10",
+          "pass": true
+        }
+      ],
+      "notes": [],
+      "observed": {
+        "httpStatus": 200,
+        "before": {
+          "hasInstance": true,
+          "realIndex": 0,
+          "activeIndex": 1,
+          "activeLabel": "1 / 10",
+          "translate": -870
+        },
+        "afterNext": {
+          "hasInstance": true,
+          "realIndex": 1,
+          "activeIndex": 2,
+          "activeLabel": "2 / 10",
+          "translate": -1740
+        },
+        "afterPrev": {
+          "hasInstance": true,
+          "realIndex": 0,
+          "activeIndex": 1,
+          "activeLabel": "1 / 10",
+          "translate": -870
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "carousel-autoplay",
+      "title": "Carousels configured to autoplay are actually autoplaying",
+      "url": "/",
+      "viewport": "desktop",
+      "asserts": "For every carousel widget whose data-settings say autoplay:\"yes\", the live Swiper instance reports autoplay.running === true. In addition, at least one autoplaying carousel is observed to advance realIndex on its own, with no interaction, within 25s.",
+      "why": "autoplay.running is a state, not a race, so it is the deterministic half of this test. The \"does it actually move\" half is the half a screenshot can never see, and it is why this file exists. Note the pixel harness deliberately FREEZES these carousels; nothing else in the project checks that they move.",
+      "network": null,
+      "status": "pass",
+      "ms": 6842,
+      "checks": [
+        {
+          "name": "target present: carousel widgets",
+          "assertion": "selector matches at least",
+          "expected": ">=5 matching \".elementor-widget-testimonial-carousel, .elementor-widget-image-carousel, .elementor-widget-elementskit-client-logo\"",
+          "observed": 5,
+          "pass": true
+        },
+        {
+          "name": "at least one carousel is configured to autoplay",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 3,
+          "pass": true
+        },
+        {
+          "name": "[image-carousel.default 598b74e] autoplay is running",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "[testimonial-carousel.default 77b6f10] autoplay is running",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "[image-carousel.default a5d4d3e] autoplay is running",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "waited for: an autoplaying carousel advanced with no interaction",
+          "assertion": "condition reached",
+          "expected": "true within 25000ms",
+          "observed": "true after 746ms",
+          "pass": true
+        },
+        {
+          "name": "a carousel advanced on its own",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        }
+      ],
+      "notes": [],
+      "observed": {
+        "httpStatus": 200,
+        "carousels": [
+          {
+            "widgetId": "598b74e",
+            "type": "image-carousel.default",
+            "autoplayConfigured": true,
+            "running": true,
+            "realIndex": 1
+          },
+          {
+            "widgetId": "77b6f10",
+            "type": "testimonial-carousel.default",
+            "autoplayConfigured": true,
+            "running": true,
+            "realIndex": 0
+          },
+          {
+            "widgetId": "a558545",
+            "type": "elementskit-client-logo.default",
+            "autoplayConfigured": false,
+            "running": true,
+            "realIndex": 0
+          },
+          {
+            "widgetId": "a5d4d3e",
+            "type": "image-carousel.default",
+            "autoplayConfigured": true,
+            "running": true,
+            "realIndex": 1
+          },
+          {
+            "widgetId": "c086f5d",
+            "type": "testimonial-carousel.default",
+            "autoplayConfigured": false,
+            "running": false,
+            "realIndex": 0
+          }
+        ],
+        "after": [
+          {
+            "widgetId": "598b74e",
+            "type": "image-carousel.default",
+            "autoplayConfigured": true,
+            "running": true,
+            "realIndex": 1
+          },
+          {
+            "widgetId": "77b6f10",
+            "type": "testimonial-carousel.default",
+            "autoplayConfigured": true,
+            "running": true,
+            "realIndex": 0
+          },
+          {
+            "widgetId": "a558545",
+            "type": "elementskit-client-logo.default",
+            "autoplayConfigured": false,
+            "running": true,
+            "realIndex": 1
+          },
+          {
+            "widgetId": "a5d4d3e",
+            "type": "image-carousel.default",
+            "autoplayConfigured": true,
+            "running": true,
+            "realIndex": 1
+          },
+          {
+            "widgetId": "c086f5d",
+            "type": "testimonial-carousel.default",
+            "autoplayConfigured": false,
+            "running": false,
+            "realIndex": 0
+          }
+        ]
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "search-classic-desktop",
+      "title": "Header search form submits and reaches the results page (desktop)",
+      "url": "/",
+      "viewport": "desktop",
+      "asserts": "Exactly one .elementor-widget-search-form is visible at this viewport. Typing \"software\" and pressing its submit button navigates to a URL matching ?s=software and lands on a document whose <body> carries the search-results class.",
+      "why": "search-form is a Pro widget. Its submission is a plain GET form so it ought to survive without JS — which is exactly why it is worth pinning down: if the replacement widget renders the wrong action or drops the name=\"s\" attribute, nothing visual changes and search silently 404s or returns the front page.",
+      "network": null,
+      "status": "pass",
+      "ms": 8468,
+      "checks": [
+        {
+          "name": "target visible: header search widget",
+          "assertion": "exactly one visible match",
+          "expected": "1 visible of \".elementor-widget-search-form\"",
+          "observed": "1 visible of 2 total",
+          "pass": true
+        },
+        {
+          "name": "target present: search input",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \".elementor-widget-search-form[data-id=\"4c5df4ea\"] input[name=\"s\"]\"",
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "target present: search submit button",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \".elementor-widget-search-form[data-id=\"4c5df4ea\"] button[type=\"submit\"]\"",
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "the query survived the round trip",
+          "assertion": "equals",
+          "expected": "software",
+          "observed": "software",
+          "pass": true
+        },
+        {
+          "name": "landed on a search-results document",
+          "assertion": "is truthy",
+          "expected": "truthy",
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "the results URL is on this site",
+          "assertion": "is truthy",
+          "expected": "truthy",
+          "observed": true,
+          "pass": true
+        }
+      ],
+      "notes": [
+        {
+          "name": "duplicate DOM ids in the document",
+          "observed": [
+            "pie-search x2",
+            "Layer_1 x3"
+          ],
+          "why": "authoring defect that predates the migration; recorded so a --compare run shows if a rebuild adds or removes any"
+        }
+      ],
+      "observed": {
+        "httpStatus": 200,
+        "widget": {
+          "index": 0,
+          "widgetId": "4c5df4ea",
+          "box": {
+            "w": 230,
+            "h": 30
+          },
+          "visible": true
+        },
+        "formAction": "http://localhost/piecyfer",
+        "landed": {
+          "url": "http://localhost/piecyfer/?s=software",
+          "bodyClass": "search search-results wp-custom-logo wp-embed-responsive wp-theme-piecyfer-theme full header-layout-logo-menu has-page-header no-middle-header responsive-layout vamtam-is-elementor elementor-active elementor-pro-active vamtam-wc-cart-empty wc-product-gallery-slider-active vamtam-font-smoothing layout-full elementor-default elementor-template-full-width elementor-kit-5 elementor-page-8711 e--ua-blink e--ua-webkit",
+          "query": "software",
+          "resultCount": 10
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "search-classic-tablet",
+      "title": "Header search form submits and reaches the results page (tablet)",
+      "url": "/",
+      "viewport": "tablet",
+      "asserts": "Exactly one .elementor-widget-search-form is visible at this viewport. Typing \"software\" and pressing its submit button navigates to a URL matching ?s=software and lands on a document whose <body> carries the search-results class.",
+      "why": "search-form is a Pro widget. Its submission is a plain GET form so it ought to survive without JS — which is exactly why it is worth pinning down: if the replacement widget renders the wrong action or drops the name=\"s\" attribute, nothing visual changes and search silently 404s or returns the front page.",
+      "network": null,
+      "status": "pass",
+      "ms": 7916,
+      "checks": [
+        {
+          "name": "target visible: header search widget",
+          "assertion": "exactly one visible match",
+          "expected": "1 visible of \".elementor-widget-search-form\"",
+          "observed": "1 visible of 2 total",
+          "pass": true
+        },
+        {
+          "name": "target present: search input",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \".elementor-widget-search-form[data-id=\"77d5c091\"] input[name=\"s\"]\"",
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "target present: search submit button",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \".elementor-widget-search-form[data-id=\"77d5c091\"] button[type=\"submit\"]\"",
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "the query survived the round trip",
+          "assertion": "equals",
+          "expected": "software",
+          "observed": "software",
+          "pass": true
+        },
+        {
+          "name": "landed on a search-results document",
+          "assertion": "is truthy",
+          "expected": "truthy",
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "the results URL is on this site",
+          "assertion": "is truthy",
+          "expected": "truthy",
+          "observed": true,
+          "pass": true
+        }
+      ],
+      "notes": [
+        {
+          "name": "duplicate DOM ids in the document",
+          "observed": [
+            "pie-search x2",
+            "Layer_1 x3"
+          ],
+          "why": "authoring defect that predates the migration; recorded so a --compare run shows if a rebuild adds or removes any"
+        }
+      ],
+      "observed": {
+        "httpStatus": 200,
+        "widget": {
+          "index": 1,
+          "widgetId": "77d5c091",
+          "box": {
+            "w": 388,
+            "h": 30
+          },
+          "visible": true
+        },
+        "formAction": "http://localhost/piecyfer",
+        "landed": {
+          "url": "http://localhost/piecyfer/?s=software",
+          "bodyClass": "search search-results wp-custom-logo wp-embed-responsive wp-theme-piecyfer-theme full header-layout-logo-menu has-page-header no-middle-header responsive-layout vamtam-is-elementor elementor-active elementor-pro-active vamtam-wc-cart-empty wc-product-gallery-slider-active vamtam-font-smoothing layout-full elementor-default elementor-template-full-width elementor-kit-5 elementor-page-8711 e--ua-blink e--ua-webkit",
+          "query": "software",
+          "resultCount": 10
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "search-ekit-modal-mobile",
+      "title": "ElementsKit modal search opens and submits (mobile)",
+      "url": "/",
+      "viewport": "mobile",
+      "asserts": "At 375px neither classic search form is visible; instead exactly one .elementor-widget-elementskit-header-search is. Clicking its button opens a Magnific Popup (.mfp-wrap) containing a visible .ekit_search-field; typing and submitting reaches ?s=software.",
+      "why": "This is the only search a phone visitor can reach. ElementsKit is free so it should survive, but the modal depends on Magnific Popup being enqueued, and script enqueues are exactly what shifts when a plugin is swapped out.",
+      "network": null,
+      "status": "pass",
+      "ms": 9630,
+      "checks": [
+        {
+          "name": "no classic search form is reachable at 375px",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "target visible: ElementsKit header search widget",
+          "assertion": "exactly one visible match",
+          "expected": "1 visible of \".elementor-widget-elementskit-header-search\"",
+          "observed": "1 visible of 1 total",
+          "pass": true
+        },
+        {
+          "name": "target visible: search modal trigger",
+          "assertion": "exactly one visible match",
+          "expected": "1 visible of \".elementor-widget-elementskit-header-search[data-id=\"0f8c7e2\"] .ekit_navsearch-button\"",
+          "observed": "1 visible of 1 total",
+          "pass": true
+        },
+        {
+          "name": "no modal is open to begin with",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "waited for: Magnific Popup opened with a visible search field",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 3ms",
+          "pass": true
+        },
+        {
+          "name": "exactly one modal opened",
+          "assertion": "equals",
+          "expected": 1,
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "the search field is on screen",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 363,
+          "pass": true
+        },
+        {
+          "name": "the modal search reached the results page",
+          "assertion": "equals",
+          "expected": "software",
+          "observed": "software",
+          "pass": true
+        },
+        {
+          "name": "landed on a search-results document",
+          "assertion": "is truthy",
+          "expected": "truthy",
+          "observed": true,
+          "pass": true
+        }
+      ],
+      "notes": [],
+      "observed": {
+        "httpStatus": 200,
+        "classicSearchWidgetsVisibleAtMobile": 0,
+        "modalOpen": {
+          "mfpWraps": 1,
+          "inputWidth": 363,
+          "formAction": "http://localhost/piecyfer/"
+        },
+        "landed": {
+          "query": "software",
+          "bodyClass": "search search-results wp-custom-logo wp-embed-responsive wp-theme-piecyfer-theme full header-layout-logo-menu has-page-header no-middle-header responsive-layout vamtam-is-elementor elementor-active elementor-pro-active vamtam-wc-cart-empty wc-product-gallery-slider-active vamtam-font-smoothing layout-full elementor-default elementor-template-full-width elementor-kit-5 elementor-page-8711 e--ua-blink e--ua-webkit"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "form-validation-blocks-empty-submit",
+      "title": "Contact form refuses an empty submit and does not navigate",
+      "url": "/contact-us/",
+      "viewport": "desktop",
+      "asserts": "The form has required fields; pressing submit with everything empty leaves form.checkValidity() false, produces at least one field failing checkValidity(), sends NO request off the page, and leaves the URL unchanged.",
+      "why": "Elementor Pro renders both the required attributes and the submit handler. A replacement that drops `required` still looks identical and starts accepting blank enquiries.",
+      "network": null,
+      "status": "pass",
+      "ms": 8607,
+      "checks": [
+        {
+          "name": "target present: contact form",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \"#pie-contact-form form.elementor-form\"",
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "target visible: submit button",
+          "assertion": "exactly one visible match",
+          "expected": "1 visible of \"#pie-contact-form button[type=\"submit\"]\"",
+          "observed": "1 visible of 1 total",
+          "pass": true
+        },
+        {
+          "name": "the form declares required fields",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 4,
+          "pass": true
+        },
+        {
+          "name": "the form reports itself invalid",
+          "assertion": "equals",
+          "expected": false,
+          "observed": false,
+          "pass": true
+        },
+        {
+          "name": "at least one required field is failing validation",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 3,
+          "pass": true
+        },
+        {
+          "name": "the browser did not navigate away",
+          "assertion": "equals",
+          "expected": "http://localhost/piecyfer/contact-us/",
+          "observed": "http://localhost/piecyfer/contact-us/",
+          "pass": true
+        },
+        {
+          "name": "nothing was sent to the server",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        }
+      ],
+      "notes": [
+        {
+          "name": "required select accepts its own placeholder",
+          "observed": {
+            "firstOptionValue": "Select Service",
+            "required": true,
+            "validWhileUnchosen": true
+          },
+          "why": "pre-existing authoring defect: the placeholder option has a non-empty value (\"Select Service\"), so the required attribute never bites. Not caused by, and not fixed by, the Pro replacement."
+        }
+      ],
+      "observed": {
+        "httpStatus": 200,
+        "fields": {
+          "required": [
+            "form_fields[contact_us_full_name]",
+            "form_fields[contact_us_email]",
+            "form_fields[contact_us_products]",
+            "form_fields[contact_us_message]"
+          ],
+          "total": 11
+        },
+        "afterEmptySubmit": {
+          "formValid": false,
+          "invalidFields": [
+            "form_fields[contact_us_full_name]",
+            "form_fields[contact_us_email]",
+            "form_fields[contact_us_message]"
+          ],
+          "messages": []
+        },
+        "urlAfter": "http://localhost/piecyfer/contact-us/",
+        "nonGetRequestsAttempted": []
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "form-recaptcha-v3-token",
+      "title": "A validly-filled submit produces a reCAPTCHA v3 token (submission blocked)",
+      "url": "/contact-us/",
+      "viewport": "desktop",
+      "asserts": "With every required field filled, pressing submit causes exactly one POST to wp-admin/admin-ajax.php whose multipart body carries a NON-EMPTY g-recaptcha-response value. The runner aborts every non-GET request before it leaves the browser, so the enquiry is never delivered and no mail is sent.",
+      "why": "The reCAPTCHA v3 field is rendered AND executed by Elementor Pro. A replacement that renders the badge but never calls grecaptcha.execute() looks perfect and gets every real submission rejected by the server.",
+      "network": "Depends on www.google.com/recaptcha being reachable. If this test alone fails, check the network before blaming the site.",
+      "status": "pass",
+      "ms": 6024,
+      "checks": [
+        {
+          "name": "target present: contact form",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \"#pie-contact-form form.elementor-form\"",
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "target present: reCAPTCHA v3 field",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \"#pie-contact-form .elementor-g-recaptcha[data-type=\"v3\"]\"",
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "the Google reCAPTCHA API loaded",
+          "assertion": "equals",
+          "expected": "object",
+          "observed": "object",
+          "pass": true
+        },
+        {
+          "name": "waited for: the form attempted a POST (which the runner aborted)",
+          "assertion": "condition reached",
+          "expected": "true within 30000ms",
+          "observed": "true after 0ms",
+          "pass": true
+        },
+        {
+          "name": "exactly one admin-ajax POST was attempted",
+          "assertion": "equals",
+          "expected": 1,
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "the runner aborted it, so nothing reached the server",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "a g-recaptcha-response field is present in the POST",
+          "assertion": "is truthy",
+          "expected": "truthy",
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "the reCAPTCHA token is non-empty",
+          "assertion": "greater than",
+          "expected": 20,
+          "observed": 558,
+          "pass": true
+        },
+        {
+          "name": "the page did not navigate",
+          "assertion": "equals",
+          "expected": "http://localhost/piecyfer/contact-us/",
+          "observed": "http://localhost/piecyfer/contact-us/",
+          "pass": true
+        }
+      ],
+      "notes": [],
+      "observed": {
+        "httpStatus": 200,
+        "grecaptcha": "object",
+        "attemptedRequests": [
+          {
+            "method": "POST",
+            "url": "http://localhost/piecyfer/wp-admin/admin-ajax.php",
+            "bodyBytes": 2155
+          }
+        ],
+        "recaptchaTokenLength": 558,
+        "recaptchaTokenPrefix": "HFaW1hehRAIQ"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [
+        {
+          "method": "POST",
+          "url": "http://localhost/piecyfer/wp-admin/admin-ajax.php",
+          "body": "------WebKitFormBoundaryggiC0vSYntnOOGnn\r\nContent-Disposition: form-data; name=\"post_id\"\r\n\r\n83\r\n------WebKitFormBoundaryggiC0vSYntnOOGnn\r\nContent-Disposition: form-data; name=\"form_id\"\r\n\r\nd998c99\r\n------WebKitFormBoundaryggiC0vSYntnOOGnn\r\nContent-Disposition: form-data; name=\"referer_title\"\r\n\r\nContact Us | PieCyfer - Software Development Company\r\n------WebKitFormBoundaryggiC0vSYntnOOGnn\r\nContent-Disposition: form-data; name=\"queried_id\"\r\n\r\n83\r\n------WebKitFormBoundaryggiC0vSYntnOOGnn\r\nContent-Disposition: form-data; name=\"form_fields[contact_us_full_name]\"\r\n\r\nHarness Probe\r\n------WebKitFormBoundaryggiC0vSYntnOOGnn\r\nContent-Disposition: form-data; name=\"form_fields[contact_us_phone_number]\"\r\n\r\n\r\n------WebKitFormBoundaryggiC0vSYntnOOGnn\r\nContent-Disposition: form-data; name=\"form_fields[contact_us_email]\"\r\n\r\nharness@example.invalid\r\n------WebKitFormBoundaryggiC0vSYntnOOGnn\r\nContent-Disposition: form-data; name=\"form_fields[contact_us_products]\"\r\n\r\nOthers\r\n------WebKitFormBoundaryggiC0vSYntnOOGnn\r\nContent-Disposition: form-data; name=\"form_fields[contact_us_message]\"\r\n\r\nAutomated behaviour-harness probe. This submission is aborted in the browser and never reaches the server.\r\n------WebKitFormBoundaryggiC0vSYntnOOGnn\r\nContent-Disposition: form-data; name=\"g-recaptcha-response\"\r\n\r\nHFaW1hehRAIQ4LP3lUR0dFRgliBD4mZAgzYz8zAwUEK2ktEBkFGVchGG5tXilCeCUDcHgiGF5Fa21wDHFfXQYHPDFwYFIdDy51I2EIGh1weFogBRsWADxKHQcXdENDSUBIRy9KOippTWE2bnFUVUs1alNNSkJXcWtWdVFXehNEIQ4LfC5jDR4ScGMhWnAsd3VbIl98DH1RaBB7VnlEQlh9D24aCWluOiUCcjNlREAFGm8SaAInLAYHT2w1PA4IGC4Tf1dBRAoqTwtiEm44V2MpCgd0Km8FGh5BYA4OfFxAS0RhdX5rAn9jOVIXX0hnfzxvGQoKehMwIQ56fC4SZUNaQUA8Vz4mYQwqayw2ChxicTJ9SVZTDiY0ZAgNHmscOi4AFG5SDR4Qf0VObgYyL2EQPm99OgoRGC5gUFJdREpPaUwbSVxyF0g5CwJ_KxoFGhwIYxRqUlQKD0t2PzheWVJ1fSceYklAe2cLfRYUF0RjYFBcKm9jQF5PRUl1BF0lEggqayczAwYHNm8tAxMQeHViSy5BCWlrPzMHH24mDR4SDRlk\r\n------WebKitFormBoundaryggiC0vSYntnOOGnn\r\nContent-Disposition: form-data; name=\"action\"\r\n\r\nelementor_pro_forms_send_form\r\n------WebKitFormBoundaryggiC0vSYntnOOGnn\r\nContent-Disposition: form-data; name=\"referrer\"\r\n\r\nhttp://localhost/piecyfer/contact-us/\r\n------WebKitFormBoundaryggiC0vSYntnOOGnn--\r\n",
+          "aborted": true
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "popup-consultation-opens",
+      "title": "The \"Request A Consultation\" CTA opens the consultation popup",
+      "url": "/",
+      "viewport": "desktop",
+      "asserts": "No .elementor-popup-modal exists on load. Clicking the CTA whose href is an elementor-action popup:open link causes a popup document to be fetched and inserted, producing exactly one displayed .elementor-popup-modal with non-zero height and data-elementor-type=\"popup\".",
+      "why": "Popups are pure Elementor Pro: the trigger href is an opaque base64 action that only Pro's frontend router understands, and the popup body is not in the page at all — it is fetched over admin-ajax on click. Without Pro the CTA becomes a link to a \"#\" fragment and every conversion path on the site dead-ends. Nothing about the button changes visually.",
+      "network": null,
+      "status": "pass",
+      "ms": 5214,
+      "checks": [
+        {
+          "name": "target present: popup trigger link",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \"a[href*=\"popup%3Aopen\"]\"",
+          "observed": 5,
+          "pass": true
+        },
+        {
+          "name": "no popup modal on load",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "a popup trigger was found and clicked",
+          "assertion": "is truthy",
+          "expected": "truthy",
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "waited for: a popup modal was inserted and is displayed",
+          "assertion": "condition reached",
+          "expected": "true within 30000ms",
+          "observed": "true after 55ms",
+          "pass": true
+        },
+        {
+          "name": "exactly one modal is open",
+          "assertion": "equals",
+          "expected": 1,
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "the modal is displayed",
+          "assertion": "is truthy",
+          "expected": "truthy",
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "the modal has height",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 1080,
+          "pass": true
+        },
+        {
+          "name": "the popup document was actually loaded",
+          "assertion": "is truthy",
+          "expected": "truthy",
+          "observed": true,
+          "pass": true
+        }
+      ],
+      "notes": [],
+      "observed": {
+        "httpStatus": 200,
+        "triggerLabels": [
+          "Request a Meeting",
+          "Request a Meeting",
+          "Request A Consultation",
+          "Book Your Slot",
+          "Book Your Slot"
+        ],
+        "clickedTrigger": "Request A Consultation",
+        "popup": {
+          "modals": 1,
+          "display": "flex",
+          "height": 1080,
+          "popupDocumentId": "7718",
+          "hasFormInside": true,
+          "text": "Fill Up The Form Hurry Up! Book Your Slot Now! Select Servic"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "toggle-faq-expands",
+      "title": "The FAQ toggle (free Elementor toggle widget) opens and closes",
+      "url": "/why-healthcare-software-fails-without-security-first-architecture/",
+      "viewport": "desktop",
+      "asserts": "The visible .elementor-widget-toggle starts with every tab collapsed (aria-expanded=false, content display:none). Clicking the first title sets aria-expanded=true, adds .elementor-active and gives the panel height. Clicking again collapses it.",
+      "why": "The toggle widget is free Elementor, so it should be untouched — but its handler is registered through the same elementor-frontend module registry that Pro extends, and a botched replacement can break registration for everyone. On 15 of the 21 toggle instances site-wide the widget is hidden at every breakpoint (see README), so this is the only page it can be tested on.",
+      "network": null,
+      "status": "pass",
+      "ms": 6371,
+      "checks": [
+        {
+          "name": "target visible: FAQ toggle widget",
+          "assertion": "exactly one visible match",
+          "expected": "1 visible of \".elementor-widget-toggle\"",
+          "observed": "1 visible of 2 total",
+          "pass": true
+        },
+        {
+          "name": "target present: toggle titles",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \".elementor-widget-toggle[data-id=\"04fedfb\"] .elementor-tab-title\"",
+          "observed": 4,
+          "pass": true
+        },
+        {
+          "name": "the widget has toggle items",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 4,
+          "pass": true
+        },
+        {
+          "name": "everything starts collapsed",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "first panel is display:none",
+          "assertion": "equals",
+          "expected": "none",
+          "observed": "none",
+          "pass": true
+        },
+        {
+          "name": "waited for: first panel reports expanded AND has height",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 3ms",
+          "pass": true
+        },
+        {
+          "name": "aria-expanded flips to true",
+          "assertion": "equals",
+          "expected": "true",
+          "observed": "true",
+          "pass": true
+        },
+        {
+          "name": "title gains .elementor-active",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "the panel has height",
+          "assertion": "greater than",
+          "expected": 0,
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "waited for: first panel collapsed again",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 634ms",
+          "pass": true
+        },
+        {
+          "name": "the panel closes again",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        }
+      ],
+      "notes": [],
+      "observed": {
+        "httpStatus": 200,
+        "collapsed": {
+          "items": 4,
+          "expandedCount": 0,
+          "firstExpanded": "false",
+          "firstActive": false,
+          "contentDisplay": "none",
+          "contentHeight": 0
+        },
+        "expanded": {
+          "items": 4,
+          "expandedCount": 1,
+          "firstExpanded": "true",
+          "firstActive": true,
+          "contentDisplay": "block",
+          "contentHeight": 1
+        },
+        "collapsedAgain": {
+          "items": 4,
+          "expandedCount": 0,
+          "firstExpanded": "false",
+          "firstActive": false,
+          "contentDisplay": "none",
+          "contentHeight": 0
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "back-to-top",
+      "title": "ElementsKit back-to-top appears on scroll and returns to the top",
+      "url": "/why-healthcare-software-fails-without-security-first-architecture/",
+      "viewport": "desktop",
+      "asserts": "The .ekit-btt__button is transparent at scrollY 0; after scrolling past its configured show_after threshold it gains .ekit-tt-show and opacity 1; clicking it returns window.scrollY to 0 and it fades out again.",
+      "why": "ElementsKit is free, so this is a canary for \"did the plugin swap break script enqueueing for everyone\", not a Pro dependency of its own.",
+      "network": null,
+      "status": "pass",
+      "ms": 6090,
+      "checks": [
+        {
+          "name": "target present: ElementsKit back-to-top container",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \".ekit-back-to-top-container\"",
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "target present: back-to-top button",
+          "assertion": "selector matches at least",
+          "expected": ">=1 matching \".ekit-btt__button\"",
+          "observed": 1,
+          "pass": true
+        },
+        {
+          "name": "the widget carries its settings",
+          "assertion": "is truthy",
+          "expected": "truthy",
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "waited for: page is scrolled to the top",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 17ms",
+          "pass": true
+        },
+        {
+          "name": "hidden at the top of the page",
+          "assertion": "equals",
+          "expected": false,
+          "observed": false,
+          "pass": true
+        },
+        {
+          "name": "waited for: back-to-top button revealed itself after scrolling past its threshold",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 3ms",
+          "pass": true
+        },
+        {
+          "name": "button becomes visible",
+          "assertion": "equals",
+          "expected": true,
+          "observed": true,
+          "pass": true
+        },
+        {
+          "name": "button becomes opaque",
+          "assertion": "equals",
+          "expected": "1",
+          "observed": "1",
+          "pass": true
+        },
+        {
+          "name": "waited for: clicking it scrolled the page back to the top",
+          "assertion": "condition reached",
+          "expected": "true within 15000ms",
+          "observed": "true after 858ms",
+          "pass": true
+        },
+        {
+          "name": "the page is back at the top",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "the button hides itself again",
+          "assertion": "equals",
+          "expected": false,
+          "observed": false,
+          "pass": true
+        }
+      ],
+      "notes": [],
+      "observed": {
+        "httpStatus": 200,
+        "settings": {
+          "offset_top": 0,
+          "show_after": 1500,
+          "show_scroll": "yes",
+          "style": "icon_only",
+          "foreground": null,
+          "background": null
+        },
+        "atTop": {
+          "opacity": "0",
+          "shown": false
+        },
+        "scrolled": {
+          "opacity": "1",
+          "shown": true,
+          "scrollY": 2300
+        },
+        "afterClick": {
+          "scrollY": 0,
+          "shown": false
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "console-clean-home",
+      "title": "No uncaught JS errors on /",
+      "url": "/",
+      "viewport": "desktop",
+      "asserts": "After load and settle, the page has produced zero uncaught exceptions (pageerror) and zero console.error messages other than \"Failed to load resource\" network noise, which is recorded separately as a broken-asset observation and compared against the baseline.",
+      "why": "A missing frontend handler usually announces itself as a TypeError long before anyone notices the widget is dead. This is the cheapest broad net in the suite.",
+      "network": null,
+      "status": "pass",
+      "ms": 13382,
+      "checks": [
+        {
+          "name": "zero uncaught exceptions",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "zero non-network console errors",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        }
+      ],
+      "notes": [
+        {
+          "name": "brokenAssetCount",
+          "observed": 0,
+          "why": "network 404s/failures — reported, and a NEW one fails a --compare run"
+        }
+      ],
+      "observed": {
+        "httpStatus": 200,
+        "pageErrors": [],
+        "consoleErrors": [],
+        "brokenAssets": []
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "console-clean-contact-us",
+      "title": "No uncaught JS errors on /contact-us/",
+      "url": "/contact-us/",
+      "viewport": "desktop",
+      "asserts": "After load and settle, the page has produced zero uncaught exceptions (pageerror) and zero console.error messages other than \"Failed to load resource\" network noise, which is recorded separately as a broken-asset observation and compared against the baseline.",
+      "why": "A missing frontend handler usually announces itself as a TypeError long before anyone notices the widget is dead. This is the cheapest broad net in the suite.",
+      "network": null,
+      "status": "pass",
+      "ms": 9361,
+      "checks": [
+        {
+          "name": "zero uncaught exceptions",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "zero non-network console errors",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        }
+      ],
+      "notes": [
+        {
+          "name": "brokenAssetCount",
+          "observed": 0,
+          "why": "network 404s/failures — reported, and a NEW one fails a --compare run"
+        }
+      ],
+      "observed": {
+        "httpStatus": 200,
+        "pageErrors": [],
+        "consoleErrors": [],
+        "brokenAssets": []
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "console-clean-our-team",
+      "title": "No uncaught JS errors on /our-team/",
+      "url": "/our-team/",
+      "viewport": "desktop",
+      "asserts": "After load and settle, the page has produced zero uncaught exceptions (pageerror) and zero console.error messages other than \"Failed to load resource\" network noise, which is recorded separately as a broken-asset observation and compared against the baseline.",
+      "why": "A missing frontend handler usually announces itself as a TypeError long before anyone notices the widget is dead. This is the cheapest broad net in the suite.",
+      "network": null,
+      "status": "pass",
+      "ms": 9302,
+      "checks": [
+        {
+          "name": "zero uncaught exceptions",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "zero non-network console errors",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        }
+      ],
+      "notes": [
+        {
+          "name": "brokenAssetCount",
+          "observed": 0,
+          "why": "network 404s/failures — reported, and a NEW one fails a --compare run"
+        }
+      ],
+      "observed": {
+        "httpStatus": 200,
+        "pageErrors": [],
+        "consoleErrors": [],
+        "brokenAssets": []
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "console-clean-blogs",
+      "title": "No uncaught JS errors on /blogs/",
+      "url": "/blogs/",
+      "viewport": "desktop",
+      "asserts": "After load and settle, the page has produced zero uncaught exceptions (pageerror) and zero console.error messages other than \"Failed to load resource\" network noise, which is recorded separately as a broken-asset observation and compared against the baseline.",
+      "why": "A missing frontend handler usually announces itself as a TypeError long before anyone notices the widget is dead. This is the cheapest broad net in the suite.",
+      "network": null,
+      "status": "pass",
+      "ms": 9437,
+      "checks": [
+        {
+          "name": "zero uncaught exceptions",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "zero non-network console errors",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        }
+      ],
+      "notes": [
+        {
+          "name": "brokenAssetCount",
+          "observed": 0,
+          "why": "network 404s/failures — reported, and a NEW one fails a --compare run"
+        }
+      ],
+      "observed": {
+        "httpStatus": 200,
+        "pageErrors": [],
+        "consoleErrors": [],
+        "brokenAssets": []
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "console-clean-single-post",
+      "title": "No uncaught JS errors on /why-healthcare-software-fails-without-security-first-architecture/",
+      "url": "/why-healthcare-software-fails-without-security-first-architecture/",
+      "viewport": "desktop",
+      "asserts": "After load and settle, the page has produced zero uncaught exceptions (pageerror) and zero console.error messages other than \"Failed to load resource\" network noise, which is recorded separately as a broken-asset observation and compared against the baseline.",
+      "why": "A missing frontend handler usually announces itself as a TypeError long before anyone notices the widget is dead. This is the cheapest broad net in the suite.",
+      "network": null,
+      "status": "pass",
+      "ms": 9169,
+      "checks": [
+        {
+          "name": "zero uncaught exceptions",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "zero non-network console errors",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        }
+      ],
+      "notes": [
+        {
+          "name": "brokenAssetCount",
+          "observed": 0,
+          "why": "network 404s/failures — reported, and a NEW one fails a --compare run"
+        }
+      ],
+      "observed": {
+        "httpStatus": 200,
+        "pageErrors": [],
+        "consoleErrors": [],
+        "brokenAssets": []
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "console-clean-service-page",
+      "title": "No uncaught JS errors on /web-app-development/",
+      "url": "/web-app-development/",
+      "viewport": "desktop",
+      "asserts": "After load and settle, the page has produced zero uncaught exceptions (pageerror) and zero console.error messages other than \"Failed to load resource\" network noise, which is recorded separately as a broken-asset observation and compared against the baseline.",
+      "why": "A missing frontend handler usually announces itself as a TypeError long before anyone notices the widget is dead. This is the cheapest broad net in the suite.",
+      "network": null,
+      "status": "pass",
+      "ms": 9341,
+      "checks": [
+        {
+          "name": "zero uncaught exceptions",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "zero non-network console errors",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        }
+      ],
+      "notes": [
+        {
+          "name": "brokenAssetCount",
+          "observed": 0,
+          "why": "network 404s/failures — reported, and a NEW one fails a --compare run"
+        }
+      ],
+      "observed": {
+        "httpStatus": 200,
+        "pageErrors": [],
+        "consoleErrors": [],
+        "brokenAssets": []
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "console-clean-category-archive",
+      "title": "No uncaught JS errors on /category/erp/",
+      "url": "/category/erp/",
+      "viewport": "desktop",
+      "asserts": "After load and settle, the page has produced zero uncaught exceptions (pageerror) and zero console.error messages other than \"Failed to load resource\" network noise, which is recorded separately as a broken-asset observation and compared against the baseline.",
+      "why": "A missing frontend handler usually announces itself as a TypeError long before anyone notices the widget is dead. This is the cheapest broad net in the suite.",
+      "network": null,
+      "status": "pass",
+      "ms": 9635,
+      "checks": [
+        {
+          "name": "zero uncaught exceptions",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "zero non-network console errors",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        }
+      ],
+      "notes": [
+        {
+          "name": "brokenAssetCount",
+          "observed": 0,
+          "why": "network 404s/failures — reported, and a NEW one fails a --compare run"
+        }
+      ],
+      "observed": {
+        "httpStatus": 200,
+        "pageErrors": [],
+        "consoleErrors": [],
+        "brokenAssets": []
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "console-clean-search-results",
+      "title": "No uncaught JS errors on /?s=software",
+      "url": "/?s=software",
+      "viewport": "desktop",
+      "asserts": "After load and settle, the page has produced zero uncaught exceptions (pageerror) and zero console.error messages other than \"Failed to load resource\" network noise, which is recorded separately as a broken-asset observation and compared against the baseline.",
+      "why": "A missing frontend handler usually announces itself as a TypeError long before anyone notices the widget is dead. This is the cheapest broad net in the suite.",
+      "network": null,
+      "status": "pass",
+      "ms": 9608,
+      "checks": [
+        {
+          "name": "zero uncaught exceptions",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "zero non-network console errors",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        }
+      ],
+      "notes": [
+        {
+          "name": "brokenAssetCount",
+          "observed": 0,
+          "why": "network 404s/failures — reported, and a NEW one fails a --compare run"
+        }
+      ],
+      "observed": {
+        "httpStatus": 200,
+        "pageErrors": [],
+        "consoleErrors": [],
+        "brokenAssets": []
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [],
+      "blockedRequests": [],
+      "error": null
+    },
+    {
+      "id": "console-clean-error-404",
+      "title": "No uncaught JS errors on /this-url-does-not-exist-404-test/",
+      "url": "/this-url-does-not-exist-404-test/",
+      "viewport": "desktop",
+      "asserts": "After load and settle, the page has produced zero uncaught exceptions (pageerror) and zero console.error messages other than \"Failed to load resource\" network noise, which is recorded separately as a broken-asset observation and compared against the baseline.",
+      "why": "A missing frontend handler usually announces itself as a TypeError long before anyone notices the widget is dead. This is the cheapest broad net in the suite.",
+      "network": null,
+      "status": "pass",
+      "ms": 8897,
+      "checks": [
+        {
+          "name": "zero uncaught exceptions",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        },
+        {
+          "name": "zero non-network console errors",
+          "assertion": "equals",
+          "expected": 0,
+          "observed": 0,
+          "pass": true
+        }
+      ],
+      "notes": [
+        {
+          "name": "brokenAssetCount",
+          "observed": 1,
+          "why": "network 404s/failures — reported, and a NEW one fails a --compare run"
+        }
+      ],
+      "observed": {
+        "httpStatus": 404,
+        "pageErrors": [],
+        "consoleErrors": [],
+        "brokenAssets": [
+          "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        ]
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "brokenAssets": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "blockedRequests": [],
+      "error": null
+    }
+  ],
+  "completedAt": "2026-08-15T10:54:05.711Z",
+  "summary": {
+    "total": 25,
+    "passed": 25,
+    "failed": 0,
+    "errored": 0,
+    "checks": 168
+  },
+  "comparison": {
+    "baselineLabel": "pro-active",
+    "regressions": [],
+    "fixes": [],
+    "added": []
+  }
+}
