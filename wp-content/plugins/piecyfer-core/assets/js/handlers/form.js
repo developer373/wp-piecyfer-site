@@ -21,7 +21,7 @@
 				return {
 					selectors: {
 						form: '.elementor-form',
-						submitButton: '.elementor-size-md, button[type="submit"], input[type="submit"]',
+						submitButton: 'button[type="submit"], input[type="submit"], .elementor-button',
 						fields: '.elementor-field-textual, .elementor-field-group input, .elementor-field-group textarea, .elementor-field-group select',
 						messagesContainer: '.elementor-message',
 						recaptchaV3: '.elementor-g-recaptcha[data-type="v3"]'
@@ -107,27 +107,52 @@
 				self.clearMessages();
 
 				if ( $recaptcha.length && window.grecaptcha && window.grecaptcha.execute ) {
+					var executed = false;
+					var timeoutId = setTimeout( function () {
+						if ( ! executed ) {
+							executed = true;
+							self.sendAjax( '' );
+						}
+					}, 2500 );
+
 					window.grecaptcha.ready( function () {
 						try {
 							var target = widgetId !== undefined ? widgetId : siteKey;
-							var p = window.grecaptcha.execute( target, { action: action } );
+							var p      = window.grecaptcha.execute( target, { action: action } );
+
 							if ( p && typeof p.then === 'function' ) {
 								p.then( function ( token ) {
-									self.sendAjax( token );
+									if ( ! executed ) {
+										executed = true;
+										clearTimeout( timeoutId );
+										self.sendAjax( token );
+									}
 								} )['catch']( function ( err ) {
 									if ( window.console && window.console.warn ) {
 										window.console.warn( '[piecyfer-form] reCAPTCHA execution error:', err );
 									}
-									self.sendAjax( '' );
+									if ( ! executed ) {
+										executed = true;
+										clearTimeout( timeoutId );
+										self.sendAjax( '' );
+									}
 								} );
 							} else {
-								self.sendAjax( '' );
+								if ( ! executed ) {
+									executed = true;
+									clearTimeout( timeoutId );
+									self.sendAjax( '' );
+								}
 							}
 						} catch ( err ) {
 							if ( window.console && window.console.warn ) {
 								window.console.warn( '[piecyfer-form] reCAPTCHA execution exception:', err );
 							}
-							self.sendAjax( '' );
+							if ( ! executed ) {
+								executed = true;
+								clearTimeout( timeoutId );
+								self.sendAjax( '' );
+							}
 						}
 					} );
 				} else {
