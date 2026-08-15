@@ -87,6 +87,21 @@ function piecyfer_google_tag_manager_body() {
 }
 
 /**
+ * Performance: Resource hints (preconnect and dns-prefetch) for critical third-party origins.
+ *
+ * @return void
+ */
+function piecyfer_resource_hints() {
+	echo "\t<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n";
+	echo "\t<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n";
+	echo "\t<link rel=\"preconnect\" href=\"https://www.googletagmanager.com\">\n";
+	echo "\t<link rel=\"dns-prefetch\" href=\"https://fonts.googleapis.com\">\n";
+	echo "\t<link rel=\"dns-prefetch\" href=\"https://fonts.gstatic.com\">\n";
+	echo "\t<link rel=\"dns-prefetch\" href=\"https://www.googletagmanager.com\">\n";
+}
+add_action( 'wp_head', 'piecyfer_resource_hints', 2 );
+
+/**
  * Google Search Console ownership proof.
  *
  * @return void
@@ -97,7 +112,7 @@ function piecyfer_google_site_verification() {
 	}
 
 	printf(
-		'<meta name="google-site-verification" content="%s" />',
+		'<meta name="google-site-verification" content="%s" />' . "\n",
 		esc_attr( PIECYFER_GOOGLE_SITE_VERIFICATION )
 	);
 }

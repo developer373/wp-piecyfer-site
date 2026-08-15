@@ -301,3 +301,38 @@ function piecyfer_enqueue_scripts() {
 	);
 }
 add_action( 'wp_enqueue_scripts', 'piecyfer_enqueue_scripts' );
+
+/**
+ * Performance: Defer non-critical scripts to eliminate render-blocking JS.
+ *
+ * @param string $tag    HTML script tag.
+ * @param string $handle Script handle.
+ * @return string
+ */
+function piecyfer_defer_scripts( $tag, $handle ) {
+	if ( is_admin() ) {
+		return $tag;
+	}
+
+	$defer_handles = array(
+		'piecyfer-theme',
+		'piecyfer-site',
+		'piecyfer-frontend',
+		'piecyfer-handler-nav-menu',
+		'piecyfer-handler-testimonial-carousel',
+		'piecyfer-handler-search-form',
+		'piecyfer-handler-gallery',
+		'piecyfer-handler-form',
+		'smartmenus',
+	);
+
+	if ( in_array( $handle, $defer_handles, true ) ) {
+		if ( false === strpos( $tag, ' defer' ) && false === strpos( $tag, ' async' ) ) {
+			return str_replace( ' src=', ' defer src=', $tag );
+		}
+	}
+
+	return $tag;
+}
+add_filter( 'script_loader_tag', 'piecyfer_defer_scripts', 10, 2 );
+
