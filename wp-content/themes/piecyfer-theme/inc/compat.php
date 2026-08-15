@@ -13,6 +13,63 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
+ * VamTam compatibility constants while companion plugin is transitionally active.
+ */
+if ( ! defined( 'VAMTAM_THEME_NAME' ) ) {
+	define( 'VAMTAM_THEME_NAME', 'Tecnologia' );
+}
+if ( ! defined( 'VAMTAM_THEME_SLUG' ) ) {
+	define( 'VAMTAM_THEME_SLUG', 'tecnologia' );
+}
+if ( ! defined( 'VAMTAM_THEME_DIR' ) ) {
+	define( 'VAMTAM_THEME_DIR', PIECYFER_THEME_DIR );
+}
+if ( ! defined( 'VAMTAM_THEME_URI' ) ) {
+	define( 'VAMTAM_THEME_URI', PIECYFER_THEME_URI );
+}
+if ( ! defined( 'VAMTAM_DIR' ) ) {
+	define( 'VAMTAM_DIR', PIECYFER_THEME_DIR );
+}
+if ( ! defined( 'VAMTAM_URI' ) ) {
+	define( 'VAMTAM_URI', PIECYFER_THEME_URI );
+}
+if ( ! defined( 'VAMTAM_ASSETS_DIR' ) ) {
+	define( 'VAMTAM_ASSETS_DIR', PIECYFER_THEME_DIR . 'assets/' );
+}
+if ( ! defined( 'VAMTAM_ASSETS_URI' ) ) {
+	define( 'VAMTAM_ASSETS_URI', PIECYFER_THEME_URI . 'assets/' );
+}
+if ( ! defined( 'VAMTAM_CSS' ) ) {
+	define( 'VAMTAM_CSS', PIECYFER_THEME_URI . 'assets/css/' );
+}
+if ( ! defined( 'VAMTAM_CSS_DIR' ) ) {
+	define( 'VAMTAM_CSS_DIR', PIECYFER_THEME_DIR . 'assets/css/' );
+}
+
+if ( ! class_exists( 'VamtamElementorBridge' ) ) {
+	class VamtamElementorBridge {
+		public static function get_widget_mods_list() {
+			if ( function_exists( 'piecyfer_widget_mods_list' ) ) {
+				return piecyfer_widget_mods_list();
+			}
+			return array();
+		}
+
+		public static function get_wc_mods_list() {
+			return array();
+		}
+
+		public static function get_instance() {
+			static $instance = null;
+			return $instance ??= new self();
+		}
+	}
+}
+
+
+
+
+/**
  * Force `page_for_posts` to zero.
  *
  * THIS IS NOT OPTIONAL AND IT IS NOT COSMETIC. Carried from

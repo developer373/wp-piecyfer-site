@@ -162,6 +162,43 @@ final class Plugin {
 		 * refuses to boot while Elementor Pro is active.
 		 */
 		Popup\Module::boot();
+
+		add_action( 'elementor/init', array( $this, 'register_elementor_pro_compat' ), 0 );
+	}
+
+	/**
+	 * Elementor Pro compatibility shims so the companion plugin
+	 * (vamtam-elementor-integration-tecnologia) continues attaching its widget
+	 * style controls and wrapper classes (e.g. mobile-menu-max-height).
+	 */
+	public function register_elementor_pro_compat(): void {
+		if ( ! class_exists( 'ElementorPro\Plugin' ) ) {
+			class_alias( self::class, 'ElementorPro\Plugin' );
+		}
+
+		if ( ! class_exists( 'ElementorPro\Modules\NavMenu\Widgets\Nav_Menu' ) ) {
+			class_alias( 'PieCyfer\Core\Widgets\NavMenuWidget', 'ElementorPro\Modules\NavMenu\Widgets\Nav_Menu' );
+		}
+
+		if ( ! class_exists( 'ElementorPro\Modules\Posts\Widgets\Posts' ) ) {
+			class_alias( 'PieCyfer\Core\Widgets\PostsWidget', 'ElementorPro\Modules\Posts\Widgets\Posts' );
+		}
+
+		if ( ! class_exists( 'ElementorPro\Modules\ThemeBuilder\Widgets\Archive_Posts' ) ) {
+			class_alias( 'PieCyfer\Core\Widgets\ArchivePostsWidget', 'ElementorPro\Modules\ThemeBuilder\Widgets\Archive_Posts' );
+		}
+
+		if ( ! class_exists( 'ElementorPro\Modules\Posts\Skins\Skin_Classic' ) ) {
+			class_alias( 'PieCyfer\Core\Skins\ClassicSkin', 'ElementorPro\Modules\Posts\Skins\Skin_Classic' );
+		}
+
+		if ( ! class_exists( 'ElementorPro\Modules\ThemeBuilder\Skins\Posts_Archive_Skin_Classic' ) ) {
+			class_alias( 'PieCyfer\Core\Skins\ArchiveClassicSkin', 'ElementorPro\Modules\ThemeBuilder\Skins\Posts_Archive_Skin_Classic' );
+		}
+
+		if ( ! class_exists( 'ElementorPro\Modules\Forms\Widgets\Login' ) ) {
+			eval( 'namespace ElementorPro\Modules\Forms\Widgets; class Login extends \Elementor\Widget_Base { public function get_name() { return "login"; } }' );
+		}
 	}
 
 	/**
@@ -276,7 +313,7 @@ final class Plugin {
 			wp_register_style(
 				$handle,
 				PIECYFER_CORE_URL . 'assets/css/' . $file,
-				array(),
+				array( 'elementor-frontend' ),
 				(string) filemtime( $path )
 			);
 		}

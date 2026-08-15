@@ -39,7 +39,7 @@ use Elementor\Utils;
 
 defined( 'ABSPATH' ) || exit;
 
-final class GalleryWidget extends AbstractWidget {
+class GalleryWidget extends AbstractWidget {
 
 	public function get_name(): string {
 		return 'gallery';
@@ -80,7 +80,7 @@ final class GalleryWidget extends AbstractWidget {
 	 *
 	 * @return string[]
 	 */
-	public function get_script_depends(): array {
+	public function get_script_depends() {
 		return array( 'elementor-gallery' );
 	}
 
@@ -92,7 +92,7 @@ final class GalleryWidget extends AbstractWidget {
 	 *
 	 * @return string[]
 	 */
-	public function get_style_depends(): array {
+	public function get_style_depends() {
 		return array( 'piecyfer-gallery', 'elementor-gallery', 'e-transitions' );
 	}
 

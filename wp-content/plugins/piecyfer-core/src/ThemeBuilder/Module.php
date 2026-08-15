@@ -361,7 +361,11 @@ final class Module {
 	}
 
 	public static function is_preview(): bool {
-		return \Elementor\Plugin::$instance->preview->is_preview_mode() || is_preview();
+		if ( isset( \Elementor\Plugin::$instance->preview ) && is_object( \Elementor\Plugin::$instance->preview ) ) {
+			return \Elementor\Plugin::$instance->preview->is_preview_mode() || is_preview();
+		}
+
+		return function_exists( 'is_preview' ) && is_preview();
 	}
 
 	/**

@@ -65,7 +65,7 @@ use Elementor\Utils as ElementorUtils;
 
 defined( 'ABSPATH' ) || exit;
 
-final class FormWidget extends AbstractWidget {
+class FormWidget extends AbstractWidget {
 
 	/**
 	 * Message ids, mirroring ElementorPro\Modules\Forms\Classes\Ajax_Handler's
@@ -144,7 +144,7 @@ final class FormWidget extends AbstractWidget {
 	 *
 	 * @return string[]
 	 */
-	public function get_style_depends(): array {
+	public function get_style_depends() {
 		return array( 'piecyfer-form' );
 	}
 
@@ -2936,7 +2936,7 @@ final class FormWidget extends AbstractWidget {
 					/** This filter is documented in elementor-pro/modules/forms/widgets/form.php */
 					$item = apply_filters( "elementor_pro/forms/render/item/{$field_type}", $item, $item_index, $this );
 
-					$print_label = ! in_array( $item['field_type'], array( 'hidden', 'html', 'step' ), true );
+					$print_label = ! in_array( $item['field_type'], array( 'hidden', 'html', 'step', 'recaptcha', 'recaptcha_v3' ), true );
 					?>
 				<div <?php $this->print_render_attribute_string( 'field-group' . $item_index ); ?>>
 					<?php
@@ -3552,6 +3552,10 @@ final class FormWidget extends AbstractWidget {
 
 		if ( ! empty( $item['width_mobile'] ) ) {
 			$this->add_render_attribute( 'field-group' . $i, 'class', 'elementor-sm-' . $item['width_mobile'] );
+		}
+
+		if ( 'recaptcha_v3' === $item['field_type'] && ! empty( $item['recaptcha_badge'] ) ) {
+			$this->add_render_attribute( 'field-group' . $i, 'class', 'recaptcha_v3-' . $item['recaptcha_badge'] );
 		}
 
 		// Allow zero as placeholder.

@@ -46,7 +46,7 @@ use PieCyfer\Core\Skins;
 
 defined( 'ABSPATH' ) || exit;
 
-final class ArchivePostsWidget extends PostsBaseWidget {
+class ArchivePostsWidget extends PostsBaseWidget {
 
 	/**
 	 * @param array<string,mixed>      $data
@@ -108,7 +108,7 @@ final class ArchivePostsWidget extends PostsBaseWidget {
 	/**
 	 * @return string[]
 	 */
-	public function get_style_depends(): array {
+	public function get_style_depends() {
 		return array( 'piecyfer-posts' );
 	}
 

@@ -97,7 +97,7 @@ final class CallToActionWidget extends AbstractWidget {
 	 *
 	 * @return string[]
 	 */
-	public function get_style_depends(): array {
+	public function get_style_depends() {
 		return array( 'piecyfer-call-to-action', 'e-transitions' );
 	}
 

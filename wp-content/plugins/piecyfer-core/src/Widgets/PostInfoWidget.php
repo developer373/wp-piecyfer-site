@@ -68,7 +68,7 @@ final class PostInfoWidget extends AbstractWidget {
 	 *
 	 * @return string[]
 	 */
-	public function get_style_depends(): array {
+	public function get_style_depends() {
 		$depends = array( 'piecyfer-post-info', 'widget-icon-list' );
 
 		if ( Icons_Manager::is_migration_allowed() ) {

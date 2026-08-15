@@ -44,7 +44,7 @@ use Elementor\Utils;
 
 defined( 'ABSPATH' ) || exit;
 
-final class TestimonialCarouselWidget extends AbstractWidget {
+class TestimonialCarouselWidget extends AbstractWidget {
 
 	/**
 	 * Pro's Base keeps this counter so that two carousels on one page cannot
@@ -105,7 +105,7 @@ final class TestimonialCarouselWidget extends AbstractWidget {
 	 *
 	 * @return string[]
 	 */
-	public function get_script_depends(): array {
+	public function get_script_depends() {
 		return array( 'imagesloaded' );
 	}
 
@@ -115,7 +115,7 @@ final class TestimonialCarouselWidget extends AbstractWidget {
 	 *
 	 * @return string[]
 	 */
-	public function get_style_depends(): array {
+	public function get_style_depends() {
 		return array( 'e-swiper', 'piecyfer-testimonial-carousel', 'piecyfer-carousel-module-base' );
 	}
 

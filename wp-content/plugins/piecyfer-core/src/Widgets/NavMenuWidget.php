@@ -42,7 +42,7 @@ use Elementor\Icons_Manager;
 
 defined( 'ABSPATH' ) || exit;
 
-final class NavMenuWidget extends AbstractWidget {
+class NavMenuWidget extends AbstractWidget {
 
 	/**
 	 * Bumped once per rendered `<ul>`, so the main menu gets `menu-1-<id>` and
@@ -130,14 +130,14 @@ final class NavMenuWidget extends AbstractWidget {
 	 *
 	 * @return string[]
 	 */
-	public function get_script_depends(): array {
+	public function get_script_depends() {
 		return array( 'smartmenus', 'vamtam-nav-menu' );
 	}
 
 	/**
 	 * @return string[]
 	 */
-	public function get_style_depends(): array {
+	public function get_style_depends() {
 		return array( 'piecyfer-nav-menu' );
 	}
 

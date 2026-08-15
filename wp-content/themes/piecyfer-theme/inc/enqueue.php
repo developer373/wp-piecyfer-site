@@ -162,29 +162,46 @@ function piecyfer_enqueue_styles() {
 	$small = piecyfer_breakpoint( 'md' );
 
 	wp_enqueue_style(
-		'piecyfer-theme',
+		'elementor-icons-theme-icons',
+		content_url( 'uploads/elementor/custom-icons/theme-icons/style.css' ),
+		array(),
+		'1.0.0'
+	);
+
+	wp_enqueue_style(
+		'vamtam-front-all',
 		PIECYFER_THEME_URI . 'assets/css/theme.css',
 		array(),
 		piecyfer_asset_version( 'assets/css/theme.css' )
 	);
 
-	wp_add_inline_style( 'piecyfer-theme', piecyfer_icon_font_faces() );
+	wp_add_inline_style( 'vamtam-front-all', piecyfer_icon_font_faces() );
 
 	$responsive = array(
-		'max'       => '(min-width: ' . $large . 'px)',
-		'below-max' => '(max-width: ' . ( $large - 1 ) . 'px)',
-		'small'     => '(max-width: ' . ( $small - 1 ) . 'px)',
+		'max'       => array(
+			'handle' => 'vamtam-theme-elementor-max',
+			'file'   => 'assets/css/theme-max.css',
+			'media'  => '(min-width: ' . $large . 'px)',
+		),
+		'below-max' => array(
+			'handle' => 'vamtam-theme-elementor-below-max',
+			'file'   => 'assets/css/theme-below-max.css',
+			'media'  => '(max-width: ' . ( $large - 1 ) . 'px)',
+		),
+		'small'     => array(
+			'handle' => 'vamtam-theme-elementor-small',
+			'file'   => 'assets/css/theme-small.css',
+			'media'  => '(max-width: ' . ( $small - 1 ) . 'px)',
+		),
 	);
 
-	foreach ( $responsive as $name => $media ) {
-		$relative = 'assets/css/theme-' . $name . '.css';
-
+	foreach ( $responsive as $item ) {
 		wp_enqueue_style(
-			'piecyfer-theme-' . $name,
-			PIECYFER_THEME_URI . $relative,
-			array( 'piecyfer-theme' ),
-			piecyfer_asset_version( $relative ),
-			$media
+			$item['handle'],
+			PIECYFER_THEME_URI . $item['file'],
+			array( 'vamtam-front-all' ),
+			piecyfer_asset_version( $item['file'] ),
+			$item['media']
 		);
 	}
 }

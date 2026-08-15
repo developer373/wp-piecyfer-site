@@ -61,7 +61,7 @@ defined( 'ABSPATH' ) || exit;
 function piecyfer_print_tokens() {
 	$tokens = piecyfer_get_tokens();
 
-	echo '<style id="piecyfer-tokens">';
+	echo '<style id="vamtam-theme-options">';
 	echo ':root {';
 
 	foreach ( $tokens as $name => $value ) {
