@@ -29,6 +29,7 @@ class LimitModifiedDate {
 		// Reset modified date when the post is updated.
 		add_filter( 'wp_insert_post_data', [ $this, 'resetModifiedDate' ], 99999, 2 );
 		add_filter( 'wp_insert_attachment_data', [ $this, 'resetModifiedDate' ], 99999, 2 );
+		add_action( 'woocommerce_before_product_object_save', [ $this, 'limitWooCommerceModifiedDate' ] );
 
 		add_action( 'rest_api_init', [ $this, 'registerRestHooks' ] );
 
@@ -68,7 +69,11 @@ class LimitModifiedDate {
 
 		// Only enqueue this script if the post-settings-metabox is already enqueued.
 		if ( wp_script_is( 'aioseo/js/src/vue/standalone/post-settings/main.js', 'enqueued' ) ) {
-			aioseo()->core->assets->load( 'src/vue/standalone/limit-modified-date/main.js' );
+			// Declare wp-editor as a dependency so window.wp.editor is populated before the
+			// blockEditor module reads PluginPostStatusInfo. Without this the fallback chain
+			// `wp.editor?.X || wp.editPost?.X` reaches `wp.editPost.X`, which triggers a
+			// deprecation warning on WP 6.6+. See issue #7927.
+			aioseo()->core->assets->load( 'src/vue/standalone/limit-modified-date/main.js', [ 'wp-editor' ] );
 		}
 	}
 
@@ -137,7 +142,7 @@ class LimitModifiedDate {
 		}
 
 		// Handle post revision.
-		if ( ! empty( $GLOBALS['action'] ) && 'restore' === $GLOBALS['action'] ) {
+		if ( ! empty( $GLOBALS['action'] ) && in_array( $GLOBALS['action'], [ 'restore',  'inline-save' ], true ) ) {
 			$aioseoPost = Models\Post::getPost( $postArray['ID'] );
 			if ( $aioseoPost->exists() && $aioseoPost->limit_modified_date ) {
 				$shouldReset = true;
@@ -159,6 +164,31 @@ class LimitModifiedDate {
 		}
 
 		return $data;
+	}
+
+	/**
+	 * Limits the modified date for WooCommerce products.
+	 *
+	 * @since 4.8.1
+	 *
+	 * @param  \WC_Product $product The WooCommerce product.
+	 * @return void
+	 */
+	public function limitWooCommerceModifiedDate( $product ) {
+		if ( ! isset( $_POST['PostSettingsNonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['PostSettingsNonce'] ) ), 'aioseoPostSettingsNonce' ) ) {
+			return;
+		}
+
+		if ( ! isset( $_POST['aioseo-post-settings'] ) ) {
+			return;
+		}
+
+		$aioseoData = json_decode( sanitize_text_field( wp_unslash( ( $_POST['aioseo-post-settings'] ) ) ) );
+		if ( empty( $aioseoData ) || empty( $aioseoData->limit_modified_date ) ) {
+			return;
+		}
+
+		$product->set_date_modified( get_post_field( 'post_modified', $product->get_id() ) );
 	}
 
 	/**

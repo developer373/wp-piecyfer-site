@@ -175,7 +175,7 @@ trait Wp {
 			'include' => [] // Post types to include.
 		], $args );
 
-		$postTypes   = [];
+		$postTypes       = [];
 		$postTypeObjects = get_post_types( [], 'objects' );
 		foreach ( $postTypeObjects as $postTypeObject ) {
 			if ( ! is_post_type_viewable( $postTypeObject ) ) {
@@ -612,7 +612,7 @@ trait Wp {
 			return aioseo()->standalone->pageBuilderIntegrations[ $pageBuilder ]->getEditUrl( $postId );
 		}
 
-		return get_edit_post_link( $postId );
+		return get_edit_post_link( $postId, 'raw' );
 	}
 
 	/**
@@ -650,27 +650,7 @@ trait Wp {
 			return $capabilities[ $postType ];
 		}
 
-		$capabilityType = $postTypeObject->capability_type;
-		if ( ! is_array( $capabilityType ) ) {
-			$capabilityType = [
-				$capabilityType,
-				$capabilityType . 's'
-			];
-		}
-
-		// Singular base for meta capabilities, plural base for primitive capabilities.
-		list( $singularBase, $pluralBase ) = $capabilityType;
-
-		$capabilities[ $postType ] = [
-			'edit_post'          => 'edit_' . $singularBase,
-			'read_post'          => 'read_' . $singularBase,
-			'delete_post'        => 'delete_' . $singularBase,
-			'edit_posts'         => 'edit_' . $pluralBase,
-			'edit_others_posts'  => 'edit_others_' . $pluralBase,
-			'delete_posts'       => 'delete_' . $pluralBase,
-			'publish_posts'      => 'publish_' . $pluralBase,
-			'read_private_posts' => 'read_private_' . $pluralBase,
-		];
+		$capabilities[ $postType ] = (array) $postTypeObject->cap;
 
 		return $capabilities[ $postType ];
 	}
@@ -751,29 +731,48 @@ trait Wp {
 		if ( version_compare( PHP_VERSION, '7.1', '>=' ) ) {
 			$originalPrecision          = ini_get( 'precision' );
 			$originalSerializePrecision = ini_get( 'serialize_precision' );
-			ini_set( 'precision', 17 );
-			ini_set( 'serialize_precision', -1 );
+			ini_set( 'precision', 17 ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+			ini_set( 'serialize_precision', -1 ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
 		}
 
 		$json = wp_json_encode( $data, $flags );
 
 		if ( version_compare( PHP_VERSION, '7.1', '>=' ) ) {
-			ini_set( 'precision', $originalPrecision );
-			ini_set( 'serialize_precision', $originalSerializePrecision );
+			ini_set( 'precision', $originalPrecision ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+			ini_set( 'serialize_precision', $originalSerializePrecision ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
 		}
 
 		return $json;
 	}
 
 	/**
+	 * Checks whether WordPress is currently serving a REST API request.
+	 *
+	 * @since 4.8.9
+	 *
+	 * @return bool Whether WordPress is currently serving a REST API request.
+	 */
+	public function isServingRestRequest() {
+		if ( function_exists( 'wp_is_serving_rest_request' ) ) {
+			return wp_is_serving_rest_request(); // phpcs:ignore WordPress.NamingConventions.ValidHookName, AIOSEO.WpFunctionUse.NewFunctions.wp_is_serving_rest_requestFound
+		}
+
+		return defined( 'REST_REQUEST' ) && REST_REQUEST;
+	}
+
+	/**
 	 * Returns the post title or a placeholder if there isn't one.
 	 *
-	 * @since 4.3.0
+	 * @since   4.3.0
+	 * @version 4.9.8 Casts $postId to int so a null/empty ID (e.g. a link row with no linked post) doesn't
+	 *                 trigger the "null array offset" deprecation on the static cache.
 	 *
 	 * @param  int    $postId The post ID.
 	 * @return string         The post title.
 	 */
 	public function getPostTitle( $postId ) {
+		$postId = (int) $postId;
+
 		static $titles = [];
 		if ( isset( $titles[ $postId ] ) ) {
 			return $titles[ $postId ];
@@ -781,13 +780,13 @@ trait Wp {
 
 		$post = aioseo()->helpers->getPost( $postId );
 		if ( ! is_a( $post, 'WP_Post' ) ) {
-			$titles[ $postId ] = __( '(no title)' ); // phpcs:ignore AIOSEO.Wp.I18n.MissingArgDomain
+			$titles[ $postId ] = __( '(no title)', 'default' ); // phpcs:ignore AIOSEO.Wp.I18n.TextDomainMismatch, WordPress.WP.I18n.TextDomainMismatch
 
 			return $titles[ $postId ];
 		}
 
 		$title = $post->post_title;
-		$title = $title ? $title : __( '(no title)' ); // phpcs:ignore AIOSEO.Wp.I18n.MissingArgDomain
+		$title = $title ? $title : __( '(no title)', 'default' ); // phpcs:ignore AIOSEO.Wp.I18n.TextDomainMismatch, WordPress.WP.I18n.TextDomainMismatch
 
 		$titles[ $postId ] = aioseo()->helpers->decodeHtmlEntities( $title );
 
@@ -842,6 +841,23 @@ trait Wp {
 		$postStatus = get_post_status( $post );
 
 		return is_post_type_viewable( $postType ) && $this->isPostStatusViewable( $postStatus );
+	}
+
+	/**
+	 * Whether the current admin list table is filtered to the Trash view.
+	 * Mirrors how WordPress core determines the trash view in WP_Posts_List_Table and WP_Media_List_Table.
+	 *
+	 * @since 5.0.0
+	 *
+	 * @return bool Whether the current list view shows trashed items.
+	 */
+	public function isTrashListView() {
+		// phpcs:disable HM.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Recommended
+		$postStatus       = sanitize_text_field( wp_unslash( $_REQUEST['post_status'] ?? '' ) );
+		$attachmentFilter = sanitize_text_field( wp_unslash( $_REQUEST['attachment-filter'] ?? '' ) );
+		// phpcs:enable HM.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Recommended
+
+		return 'trash' === $postStatus || 'trash' === $attachmentFilter;
 	}
 
 	/**
@@ -944,5 +960,110 @@ trait Wp {
 		}
 
 		return 'classic' === get_option( 'classic-editor-replace' );
+	}
+
+	/**
+	 * Redirects to a 404 Not Found page if the sitemap is disabled.
+	 *
+	 * @since 4.0.0
+	 * @version 4.8.0 Moved from the Sitemap class.
+	 *
+	 * @return void
+	 */
+	public function notFoundPage() {
+		global $wp_query; // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+		$wp_query->set_404(); // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+		status_header( 404 );
+		include_once get_404_template();
+		exit;
+	}
+
+	/**
+	 * Retrieves the post type labels for the given post type.
+	 *
+	 * @since 4.8.2
+	 *
+	 * @param  string $postType The name of a registered post type.
+	 * @return object           Object with all the labels as member variables.
+	 */
+	public function getPostTypeLabels( $postType ) {
+		static $postTypeLabels = [];
+		if ( ! isset( $postTypeLabels[ $postType ] ) ) {
+			$postTypeObject = get_post_type_object( $postType );
+			if ( ! is_a( $postTypeObject, 'WP_Post_Type' ) ) {
+				return null;
+			}
+
+			$postTypeLabels[ $postType ] = $postTypeObject->labels;
+		}
+
+		return $postTypeLabels[ $postType ];
+	}
+
+	/**
+	 * Cleans the slug of the current request before we use it.
+	 *
+	 * @since 4.8.4
+	 *
+	 * @param  string $slug The slug.
+	 * @return string       The cleaned slug.
+	 */
+	public function cleanSlug( $slug ) {
+		$slug = strtolower( $slug );
+		$slug = aioseo()->helpers->unleadingSlashIt( $slug );
+		$slug = untrailingslashit( $slug );
+
+		return $slug;
+	}
+
+	/**
+	 * Returns the scannable post types.
+	 *
+	 * @since 4.8.6
+	 *
+	 * @return array The scannable post types.
+	 */
+	public function getScannablePostTypes() {
+		static $scannablePostTypes = null;
+		if ( null !== $scannablePostTypes ) {
+			return $scannablePostTypes;
+		}
+
+		// We exclude these post types to optimize performance.
+		$nonSupportedPostTypes = [ 'attachment' ];
+		$scannablePostTypes    = array_diff(
+			$this->getPublicPostTypes( true ),
+			$nonSupportedPostTypes
+		);
+
+		return $scannablePostTypes;
+	}
+
+	/**
+	 * Returns the user data.
+	 *
+	 * @since 4.8.7
+	 *
+	 * @param  int $userId The user ID.
+	 * @return \WP_User|null The user data.
+	 */
+	public function getUserData( $userId ) {
+		$userData = get_userdata( $userId );
+		if ( ! is_a( $userData, 'WP_User' ) ) {
+			return null;
+		}
+
+		$toUnset = [
+			'user_pass',
+			'user_activation_key'
+		];
+
+		foreach ( $toUnset as $key ) {
+			if ( isset( $userData->$key ) ) {
+				unset( $userData->$key );
+			}
+		}
+
+		return $userData;
 	}
 }

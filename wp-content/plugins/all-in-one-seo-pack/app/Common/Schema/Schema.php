@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use AIOSEO\Plugin\Common\Integrations\BuddyPress as BuddyPressIntegration;
+use AIOSEO\Plugin\Common\Integrations\BbPress as BbPressIntegration;
 
 /**
  * Builds our schema.
@@ -83,11 +84,13 @@ class Schema {
 	 * @var array
 	 */
 	public $nullableFields = [
-		'price',       // Needs to be 0 if free for Software Application.
-		'ratingValue', // Needs to be 0 for 0 star ratings.
-		'value',       // Needs to be 0 if free for product shipping details.
-		'minValue',    // Needs to be 0 for product delivery time.
-		'maxValue'     // Needs to be 0 for product delivery time.
+		'price',                // Needs to be 0 if free for Software Application.
+		'ratingValue',          // Needs to be 0 for 0-star ratings.
+		'value',                // Needs to be 0 if free for product shipping details.
+		'minValue',             // Needs to be 0 for product delivery time.
+		'maxValue',             // Needs to be 0 for product delivery time.
+		'suggestedMinAge',      // Needs to be 0 for PeopleAudience minimum age.
+		'valueAddedTaxIncluded' // Needs to be `false` for WooCommerce products with tax-exclusive pricing.
 	];
 
 	/**
@@ -233,6 +236,12 @@ class Schema {
 
 		if ( BuddyPressIntegration::isComponentPage() ) {
 			aioseo()->standalone->buddyPress->component->determineSchemaGraphsAndContext( $contextInstance );
+
+			return;
+		}
+
+		if ( BbPressIntegration::isComponentPage() ) {
+			aioseo()->standalone->bbPress->component->determineSchemaGraphsAndContext();
 
 			return;
 		}

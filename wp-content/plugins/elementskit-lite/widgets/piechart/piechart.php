@@ -11,10 +11,17 @@ class ElementsKit_Widget_Piechart extends Widget_Base {
     use \ElementsKit_Lite\Widgets\Widget_Notice;
 
     public $base;
-    
+
     public function __construct( $data = [], $args = null ) {
 		parent::__construct( $data, $args );
-		$this->add_script_depends('easypiechart');
+	}
+
+	public function get_script_depends() {
+		return ['ekit-piechart', 'easy-pie-chart'];
+	}
+
+	public function get_style_depends() {
+		return ['ekit-piechart'];
 	}
 
     public function get_name() {
@@ -511,7 +518,7 @@ class ElementsKit_Widget_Piechart extends Widget_Base {
                 'default'   => '#333',
                 'selectors' => [
                     '{{WRAPPER}} .ekit-chart-content i' => 'color: {{VALUE}};',
-                    '{{WRAPPER}} .ekit-chart-content svg path'  => 'stroke: {{VALUE}}; fill: {{VALUE}};',
+                    '{{WRAPPER}} .ekit-chart-content svg'  => 'fill: {{VALUE}};',
                 ],
                 'condition' => [
                     'ekit_piechart_icon_type!' => 'image',

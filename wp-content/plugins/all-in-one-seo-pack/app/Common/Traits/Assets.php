@@ -247,6 +247,15 @@ trait Assets {
 	public function registerJs( $asset, $dependencies = [], $data = null, $objectName = 'aioseo' ) {
 		$handle = $this->jsHandle( $asset );
 		if ( wp_script_is( $handle, 'registered' ) ) {
+			// If it's already registered let's add the data.
+			if ( ! empty( $data ) ) {
+				wp_localize_script(
+					$handle,
+					$objectName,
+					$data
+				);
+			}
+
 			return;
 		}
 
@@ -410,7 +419,7 @@ trait Assets {
 	 * @param  string      $item An item to retrieve.
 	 * @return string|null       The asset item.
 	 */
-	private function getAssetManifestItem( $item ) {
+	public function getAssetManifestItem( $item ) {
 		$assetManifest = $this->getManifest();
 
 		return ! empty( $assetManifest[ $item ] ) ? $assetManifest[ $item ] : null;
@@ -630,5 +639,25 @@ trait Assets {
 		}
 
 		return $queue;
+	}
+
+	/**
+	 * Check if an asset exists (works in both dev and production mode).
+	 *
+	 * @since 4.9.0
+	 *
+	 * @param  string $asset The asset path to check.
+	 * @return bool          Whether the asset exists.
+	 */
+	public function assetExists( $asset ) {
+		// In dev mode, check if the source file exists instead of checking the manifest.
+		if ( $this->shouldLoadDev() ) {
+			$sourcePath = AIOSEO_DIR . '/' . ltrim( $asset, '/' );
+
+			return file_exists( $sourcePath );
+		}
+
+		// In production mode, check the manifest.
+		return ! empty( aioseo()->core->assets->getAssetManifestItem( $asset ) );
 	}
 }

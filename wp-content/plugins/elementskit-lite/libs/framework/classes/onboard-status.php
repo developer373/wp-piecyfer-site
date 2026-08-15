@@ -15,8 +15,15 @@ class Onboard_Status {
 	public function onboard() {
 
 		add_action( 'elementskit/admin/after_save', array( $this, 'ajax_action' ) );
+		( new Install_Notice() )->init();
 		
 		if ( get_option( $this->optionKey ) ) {
+			return true;
+		}
+
+		// Skip onboarding when ElementsKit was installed by another Wpmet onboarding flow.
+		if ( Install_Tracker::was_auto_installed( 'elementskit-lite/elementskit-lite.php' ) ) {
+			$this->finish_onboard();
 			return true;
 		}
 
@@ -48,19 +55,15 @@ class Onboard_Status {
 		// finish on-boarding
 		$this->finish_onboard();
 
-		if ( isset( $_POST['settings']['tut_term'] ) && $_POST['settings']['tut_term'] == 'user_agreed' ) {
-			Plugin_Data_Sender::instance()->send( 'diagnostic-data' ); // send non-sensitive diagnostic data and details about plugin usage.
-		}
-
-		if ( isset( $_POST['settings']['newsletter_email'] ) && ! empty( $_POST['settings']['newsletter_email'] ) ) {
-
+		$email = isset( $_POST['settings']['newsletter_email'] ) ? sanitize_email( wp_unslash( $_POST['settings']['newsletter_email'] ) ) : '';
+		if ( is_email( $email ) ) {
 			$data = array(
-				'email'           => sanitize_email( wp_unslash( $_POST['settings']['newsletter_email'] ) ),
-				'environment_id'  => 1,
-				'contact_list_id' => 1,
+				'email'           => $email,
+				'slug'            => 'elementskit-lite',
 			);
 
-			Plugin_Data_Sender::instance()->sendAutomizyData( 'email-subscribe', $data );
+			$response = Plugin_Data_Sender::instance()->sendEmailSubscribeData( 'plugin-subscribe', $data );
+			Install_Tracker::store_collected_email( $email );
 		}
 	}
 
@@ -102,5 +105,4 @@ class Onboard_Status {
 			add_option( $this->optionKey, $this->optionValue );
 		}
 	}
-
 }

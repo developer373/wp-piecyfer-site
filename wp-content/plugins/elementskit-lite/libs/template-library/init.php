@@ -1,27 +1,28 @@
-<?php 
+<?php
+
 namespace ElementsKit_Lite\Libs\Template_Library;
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 /**
  * Class Init
- * 
+ *
  * Initializes the Template Library of the ElementsKit Lite plugin.
  */
-class Init {
+class Init{
 	/**
 	 * Initializes the Init class.
-	 * 
+	 *
 	 * Includes necessary files.
 	 */
-	public function __construct() {
-		add_action('activate_gutenkit-blocks-addon/gutenkit-blocks-addon.php', array( $this, 'load_gutenkit_plugin' ), 9999);
-		add_action( 'enqueue_block_editor_assets', array( $this, 'library_enqueue_block_editor_assets' ) );
+	public function __construct(){
+		add_action('activate_gutenkit-blocks-addon/gutenkit-blocks-addon.php', array($this, 'load_gutenkit_plugin'), 9999);
+		add_action('enqueue_block_editor_assets', array($this, 'library_enqueue_block_editor_assets'));
 	}
 
 	/**
 	 * Retrieves the URL of the Template Library.
-	 * 
+	 *
 	 * @return string The URL of the Template Library.
 	 * @since 3.1.4
 	 */
@@ -31,7 +32,7 @@ class Init {
 
 	/**
 	 * Retrieves the directory of the Template Library.
-	 * 
+	 *
 	 * @return string The directory of the Template Library.
 	 * @since 3.1.4
 	 */
@@ -45,7 +46,7 @@ class Init {
 	 * Deletes the 'gutenkit_do_activation_redirect' option.
 	 */
 	public function load_gutenkit_plugin() {
-		delete_option( 'gutenkit_do_activation_redirect' );
+		delete_option('gutenkit_do_activation_redirect');
 	}
 
 	/**
@@ -56,27 +57,24 @@ class Init {
 	 */
 	public function library_enqueue_block_editor_assets() {
 		// Enqueue block editor only JavaScript and CSS.
-		if ( file_exists( self::get_dir() . 'assets/library/editor-template-library.asset.php' ) ) {
-			$editor_template_library = include self::get_dir() . 'assets/library/editor-template-library.asset.php';
+		$file_path = self::get_dir() . 'assets/library/editor-template-library.asset.php';
+		if (file_exists($file_path)) {
+			$editor_template_library = include $file_path;
 			wp_enqueue_script(
-				'extra-editor-template-library',
+				'gutenkit-editor-template-library',
 				self::get_url() . 'assets/library/editor-template-library.js',
 				$editor_template_library['dependencies'],
 				$editor_template_library['version'],
-				true
+				[
+					'in_footer' => true,
+				]
 			);
 
 			wp_enqueue_style(
-				'extra-editor-template-library',
+				'gutenkit-editor-template-library',
 				self::get_url() . 'assets/library/editor-template-library.css',
 				array(),
 				$editor_template_library['version']
-			);
-
-			// Google Roboto Font
-			wp_enqueue_style(
-				'extra-google-fonts',
-				'https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap'
 			);
 		}
 	}

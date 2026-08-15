@@ -15,32 +15,33 @@ class Access {
 	 * @var array
 	 */
 	protected $capabilities = [
+		'aioseo_about_us_page',
 		'aioseo_dashboard',
-		'aioseo_general_settings',
-		'aioseo_search_appearance_settings',
-		'aioseo_social_networks_settings',
-		'aioseo_sitemap_settings',
-		'aioseo_link_assistant_settings',
-		'aioseo_redirects_manage',
-		'aioseo_page_redirects_manage',
-		'aioseo_redirects_settings',
-		'aioseo_seo_analysis_settings',
-		'aioseo_search_statistics_settings',
-		'aioseo_tools_settings',
 		'aioseo_feature_manager_settings',
+		'aioseo_general_settings',
+		'aioseo_link_assistant_settings',
+		'aioseo_local_seo_settings',
+		'aioseo_page_advanced_settings',
+		'aioseo_page_ai_content_settings',
 		'aioseo_page_analysis',
 		'aioseo_page_general_settings',
-		'aioseo_page_advanced_settings',
-		'aioseo_page_schema_settings',
-		'aioseo_page_social_settings',
 		'aioseo_page_link_assistant_settings',
-		'aioseo_page_redirects_settings',
-		'aioseo_local_seo_settings',
 		'aioseo_page_local_seo_settings',
+		'aioseo_page_redirects_manage',
+		'aioseo_page_schema_settings',
+		'aioseo_page_seo_revisions_settings',
+		'aioseo_page_social_settings',
 		'aioseo_page_writing_assistant_settings',
-		'aioseo_about_us_page',
+		'aioseo_redirects_manage',
+		'aioseo_redirects_settings',
+		'aioseo_ai_insights_settings',
+		'aioseo_search_appearance_settings',
+		'aioseo_search_statistics_settings',
+		'aioseo_seo_analysis_settings',
 		'aioseo_setup_wizard',
-		'aioseo_page_seo_revisions_settings'
+		'aioseo_sitemap_settings',
+		'aioseo_social_networks_settings',
+		'aioseo_tools_settings'
 	];
 
 	/**
@@ -105,7 +106,8 @@ class Access {
 	 * Adds capabilities into WordPress for the current user.
 	 * Only on activation or settings saved.
 	 *
-	 * @since 4.0.0
+	 * @since   4.0.0
+	 * @version 4.9.10 Grant aioseo_page_writing_assistant_settings to post-editing roles.
 	 *
 	 * @return void
 	 */
@@ -122,13 +124,15 @@ class Access {
 				$roleObject->add_cap( 'aioseo_manage_seo' );
 			}
 
-			if ( function_exists( 'wp_get_current_user' ) && current_user_can( 'edit_posts' ) ) {
+			if ( $roleObject->has_cap( 'edit_posts' ) ) {
 				$postCapabilities = [
+					'aioseo_page_advanced_settings',
+					'aioseo_page_ai_content_settings',
 					'aioseo_page_analysis',
 					'aioseo_page_general_settings',
-					'aioseo_page_advanced_settings',
 					'aioseo_page_schema_settings',
 					'aioseo_page_social_settings',
+					'aioseo_page_writing_assistant_settings'
 				];
 
 				foreach ( $postCapabilities as $capability ) {
@@ -184,7 +188,8 @@ class Access {
 	/**
 	 * Checks if the current user has the capability.
 	 *
-	 * @since 4.0.0
+	 * @since   4.0.0
+	 * @version 4.9.10 Authorize per-post capabilities by actual grant instead of a name match.
 	 *
 	 * @param  string|array $capability The capability to check against.
 	 * @param  string|null  $checkRole  A role to check against.
@@ -202,7 +207,7 @@ class Access {
 
 		if ( is_array( $capability ) ) {
 			foreach ( $capability as $cap ) {
-				if ( false !== strpos( $cap, 'aioseo_page_' ) ) {
+				if ( $this->hasCapability( $cap, $checkRole ) ) {
 					return true;
 				}
 			}
@@ -210,7 +215,14 @@ class Access {
 			return false;
 		}
 
-		return false !== strpos( $capability, 'aioseo_page_' );
+		// Non-admins are limited to the per-post AIOSEO capabilities, and only when the capability
+		// was actually granted to their role (see addCapabilities()) - authorize by the real grant,
+		// not by a name match, so an ungranted aioseo_page_* route isn't reachable by capability name.
+		if ( 0 !== strpos( $capability, 'aioseo_page_' ) ) {
+			return false;
+		}
+
+		return $this->can( $capability, $checkRole );
 	}
 
 	/**
@@ -237,7 +249,7 @@ class Access {
 	/**
 	 * Returns the capability list.
 	 *
-	 * @return 4.1.3
+	 * @since 4.1.3
 	 *
 	 * @return array An array of capabilities.
 	 */
@@ -271,6 +283,57 @@ class Access {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Unified access check supporting the same shorthand the AIOSEO REST routes use.
+	 *
+	 * Accepts:
+	 *   - 'all' or 'everyone' — any logged-in user.
+	 *   - 'any'               — any user with at least one AIOSEO capability.
+	 *   - 'options'           — any user with at least one non-page AIOSEO capability
+	 *                           (i.e. excludes per-post `aioseo_page_*` caps).
+	 *   - string capability   — passed through to {@see Access::hasCapability()}.
+	 *   - array of caps       — OR semantics, passed through to {@see Access::hasCapability()}.
+	 *
+	 * Admins/superadmins always pass.
+	 *
+	 * @since 4.9.8
+	 *
+	 * @param  string|array $access The access declaration.
+	 * @return bool
+	 */
+	public function hasAccess( $access ) {
+		if ( $this->isAdmin() ) {
+			return true;
+		}
+
+		if ( 'all' === $access || 'everyone' === $access ) {
+			return is_user_logged_in();
+		}
+
+		if ( 'any' === $access || 'options' === $access ) {
+			if ( ! is_user_logged_in() ) {
+				return false;
+			}
+
+			$aioseoCaps = $this->getCapabilityList();
+			if ( 'options' === $access ) {
+				$aioseoCaps = array_filter( $aioseoCaps, function( $capability ) {
+					return 0 !== strpos( $capability, 'aioseo_page_' );
+				} );
+			}
+
+			foreach ( wp_get_current_user()->get_role_caps() as $capability => $enabled ) {
+				if ( $enabled && in_array( $capability, $aioseoCaps, true ) ) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		return $this->hasCapability( $access );
 	}
 
 	/**

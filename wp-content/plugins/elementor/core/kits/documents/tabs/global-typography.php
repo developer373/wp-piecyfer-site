@@ -7,7 +7,7 @@ use Elementor\Group_Control_Typography;
 use Elementor\Repeater;
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit; // Exit if accessed directly
+	exit; // Exit if accessed directly.
 }
 
 class Global_Typography extends Tab_Base {
@@ -205,6 +205,8 @@ class Global_Typography extends Tab_Base {
 				],
 			]
 		);
+
+		do_action( 'elementor/kit/global-typography/register_controls', $this );
 
 		$this->end_controls_section();
 	}

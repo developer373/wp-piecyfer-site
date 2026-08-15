@@ -33,18 +33,28 @@ class ProfilePage extends WebPage {
 	public function get() {
 		$data = parent::get();
 
-		$post   = aioseo()->helpers->getPost();
-		$author = get_queried_object();
+		$post          = aioseo()->helpers->getPost();
+		$queriedObject = get_queried_object();
 		if (
-			! is_a( $author, 'WP_User' ) &&
-			( is_singular() && ! is_a( $post, 'WP_Post' ) )
+			( is_singular() && ! is_a( $post, 'WP_Post' ) ) ||
+			( ! is_singular() && ! is_a( $queriedObject, 'WP_User' ) )
 		) {
 			return [];
 		}
 
+		$isBuddyPressMemberPage = BuddyPressIntegration::isComponentPage() && 'bp-member_single' === aioseo()->standalone->buddyPress->component->templateType;
+
+		if ( $isBuddyPressMemberPage ) {
+			$author   = aioseo()->standalone->buddyPress->component->author;
+			$authorId = $author->ID;
+		} else {
+			$authorId = is_a( $queriedObject, 'WP_User' ) ? $queriedObject->ID : $post->post_author;
+			$author   = is_a( $queriedObject, 'WP_User' ) ? $queriedObject : get_user_by( 'id', $authorId );
+		}
+
 		global $wp_query; // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+
 		$articles = [];
-		$authorId = $author->ID ?? $post->post_author ?? 0;
 		foreach ( $wp_query->posts as $post ) { // phpcs:ignore Squiz.NamingConventions.ValidVariableName
 			if ( $post->post_author !== $authorId ) {
 				continue;
@@ -71,17 +81,10 @@ class ProfilePage extends WebPage {
 
 		] );
 
-		if (
-			BuddyPressIntegration::isComponentPage() &&
-			'bp-member_single' === aioseo()->standalone->buddyPress->component->templateType
-		) {
-			if ( ! isset( $data['mainEntity'] ) ) {
-				$data['mainEntity'] = [];
-			}
-
+		if ( $isBuddyPressMemberPage ) {
 			$data['mainEntity']['@type'] = 'Person';
-			$data['mainEntity']['name']  = aioseo()->standalone->buddyPress->component->author->display_name;
-			$data['mainEntity']['url']   = BuddyPressIntegration::getComponentSingleUrl( 'member', aioseo()->standalone->buddyPress->component->author->ID );
+			$data['mainEntity']['name']  = $author->display_name;
+			$data['mainEntity']['url']   = BuddyPressIntegration::getComponentSingleUrl( 'member', $authorId );
 		}
 
 		return $data;

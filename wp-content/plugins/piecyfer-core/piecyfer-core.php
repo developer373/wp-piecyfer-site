@@ -33,7 +33,7 @@ const VERSION = '0.1.0';
  * discovered by a visitor.
  */
 const ELEMENTOR_MIN    = '3.20.0';
-const ELEMENTOR_TESTED = '3.25.10';
+const ELEMENTOR_TESTED = '4.2.2';
 const PHP_MIN          = '8.0';
 
 define( 'PIECYFER_CORE_FILE', __FILE__ );

@@ -11,7 +11,7 @@ if ( ! class_exists( 'HT_CCW_Variables' ) ) :
 class HT_CCW_Variables {
 
     /**
-     * db options table - ccw_options values
+     * Db options table - ccw_options values
      * @var array get_options ccw_options
      */
     public $get_option;
@@ -21,7 +21,12 @@ class HT_CCW_Variables {
     }
 
     public function get_option() {
-        $this->get_option =  get_option('ccw_options');
+        // Ensure an array is always available to avoid offset-on-false warnings
+        $opts = get_option( 'ccw_options', array() );
+        if ( ! is_array( $opts ) ) {
+            $opts = array();
+        }
+        $this->get_option = $opts;
     }
 
     // public function ccw_enable() {

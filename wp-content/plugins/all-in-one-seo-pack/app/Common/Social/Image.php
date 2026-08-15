@@ -71,7 +71,7 @@ class Image {
 			return $images[ $hash ];
 		}
 
-		if ( 'auto' === $imageSource && aioseo()->helpers->getPostPageBuilderName( $post->ID ) ) {
+		if ( 'auto' === $imageSource && $this->post instanceof \WP_Post && aioseo()->helpers->getPostPageBuilderName( $this->post->ID ) ) {
 			$imageSource = 'default';
 		}
 
@@ -188,7 +188,7 @@ class Image {
 		}
 
 		$postContent = aioseo()->helpers->getPostContent( $this->post );
-		preg_match_all( '|<img.*?src=[\'"](.*?)[\'"].*?>|i', (string) $postContent, $matches );
+		preg_match_all( '|<img.*?src=[\'"](.*?)[\'"].*?>|i', (string) $postContent, $matches ); // phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage
 
 		// Ignore cover block background image - WP >= 5.7.
 		if ( ! empty( $matches[0] ) && apply_filters( 'aioseo_social_image_ignore_cover_block', true, $this->post, $matches ) ) {

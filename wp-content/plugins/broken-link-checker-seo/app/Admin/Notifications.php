@@ -42,12 +42,23 @@ class Notifications {
 	private $notConnectedNotice;
 
 	/**
+	 * The action name for the notifications update.
+	 *
+	 * @since 1.2.9
+	 *
+	 * @var string
+	 */
+	private $actionName = 'aioseo_blc_admin_notifications_update';
+
+	/**
 	 * Class constructor.
 	 *
-	 * @since 1.0.0
+	 * @since   1.0.0
+	 * @version 1.2.9 Schedule notifications update as a daily recurring action.
 	 */
 	public function __construct() {
-		add_action( 'aioseo_blc_admin_notifications_update', [ $this, 'update' ] );
+		add_action( 'admin_init', [ $this, 'scheduleNotificationsUpdate' ] );
+		add_action( $this->actionName, [ $this, 'update' ] );
 
 		if ( ! is_admin() ) {
 			return;
@@ -58,6 +69,21 @@ class Notifications {
 	}
 
 	/**
+	 * Schedules the daily recurring notifications update.
+	 *
+	 * @since 1.2.9
+	 *
+	 * @return void
+	 */
+	public function scheduleNotificationsUpdate() {
+		if ( aioseoBrokenLinkChecker()->actionScheduler->isScheduled( $this->actionName ) ) {
+			return;
+		}
+
+		aioseoBrokenLinkChecker()->actionScheduler->scheduleRecurrent( $this->actionName, 0, DAY_IN_SECONDS );
+	}
+
+	/**
 	 * Initialize notifications.
 	 *
 	 * @since 1.0.0
@@ -65,14 +91,12 @@ class Notifications {
 	 * @return void
 	 */
 	public function init() {
-		// If our tables do not exist, create them now.
+		// If our tables do not exist, let runUpdates() handle creation.
+		// Calling updateDbSchema() here AND in runUpdates() causes duplicate
+		// dbDelta() calls which triggers "table already exists" errors.
 		if ( ! aioseoBrokenLinkChecker()->core->db->tableExists( 'aioseo_blc_notifications' ) ) {
-			aioseoBrokenLinkChecker()->updates->addInitialTables();
-
 			return;
 		}
-
-		$this->checkForUpdates();
 
 		$this->notConnectedNotice = new Notices\NotConnected();
 		$this->reviewNotice       = new Notices\Review();
@@ -90,25 +114,13 @@ class Notifications {
 			return;
 		}
 
-		$this->notConnectedNotice->maybeShowNotice();
-		$this->reviewNotice->maybeShowNotice();
-	}
-
-	/**
-	 * Checks if we should update our notifications.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return void
-	 */
-	private function checkForUpdates() {
-		$nextRun = aioseoBrokenLinkChecker()->core->cache->get( 'admin_notifications_update' );
-		if ( null !== $nextRun && time() < $nextRun ) {
-			return;
+		if ( ! empty( $this->notConnectedNotice ) ) {
+			$this->notConnectedNotice->maybeShowNotice();
 		}
 
-		aioseoBrokenLinkChecker()->actionScheduler->scheduleAsync( 'aioseo_blc_admin_notifications_update' );
-		aioseoBrokenLinkChecker()->core->cache->update( 'admin_notifications_update', time() + DAY_IN_SECONDS );
+		if ( ! empty( $this->reviewNotice ) ) {
+			$this->reviewNotice->maybeShowNotice();
+		}
 	}
 
 	/**
@@ -176,6 +188,13 @@ class Notifications {
 	 * @return array A list of notifications.
 	 */
 	private function fetch() {
+		$cacheKey = 'blc_notifications_last_fetched';
+		if ( null !== aioseoBrokenLinkChecker()->core->cache->get( $cacheKey ) ) {
+			return [];
+		}
+
+		aioseoBrokenLinkChecker()->core->cache->update( $cacheKey, true, 12 * HOUR_IN_SECONDS );
+
 		$response = aioseoBrokenLinkChecker()->helpers->wpRemoteGet( $this->getUrl() );
 		if ( is_wp_error( $response ) ) {
 			return [];

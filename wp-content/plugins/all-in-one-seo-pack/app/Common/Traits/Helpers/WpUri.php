@@ -70,12 +70,12 @@ trait WpUri {
 			return $url;
 		}
 
-		global $wp, $wp_rewrite; // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+		global $wp;
 		// Permalink url without the query string.
 		$url = user_trailingslashit( home_url( $wp->request ) );
 
 		// If permalinks are not being used we need to append the query string to the home url.
-		if ( ! $wp_rewrite->using_permalinks() ) { // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+		if ( ! $this->usingPermalinks() ) {
 			$url = home_url( ! empty( $wp->query_string ) ? '?' . $wp->query_string : '' );
 		}
 
@@ -114,10 +114,15 @@ trait WpUri {
 			$metaData     = aioseo()->meta->metaData->getMetaData( $queriedObject );
 			$url[ $hash ] = get_term_link( $queriedObject, $queriedObject->taxonomy ?? '' );
 
+			// If the term link is a WP_Error, set it to an empty string.
+			if ( ! is_string( $url[ $hash ] ) ) {
+				$url[ $hash ] = '';
+			}
+
 			// Add pagination to the URL. We need to do this here because get_term_link() doesn't handle pagination.
 			// We'll strip it further down if no pagination for canonical is enabled.
 			if ( $this->getPageNumber() > 1 ) {
-				$url[ $hash ] = user_trailingslashit( $url[ $hash ] . 'page/' . $this->getPageNumber() );
+				$url[ $hash ] = user_trailingslashit( rtrim( $url[ $hash ], '/' ) . '/page/' . $this->getPageNumber() );
 			}
 		}
 
@@ -140,9 +145,8 @@ trait WpUri {
 			in_array( 'noPaginationForCanonical', aioseo()->internalOptions->deprecatedOptions, true ) &&
 			aioseo()->options->deprecated->searchAppearance->advanced->noPaginationForCanonical
 		) {
-			global $wp_rewrite; // phpcs:ignore Squiz.NamingConventions.ValidVariableName
 			if ( 1 < $pageNumber ) {
-				if ( $wp_rewrite->using_permalinks() ) { // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+				if ( $this->usingPermalinks() ) {
 					// Replace /page/3 and /page/3/.
 					$url[ $hash ] = preg_replace( "@(?<=/)page/$pageNumber(/|)$@", '', (string) $url[ $hash ] );
 					// Replace /3 and /3/.
@@ -171,31 +175,6 @@ trait WpUri {
 		$url[ $hash ] = apply_filters( 'aioseo_canonical_url', $url[ $hash ] );
 
 		return $url[ $hash ];
-	}
-
-	/**
-	 * Formats a given URL as an absolute URL if it is relative.
-	 *
-	 * @since 4.0.0
-	 *
-	 * @param  string $url The URL.
-	 * @return string $url The absolute URL.
-	 */
-	public function makeUrlAbsolute( $url ) {
-		if ( 0 !== strpos( $url, 'http' ) && '/' !== $url ) {
-			$url = $this->sanitizeDomain( $url );
-			if ( $this->isDomainWithPaths( $url ) ) {
-				$scheme = wp_parse_url( home_url(), PHP_URL_SCHEME );
-				$url    = $scheme . '://' . $url;
-			} elseif ( 0 === strpos( $url, '//' ) ) {
-				$scheme = wp_parse_url( home_url(), PHP_URL_SCHEME );
-				$url    = $scheme . ':' . $url;
-			} else {
-				$url = home_url( $url );
-			}
-		}
-
-		return $url;
 	}
 
 	/**
@@ -273,14 +252,20 @@ trait WpUri {
 	* Retrieves a post by its given path.
 	* Based on the built-in get_page_by_path() function, but only checks ancestry if the post type is actually hierarchical.
 	*
-	* @since 4.1.4
+	* @since   4.1.4
+	* @version 4.9.9 Validate URL prefix against the post type's rewrite slug.
 	*
 	* @param  string       $path     The path.
 	* @param  string       $output   The output type. OBJECT, ARRAY_A, or ARRAY_N.
 	* @param  string|array $postType The post type(s) to check against.
 	* @return object|false           The post or false on failure.
 	*/
-	public function getPostByPath( $path, $output = OBJECT, $postType = 'page' ) {
+	public function getPostByPath( $path, $output = OBJECT, $postType = null ) {
+		// If no post type specified, use all public post types
+		if ( null === $postType ) {
+			$postType = $this->getPublicPostTypes( true );
+		}
+
 		$lastChanged = wp_cache_get_last_changed( 'aioseo_posts_by_path' );
 		$hash        = md5( $path . serialize( $postType ) );
 		$cacheKey    = "get_page_by_path:$hash:$lastChanged";
@@ -300,28 +285,41 @@ trait WpUri {
 		$path          = str_replace( '%20', ' ', $path );
 		$parts         = explode( '/', trim( $path, '/' ) );
 		$reversedParts = array_reverse( $parts );
-		$postNames     = "'" . implode( "','", $parts ) . "'";
 
-		$postTypes = is_array( $postType ) ? $postType : [ $postType, 'attachment' ];
-		$postTypes = "'" . implode( "','", $postTypes ) . "'";
+		$postTypes = is_array( $postType ) ? $postType : [ $postType ];
 
 		$posts = aioseo()->core->db->start( 'posts' )
 			->select( 'ID, post_name, post_parent, post_type' )
-			->whereRaw( "post_name in ( $postNames )" )
-			->whereRaw( "post_type in ( $postTypes )" )
+			->whereIn( 'post_name', $parts )
+			->whereIn( 'post_type', $postTypes )
+			->whereIn( 'post_status', [ 'publish' ] )
 			->run()
 			->result();
 
+		if ( empty( $posts ) ) {
+			wp_cache_set( $cacheKey, 0, 'aioseo_posts_by_path' );
+
+			return false;
+		}
+
+		// Create a lookup array for posts by ID for efficient parent lookups
+		$postsById = [];
+		foreach ( $posts as $post ) {
+			$postsById[ $post->ID ] = $post;
+		}
+
 		$foundId = 0;
+		$targetPostTypes = is_array( $postType ) ? $postType : [ $postType ];
+
 		foreach ( $posts as $post ) {
 			if ( $post->post_name === $reversedParts[0] ) {
 				$count = 0;
 				$p     = $post;
 
 				// Loop through the given path parts from right to left, ensuring each matches the post ancestry.
-				while ( 0 !== (int) $p->post_parent && isset( $posts[ $p->post_parent ] ) ) {
+				while ( 0 !== (int) $p->post_parent && isset( $postsById[ $p->post_parent ] ) ) {
 					$count++;
-					$parent = $posts[ $p->post_parent ];
+					$parent = $postsById[ $p->post_parent ];
 					if ( ! isset( $reversedParts[ $count ] ) || $parent->post_name !== $reversedParts[ $count ] ) {
 						break;
 					}
@@ -330,11 +328,17 @@ trait WpUri {
 
 				if (
 					0 === (int) $p->post_parent &&
-					( ! is_post_type_hierarchical( $p->post_type ) || count( $reversedParts ) === $count + 1 ) &&
+					$this->urlPathMatchesPostType( $p->post_type, $reversedParts, $count ) &&
 					$p->post_name === $reversedParts[ $count ]
 				) {
 					$foundId = $post->ID;
-					if ( $post->post_type === $postType ) {
+
+					// If we're looking for specific post types, prefer exact matches
+					if ( ! is_array( $postType ) && $post->post_type === $postType ) {
+						break;
+					}
+					// If we're looking for multiple post types, any match is good
+					if ( is_array( $postType ) && in_array( $post->post_type, $targetPostTypes, true ) ) {
 						break;
 					}
 				}
@@ -345,6 +349,37 @@ trait WpUri {
 		wp_cache_set( $cacheKey, $foundId, 'aioseo_posts_by_path' );
 
 		return $foundId ? get_post( $foundId, $output ) : false;
+	}
+
+	/**
+	 * Checks that the URL prefix preceding the matched slug is compatible with the candidate's post type.
+	 *
+	 * @since 4.9.9
+	 *
+	 * @param  string $postType      The candidate's post type.
+	 * @param  array  $reversedParts The path segments in reverse order.
+	 * @param  int    $count         The ancestry depth already consumed.
+	 * @return bool                  True if the URL path is compatible with the post type.
+	 */
+	private function urlPathMatchesPostType( $postType, $reversedParts, $count ) {
+		static $expectedPrefixes = [];
+
+		if ( ! array_key_exists( $postType, $expectedPrefixes ) ) {
+			$expectedPrefixes[ $postType ] = $this->getPostTypeUrlPrefix( $postType );
+		}
+
+		$expectedPrefix = $expectedPrefixes[ $postType ];
+
+		// No rewrite registration (e.g. built-in `post`/`page`): keep historical behavior.
+		if ( null === $expectedPrefix ) {
+			return is_post_type_hierarchical( $postType )
+				? count( $reversedParts ) === $count + 1
+				: true;
+		}
+
+		$actualPrefix = implode( '/', array_reverse( array_slice( $reversedParts, $count + 1 ) ) );
+
+		return $actualPrefix === $expectedPrefix;
 	}
 
 	/**
@@ -545,25 +580,38 @@ trait WpUri {
 			return false;
 		}
 
-		$canonical_url = get_permalink( $post ); // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+		$canonicalUrl = get_permalink( $post );
 
 		// If a canonical is being generated for the current page, make sure it has pagination if needed.
 		if ( get_queried_object_id() === $post->ID ) {
 			$page = get_query_var( 'page', 0 );
 			if ( $page >= 2 ) {
 				if ( ! get_option( 'permalink_structure' ) ) {
-					$canonical_url = add_query_arg( 'page', $page, $canonical_url ); // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+					$canonicalUrl = add_query_arg( 'page', $page, $canonicalUrl );
 				} else {
-					$canonical_url = trailingslashit( $canonical_url ) . user_trailingslashit( $page, 'single_paged' ); // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+					$canonicalUrl = trailingslashit( $canonicalUrl ) . user_trailingslashit( $page, 'single_paged' );
 				}
 			}
 
 			$cpage = aioseo()->helpers->getCommentPageNumber(); // We're calling our own function here to get the correct cpage number.
 			if ( $cpage ) {
-				$canonical_url = get_comments_pagenum_link( $cpage ); // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+				$canonicalUrl = get_comments_pagenum_link( $cpage );
 			}
 		}
 
-		return apply_filters( 'get_canonical_url', $canonical_url, $post ); // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+		return apply_filters( 'get_canonical_url', $canonicalUrl, $post ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+	}
+
+	/**
+	 * Checks if permalinks are enabled.
+	 *
+	 * @since 4.8.3
+	 *
+	 * @return bool Whether permalinks are enabled.
+	 */
+	public function usingPermalinks() {
+		global $wp_rewrite; // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+
+		return $wp_rewrite->using_permalinks(); // phpcs:ignore Squiz.NamingConventions.ValidVariableName
 	}
 }

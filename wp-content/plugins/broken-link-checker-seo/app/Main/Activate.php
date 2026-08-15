@@ -32,6 +32,14 @@ class Activate {
 	public function activate() {
 		aioseoBrokenLinkChecker()->access->addCapabilities();
 
+		// On a fresh install the cache table doesn't exist yet during activation (the plugin
+		// is loaded after the 'init' hook that normally creates it). Without it, the
+		// activation_redirect is written to the transient fallback but read back from the
+		// later-created table on the next request — missing it and never triggering the Setup
+		// Wizard. checkIfTableExists() creates the table only when missing and resets the
+		// cache's transient fallback, so the redirect is written to (and later read from) it.
+		aioseoBrokenLinkChecker()->core->cache->checkIfTableExists();
+
 		// Set the activation timestamps.
 		$time = time();
 		aioseoBrokenLinkChecker()->internalOptions->internal->activated = $time;
@@ -41,6 +49,8 @@ class Activate {
 
 			aioseoBrokenLinkChecker()->internalOptions->internal->firstActivated = $time;
 		}
+
+		aioseoBrokenLinkChecker()->core->cache->clear();
 	}
 
 	/**
@@ -59,7 +69,7 @@ class Activate {
 			return;
 		}
 
-		if ( isset( $_GET['activate-multi'] ) ) { // phpcs:ignore HM.Security.NonceVerification.Recommended
+		if ( isset( $_GET['activate-multi'] ) ) { // phpcs:ignore HM.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Recommended
 			return;
 		}
 

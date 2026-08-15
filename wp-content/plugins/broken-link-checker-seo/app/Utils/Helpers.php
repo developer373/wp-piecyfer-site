@@ -20,6 +20,7 @@ class Helpers {
 	use TraitHelpers\DateTime;
 	use TraitHelpers\Strings;
 	use TraitHelpers\ThirdParty;
+	use TraitHelpers\Url;
 	use TraitHelpers\Vue;
 	use TraitHelpers\Wp;
 	use TraitHelpers\WpContext;
@@ -34,7 +35,7 @@ class Helpers {
 	 * @return boolean True if we are, false if not.
 	 */
 	public function isDev() {
-		return aioseoBrokenLinkChecker()->isDev || isset( $_REQUEST['aioseo-dev'] ); // phpcs:ignore HM.Security.NonceVerification.Recommended
+		return aioseoBrokenLinkChecker()->isDev || isset( $_REQUEST['aioseo-dev'] ); // phpcs:ignore HM.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Recommended
 	}
 
 	/**
@@ -144,7 +145,7 @@ class Helpers {
 
 		$post  = get_post( $postId );
 		$title = $post->post_title;
-		$title = $title ? $title : __( '(no title)' ); // phpcs:ignore AIOSEO.Wp.I18n.MissingArgDomain
+		$title = $title ? $title : __( '(no title)' ); // phpcs:ignore AIOSEO.Wp.I18n.MissingArgDomain, WordPress.WP.I18n.MissingArgDomain
 
 		$titles[ $postId ] = $this->decodeHtmlEntities( $title );
 
@@ -346,5 +347,48 @@ class Helpers {
 		}
 
 		return $string;
+	}
+
+	/**
+	 * Returns user roles in the current WP install.
+	 *
+	 * @since 1.2.4
+	 *
+	 * @return array An array of user roles.
+	 */
+	public function getUserRoles() {
+		global $wp_roles; // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+
+		$wpRoles = $wp_roles; // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+		if ( ! is_object( $wpRoles ) ) {
+			// Don't assign this to the global because otherwise WordPress won't override it.
+			$wpRoles = new \WP_Roles();
+		}
+
+		$roleNames = $wpRoles->get_names();
+		asort( $roleNames );
+
+		return $roleNames;
+	}
+
+	/**
+	 * Check if the current request is uninstalling (deleting) Broken Link Checker.
+	 *
+	 * @since {Pnext}
+	 *
+	 * @return bool Whether Broken Link Checker is being uninstalled/deleted or not.
+	 */
+	public function isUninstalling() {
+		if (
+			defined( 'AIOSEO_BROKEN_LINK_CHECKER_FILE' ) &&
+			defined( 'WP_UNINSTALL_PLUGIN' )
+		) {
+			// Make sure `plugin_basename()` exists.
+			include_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+			return WP_UNINSTALL_PLUGIN === plugin_basename( AIOSEO_BROKEN_LINK_CHECKER_FILE );
+		}
+
+		return false;
 	}
 }

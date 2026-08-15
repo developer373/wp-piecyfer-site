@@ -7,10 +7,12 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Plugin Name: ElementsKit Lite
  * Description: The most advanced addons for Elementor with tons of widgets, Header builder, Footer builder, Mega menu builder, layout pack and powerful custom controls.
- * Plugin URI: https://products.wpmet.com/elementskit
+ * Plugin URI: https://wpmet.com/plugin/elementskit/
  * Author: Wpmet
- * Version: 3.3.6
+ * Version: 4.0.1
  * Author URI: https://wpmet.com/
+ * License: GPLv3 or later
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  *
  * Text Domain: elementskit-lite
  * Domain Path: /languages
@@ -32,7 +34,7 @@ final class ElementsKit_Lite {
 	 * @var string The plugin version.
 	 */
 	static function version() {
-		return '3.3.6';
+		return '4.0.1';
 	}
 
 	/**
@@ -276,23 +278,8 @@ final class ElementsKit_Lite {
 		require_once self::plugin_dir() . 'libs/emailkit/emailkit.php';
 		require_once self::plugin_dir() . 'helpers/utils.php';
 
-		// Load translation
-		add_action( 'init', array( $this, 'i18n' ) );
 		// Init Plugin
 		add_action( 'plugins_loaded', array( $this, 'init' ), 100 );
-	}
-
-	/**
-	 * Load Textdomain
-	 *
-	 * Load plugin localization files.
-	 * Fired by `init` action hook.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 */
-	public function i18n() {
-		load_plugin_textdomain( 'elementskit-lite', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 	}
 
 	/**
@@ -331,7 +318,7 @@ final class ElementsKit_Lite {
 		}
 
 		// Register ElementsKit_Lite widget category
-		add_action( 'elementor/elements/categories_registered', array( $this, 'elementor_widget_category' ) );
+		add_action( 'elementor/elements/categories_registered', array( $this, 'elementor_widget_category' ), 1 );
 
 		// initiate elementor custom controls
 		new \ElementsKit_Lite\Modules\Controls\Init();
@@ -381,7 +368,7 @@ final class ElementsKit_Lite {
 
 		\Oxaim\Libs\Notice::instance( 'elementskit-lite', 'unsupported-elementor-version' )
 		->set_type( 'error' )
-		->set_message( sprintf( '%1$s %2$s+, %3$s', 
+		->set_message( sprintf( '%1$s %2$s+, %3$s',
 				esc_html__( 'ElementsKit requires Elementor version', 'elementskit-lite' ),
 				self::min_el_version() ,
 				esc_html__( 'which is currently NOT RUNNING.', 'elementskit-lite' ),
@@ -432,7 +419,7 @@ final class ElementsKit_Lite {
 			'elementskit',
 			array(
 				'title' => esc_html__( 'ElementsKit', 'elementskit-lite' ),
-				'icon'  => 'fa fa-plug',
+				'icon'  => 'fas fa-plug',
 			),
 			1
 		);
@@ -440,7 +427,7 @@ final class ElementsKit_Lite {
 			'elementskit_headerfooter',
 			array(
 				'title' => esc_html__( 'ElementsKit Header Footer', 'elementskit-lite' ),
-				'icon'  => 'fa fa-plug',
+				'icon'  => 'fas fa-plug',
 			),
 			1
 		);

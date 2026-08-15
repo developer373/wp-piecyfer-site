@@ -20,21 +20,26 @@ if ( ! class_exists( 'HT_CCW' ) ) :
 class HT_CCW {
 
     /**
-     * singleton instance
+     * Singleton instance
      *
      * @var HT_CCW 
      */
     private static $instance = null;
 
     /**
-     * wp_is_mobile - if true then 1, else 2
+     * Declare instance of HT_CCW_Chat
+     */
+    public $floating_style;
+
+    /**
+     * Wp_is_mobile - if true then 1, else 2
      *
      * @var int if mobile, tab .. then 1, else 2
      */
     public $device_type;
 
     /**
-     * instance of HT_CCW_Variables
+     * Instance of HT_CCW_Variables
      * 
      * database values , .. . options .. 
      *
@@ -43,7 +48,7 @@ class HT_CCW {
     public $variables = null;
 
     /**
-     * main instance - HT_CCW
+     * Main instance - HT_CCW
      *
      * @return HT_CCW instance
      * @since 1.0
@@ -56,15 +61,23 @@ class HT_CCW {
     }
 
     public function __clone() {
-		wc_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'click-to-chat-for-whatsapp' ), '1.0' );
+        _doing_it_wrong(
+            __FUNCTION__,
+            esc_html__( 'Cheatin&#8217; huh?', 'click-to-chat-for-whatsapp' ),
+            '1.0'
+        );
     }
-    
+
     public function __wakeup() {
-		wc_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'click-to-chat-for-whatsapp' ), '1.0' );
+        _doing_it_wrong(
+            __FUNCTION__,
+            esc_html__( 'Cheatin&#8217; huh?', 'click-to-chat-for-whatsapp' ),
+            '1.0'
+        );
     }
 
     /**
-     * constructor 
+     * Constructor 
      * includes() -> include files
      * hooks()  -> run hooks 
      */
@@ -77,7 +90,7 @@ class HT_CCW {
     
 
     /**
-     * add the basic things
+     * Add the basic things
      * calling this before include, initilize other things
      * because this things may useful before initilize other things
      *  e.g. include, initialize files based on device, user settings
@@ -94,7 +107,7 @@ class HT_CCW {
     
 
     /**
-     * include plugin file
+     * Include plugin file
      */
     private function includes() {
 
@@ -150,7 +163,7 @@ class HT_CCW {
 
 
     /**
-     * create instance
+     * Create instance
      * @uses this->hooks() - using init hook - priority 0
      */
     public function init() {

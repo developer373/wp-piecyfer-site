@@ -14,10 +14,13 @@ class Common extends \ElementsKit_Lite\Core\Handler_Api {
 		return ( $title == '' ) ? ( 'ElementsKit_Lite Custom Widget #' . time() ) : $title;
 	}
 
+	private function current_user_can_save_widget() {
+		return is_user_logged_in() && current_user_can( 'manage_options' ) && ( ! is_multisite() || is_super_admin() );
+	}
 
 	public function post_push() {
 
-		if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->current_user_can_save_widget() ) {
 
 			return array(
 				'success' => false,
@@ -31,7 +34,6 @@ class Common extends \ElementsKit_Lite\Core\Handler_Api {
 		$data = json_decode( $this->request['data'] );
 
 		if ( ! property_exists( $data, 'title' ) || ! property_exists( $data, 'tabs' ) || ! ( $data->tabs instanceof \stdClass ) ) {
-
 			return array(
 				'success' => false,
 				'message' => array(

@@ -10,35 +10,60 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// phpcs:disable VariableAnalysis.CodeAnalysis.VariableAnalysis.UndefinedVariable
-// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped
-// phpcs:disable Generic.Files.LineLength.MaxExceeded
+// phpcs:disable VariableAnalysis.CodeAnalysis.VariableAnalysis.UndefinedVariable, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
+// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped, Generic.Files.LineLength.MaxExceeded
 ?>
 <div style="background-color: #f3f4f5; color: #141b38; font-family: Helvetica, Roboto, Arial, sans-serif; font-size: 14px; line-height: 22px; margin: 0; padding: 0;">
 	<span style="display: none !important; visibility: hidden; opacity: 0; height: 0; width: 0;"><?php echo $preHeader ?? '' ?></span>
 
 	<div style="margin: 0 auto; padding: 70px 0; width: 100%; max-width: 680px;">
 		<div style="background-color: #ffffff; border: 1px solid #e8e8eb;">
-			<div style="padding-left: 20px; padding-right: 20px; padding-bottom: 20px; overflow-x: auto;">
-				<div style="margin-right: 12px; min-width: 100px; padding-top: 20px; display: inline-block; vertical-align: middle;">
-					<img
-							style="border: none; box-sizing: border-box; display: inline-block; font-size: 14px; height: auto; line-height: 1; max-width: 100%; text-decoration: none; vertical-align: middle;"
-							width="100"
-							height="20"
-							src="https://static.aioseo.io/report/ste/text-logo.jpg"
-							alt="<?php echo esc_attr( AIOSEO_PLUGIN_SHORT_NAME ) ?>"
-					/>
-				</div>
+			<div style="padding-left: 20px; padding-right: 20px; padding-bottom: 20px;">
+				<table style="table-layout: fixed; border-collapse: collapse; text-align: left; vertical-align: middle; width: 100%;">
+					<thead>
+					<tr>
+						<th style="padding: 0; width: 60%; line-height: 1;"></th>
+						<th style="padding: 0; width: 40%; line-height: 1;"></th>
+					</tr>
+					</thead>
 
-				<div style="max-width: 290px; padding-top: 20px; display: inline-block; vertical-align: middle; width: 100%;">
-					<p style="font-size: 16px; margin-bottom: 0; margin-top: 0; font-weight: 700;">
-						<span><?php echo $heading ?? ''; ?></span>
-					</p>
-				</div>
+					<tbody>
+					<tr>
+						<td style="padding: 0;">
+							<div style="padding-top: 20px;">
+								<img
+										style="border: none; box-sizing: border-box; display: inline-block; font-size: 14px; height: auto; line-height: 1; max-width: 100%; text-decoration: none;"
+										width="100"
+										height="20"
+										src="https://static.aioseo.io/report/ste/text-logo.jpg"
+										alt="<?php echo esc_attr( AIOSEO_PLUGIN_SHORT_NAME ) ?>"
+								/>
+							</div>
+						</td>
 
-				<div style="padding-top: 20px; display: inline-block; vertical-align: middle; font-size: 12px; text-align: right; float: right;">
-					<?php echo $dateRange['range'] ?? ''; ?>
-				</div>
+						<td style="padding: 0; word-break: break-word;">
+							<div style="padding-top: 20px; font-size: 12px; text-align: right; line-height: 15px;"><?php echo $dateRange['range'] ?? ''; ?></div>
+						</td>
+					</tr>
+
+					<tr>
+						<td style="padding: 0; word-break: break-word;">
+							<div style="padding-top: 10px;">
+								<p style="font-size: 16px; margin-bottom: 0; margin-top: 0; font-weight: 700;"><?php echo $heading ?? ''; ?></p>
+							</div>
+						</td>
+
+						<td style="padding: 0; word-break: break-word;">
+							<div style="padding-top: 10px; font-size: 12px; text-align: right; line-height: 15px;">
+								<a
+										href="<?php echo site_url(); ?>"
+										style="color: #005ae0; font-weight: normal; text-decoration: none;"
+								><?php echo site_url(); ?></a>
+							</div>
+						</td>
+					</tr>
+					</tbody>
+				</table>
 			</div>
 
 			<div style="background-color: #004f9d; padding-bottom: 20px;">

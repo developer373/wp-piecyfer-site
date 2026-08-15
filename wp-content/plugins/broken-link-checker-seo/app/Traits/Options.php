@@ -198,10 +198,10 @@ trait Options {
 			if ( $preserveHtml ) {
 				if ( is_array( $defaults[ $name ]['value'] ) ) {
 					foreach ( $defaults[ $name ]['value'] as $k => $v ) {
-						$defaults[ $name ]['value'][ $k ] = html_entity_decode( $v, ENT_NOQUOTES );
+						$defaults[ $name ]['value'][ $k ] = aioseoBrokenLinkChecker()->helpers->decodeHtmlEntities( $v );
 					}
 				} else {
-					$defaults[ $name ]['value'] = html_entity_decode( $defaults[ $name ]['value'], ENT_NOQUOTES );
+					$defaults[ $name ]['value'] = aioseoBrokenLinkChecker()->helpers->decodeHtmlEntities( $defaults[ $name ]['value'] );
 				}
 			}
 			$value = $defaults[ $name ]['value'];
@@ -955,10 +955,10 @@ trait Options {
 				if ( $preserveHtml ) {
 					if ( is_array( $value['value'] ) ) {
 						foreach ( $value['value'] as $k => $v ) {
-							$value['value'][ $k ] = html_entity_decode( $v, ENT_NOQUOTES );
+							$value['value'][ $k ] = aioseoBrokenLinkChecker()->helpers->decodeHtmlEntities( $v );
 						}
 					} else {
-						$value['value'] = html_entity_decode( $value['value'], ENT_NOQUOTES );
+						$value['value'] = aioseoBrokenLinkChecker()->helpers->decodeHtmlEntities( $value['value'] );
 					}
 				}
 				$options[ $key ] = $value['value'];
@@ -1024,7 +1024,19 @@ trait Options {
 	public function getDbOptions( $optionsName ) {
 		$cache = aioseoBrokenLinkChecker()->core->optionsCache->getDb( $optionsName );
 		if ( empty( $cache ) ) {
-			$options = json_decode( get_option( $optionsName ), true );
+			// NOTE: get_option() can return a non-string (e.g. an array from a row stored
+			// unencoded), which fatals in json_decode() on PHP 8+.
+			$dbOptions = get_option( $optionsName );
+			if ( is_string( $dbOptions ) ) {
+				$options = json_decode( $dbOptions, true );
+			} else {
+				// Row holds a non-string value (typically a serialized array left by an
+				// external tool: WP-CLI `--format=json`, site migration plugin, etc.).
+				// Use the data as-is and mark the instance dirty so the shutdown save
+				// rewrites the row as JSON — self-heals the corrupted storage.
+				$options          = is_array( $dbOptions ) ? $dbOptions : [];
+				$this->shouldSave = true;
+			}
 			$options = ! empty( $options ) ? $options : [];
 
 			// Set the cache.

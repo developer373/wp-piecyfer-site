@@ -1,10 +1,10 @@
 <?php
 namespace Elementor\Modules\AtomicWidgets\Controls\Types;
 
-use Elementor\Modules\AtomicWidgets\Base\Atomic_Control_Base;
+use Elementor\Modules\AtomicWidgets\Controls\Base\Atomic_Control_Base;
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit; // Exit if accessed directly
+	exit; // Exit if accessed directly.
 }
 
 class Textarea_Control extends Atomic_Control_Base {
@@ -15,7 +15,7 @@ class Textarea_Control extends Atomic_Control_Base {
 	}
 
 	public function set_placeholder( string $placeholder ): self {
-		$this->placeholder = $placeholder;
+		$this->placeholder = html_entity_decode( $placeholder );
 
 		return $this;
 	}

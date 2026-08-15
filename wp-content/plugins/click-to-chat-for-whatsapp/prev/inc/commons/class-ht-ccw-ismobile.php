@@ -1,6 +1,6 @@
 <?php
 /**
- * detect device -  mobile or not
+ * Detect device -  mobile or not
  * 
  */
 
@@ -11,7 +11,7 @@ if ( ! class_exists( 'HT_CCW_IsMobile' ) ) :
 class HT_CCW_IsMobile {
 
     /**
-     * return is mobile or not
+     * Return is mobile or not
      * while using in condition check with 1 not with 2
      * @var int - if mobile : 1 ?  2
      */
@@ -24,7 +24,7 @@ class HT_CCW_IsMobile {
     }
 
     /**
-     * added this  -  an user mention that wp_is_mobile uncauched error
+     * Added this  -  an user mention that wp_is_mobile uncauched error
      *  so now it easy to fix incase more users repoted this issue
      * 
      * Check is mobile device or not
@@ -52,13 +52,16 @@ class HT_CCW_IsMobile {
     /**
      * @uses $this -> is_mobile
      * 
-     * php way of find is mobile
+     * Php way of find is mobile
      * fallback if wp_is_mobile is not defined 
      * @return boolean
      */
     public function php_is_mobile() {
+        if ( ! isset( $_SERVER['HTTP_USER_AGENT'] ) ) {
+            return false;
+        }
         // return preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $_SERVER["HTTP_USER_AGENT"]);
-        return preg_match("/(android|webos|avantgo|iphone|ipad|ipod|blackbe‌​rry|iemobile|bolt|bo‌​ost|cricket|docomo|f‌​one|hiptop|mini|oper‌​a mini|kitkat|mobi|palm|phone|pie|tablet|up\.browser|up\.link|‌​webos|wos)/i", $_SERVER["HTTP_USER_AGENT"]);
+        return preg_match("/(android|webos|avantgo|iphone|ipad|ipod|blackberry|iemobile|bolt|boost|cricket|docomo|fone|hiptop|mini|opera mini|kitkat|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ));
     }  
 
 

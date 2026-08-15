@@ -2,47 +2,39 @@
 
 namespace Elementor\Modules\AtomicWidgets\PropTypes;
 
-use Elementor\Plugin;
+use Elementor\Modules\AtomicWidgets\PropTypes\Base\Object_Prop_Type;
+use Elementor\Modules\AtomicWidgets\PropTypes\Primitives\String_Prop_Type;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-class Image_Src_Prop_Type extends Transformable_Prop_Type {
-
+class Image_Src_Prop_Type extends Object_Prop_Type {
 	public static function get_key(): string {
 		return 'image-src';
 	}
 
-	protected function validate_value( $value ): void {
-		if (
-			! array_key_exists( 'id', $value ) ||
-			! array_key_exists( 'url', $value )
-		) {
-			throw new \Exception( 'Value must have both `id` and `url` keys.' );
-		}
+	protected function define_shape(): array {
+		return [
+			'id'  => Image_Attachment_Id_Prop_Type::make()->description( 'The ID of the image attachment in the WordPress media library, applicable for internal images only' ),
+			'url' => Url_Prop_Type::make(),
+			'alt' => String_Prop_Type::make()->description( 'The alt text of the image' ),
+		];
+	}
 
-		$has_id = null !== $value['id'];
-		$has_url = null !== $value['url'];
+	public function default_url( string $url ): self {
+		$this->default( [
+			'id' => null,
+			'url' => Url_Prop_Type::generate( $url ),
+		] );
 
-		if ( ! $has_id && ! $has_url ) {
-			throw new \Exception( 'At least one of `id` or `url` must be set.' );
-		}
+		return $this;
+	}
 
-		if ( $has_id && ! is_numeric( $value['id'] ) ) {
-			throw new \Exception( '`id` must be a number, ' . gettype( $value['id'] ) . ' given.' );
-		}
+	protected function validate_value( $value ): bool {
+		$has_id  = ! empty( $value['id'] );
+		$has_url = ! empty( $value['url'] );
 
-		if ( $has_id && ! Plugin::$instance->wp->wp_attachment_is_image( $value['id'] ) ) {
-			throw new \Exception( '`id` must be a valid attachment ID.' );
-		}
-
-		if ( $has_url && ! is_string( $value['url'] ) ) {
-			throw new \Exception( '`url` must be a string, ' . gettype( $value['url'] ) . ' given.' );
-		}
-
-		if ( $has_url && false === wp_http_validate_url( $value['url'] ) ) {
-			throw new \Exception( '`url` must be a valid URL.' );
-		}
+		return ( $has_id xor $has_url ) && parent::validate_value( $value );
 	}
 }

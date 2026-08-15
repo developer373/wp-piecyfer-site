@@ -2,6 +2,7 @@
 namespace Elementor;
 
 use Elementor\Core\Base\App;
+use Elementor\Core\Editor\Editor;
 use Elementor\Core\Settings\Manager as SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -92,6 +93,11 @@ class Preview extends App {
 
 		$this->post_id = get_the_ID();
 		$this->is_preview = true;
+
+		// Send Document-Isolation-Policy on the preview iframe so it shares
+		// an agent cluster with the editor parent and synchronous DOM access
+		// (e.g. iframe.contentWindow.elementorFrontend) keeps working.
+		Editor::send_document_isolation_policy_header();
 
 		// Don't redirect to permalink.
 		remove_action( 'template_redirect', 'redirect_canonical' );
@@ -195,6 +201,18 @@ class Preview extends App {
 	}
 
 	/**
+	 * Whether WordPress post preview or Elementor preview iframe is active.
+	 *
+	 * @since 4.1.0
+	 * @access public
+	 *
+	 * @return bool
+	 */
+	public function is_editor_or_preview() {
+		return is_preview() || $this->is_preview_mode();
+	}
+
+	/**
 	 * Builder wrapper.
 	 *
 	 * Used to add an empty HTML wrapper for the builder, the javascript will add
@@ -235,9 +253,11 @@ class Preview extends App {
 
 		Plugin::$instance->frontend->enqueue_styles();
 
+		Plugin::$instance->elements_manager->enqueue_elements_styles();
+
 		Plugin::$instance->widgets_manager->enqueue_widgets_styles();
 
-		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
+		$suffix = Utils::is_script_debug() ? '' : '.min';
 
 		$direction_suffix = is_rtl() ? '-rtl' : '';
 
@@ -293,8 +313,9 @@ class Preview extends App {
 		Plugin::$instance->frontend->register_scripts();
 
 		Plugin::$instance->widgets_manager->enqueue_widgets_scripts();
+		Plugin::$instance->elements_manager->enqueue_elements_scripts();
 
-		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
+		$suffix = Utils::is_script_debug() ? '' : '.min';
 
 		wp_enqueue_script(
 			'elementor-inline-editor',

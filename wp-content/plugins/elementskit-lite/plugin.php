@@ -35,11 +35,14 @@ class Plugin {
 		// check on-boarding status
 		Libs\Framework\Classes\Onboard_Status::instance()->onboard();
 
-		// Enqueue frontend scripts.
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend' ) );
+		// Initialize deactivation feedback
+		Core\Plugin_Unsubscribe::instance();
 
-		// migrate old settings db to new format
+		// migrate old settings db to new format.
 		new Compatibility\Data_Migration\Settings_Db();
+
+		// compatibility for element manager.
+		new Compatibility\Element_Manager\Init();
 
 		// Enqueue admin scripts.
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin' ) );
@@ -56,11 +59,15 @@ class Plugin {
 		// Register default modules
 		Core\Build_Modules::instance();
 
+		// Register ElementsKit MCP support (shared service, WP Abilities,
+		// MCP server, REST proxy and the Angie editor tools).
+		Mcp\Manager::instance();
+
 		// register plugin activation actions
 		( new Core\Activation_Actions() )->init();
 
-		add_action( 'wp_head', array( $this, 'add_meta_for_search_excluded' ) );
-		
+		add_action( 'send_headers', array( $this, 'add_meta_for_search_excluded' ) );
+
 		// Register ElementsKit supported widgets to Elementor from 3rd party plugins.
 		add_action( 'elementor/widgets/register', array( $this, 'register_widgets' ), 1050 );
 
@@ -73,8 +80,17 @@ class Plugin {
 		// Show forms sub menu page
 		\Wpmet\Libs\Forms::instance();
 
-		$is_pro_active = in_array( 'elementskit/elementskit.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) );
-		
+		$is_pro_active = \ElementsKit_Lite\Utils::ekit_is_plugin_active( 'elementskit/elementskit.php');
+
+		// Initialize editor promotion for pro widgets
+		if( ! $is_pro_active ) {
+			add_action( 'elementor/editor/init', function() {
+				if ( class_exists( '\ElementsKit_Lite\Core\Editor_Promotion' ) ) {
+					\ElementsKit_Lite\Core\Editor_Promotion::instance()->init();
+				}
+			} );
+		}
+
 		if ( is_admin() && Libs\Framework\Classes\Utils::instance()->get_settings( 'ekit_user_consent_for_banner', 'yes' ) == 'yes' ) {
 			$filter_string = \ElementsKit_Lite::active_plugins();
 			/**
@@ -100,8 +116,8 @@ class Plugin {
 
 			/**
 			 *  Ask for rating
-			 *  A rating notice will appear depends on 
-			 *  @set_first_appear_day methods 
+			 *  A rating notice will appear depends on
+			 *  @set_first_appear_day methods
 			 */
 			\Wpmet\Libs\Rating::instance( 'elementskit-lite' )
 			->set_plugin( 'ElementsKit', 'https://wpmet.com/wordpress.org/rating/elementskit' )
@@ -132,54 +148,54 @@ class Plugin {
 			->set_page_grid(
 				array(
 					'url'       => 'https://wpmet.com/fb-group',
-					'title'     => 'Join the Community',
+					'title'     => esc_html__( 'Join the Community', 'elementskit-lite' ),
 					'thumbnail' => \ElementsKit_Lite::lib_url() . 'pro-awareness/assets/community.png',
-					'description' => 'Join our Facebook group to get 20% discount coupon on premium products. Follow us to get more exciting offers.'
+					'description' => esc_html__( 'Join our Facebook group to get 20% discount coupon on premium products. Follow us to get more exciting offers.', 'elementskit-lite' )
 				)
 			)
 			->set_page_grid(
 				array(
 					'url'       => 'https://www.youtube.com/playlist?list=PL3t2OjZ6gY8MVnyA4OLB6qXb77-roJOuY',
-					'title'     => 'Video Tutorials',
+					'title'     => esc_html__( 'Video Tutorials', 'elementskit-lite' ),
 					'thumbnail' => \ElementsKit_Lite::lib_url() . 'pro-awareness/assets/videos.png',
-					'description' => 'Learn the step by step process for developing your site easily from video tutorials.'
+					'description' => esc_html__( 'Learn the step by step process for developing your site easily from video tutorials.', 'elementskit-lite' )
 				)
 			)
 			->set_page_grid(
 				array(
 					'url'       => 'https://wpmet.com/plugin/elementskit/roadmaps#ideas',
-					'title'     => 'Request a feature',
+					'title'     => esc_html__( 'Request a feature', 'elementskit-lite' ),
 					'thumbnail' => \ElementsKit_Lite::lib_url() . 'pro-awareness/assets/request.png',
-					'description' => 'Have any special feature in mind? Let us know through the feature request.'
+					'description' => esc_html__( 'Have any special feature in mind? Let us know through the feature request.', 'elementskit-lite' )
 				)
 			)
 			->set_page_grid(
 				array(
 					'url'       => 'https://wpmet.com/doc/elementskit/',
-					'title'     => 'Documentation',
+					'title'     => esc_html__( 'Documentation', 'elementskit-lite' ),
 					'thumbnail' => \ElementsKit_Lite::lib_url() . 'pro-awareness/assets/documentation.png',
-					'description' => 'Detailed documentation to help you understand the functionality of each feature.'
+					'description' => esc_html__( 'Detailed documentation to help you understand the functionality of each feature.', 'elementskit-lite' )
 				)
 			)
 			->set_page_grid(
 				array(
 					'url'       => 'https://wpmet.com/plugin/elementskit/roadmaps/',
-					'title'     => 'Public Roadmap',
+					'title'     => esc_html__( 'Public Roadmap', 'elementskit-lite' ),
 					'thumbnail' => \ElementsKit_Lite::lib_url() . 'pro-awareness/assets/roadmaps.png',
-					'description' => 'Check our upcoming new features, detailed development stories and tasks'
+					'description' => esc_html__( 'Check our upcoming new features, detailed development stories and tasks', 'elementskit-lite' )
 				)
 			)
-			->set_plugin_row_meta( 'Documentation', 'https://wpmet.com/elementskit-docs', array( 'target' => '_blank' ) )
-			->set_plugin_row_meta( 'Facebook Community', 'https://wpmet.com/fb-group', array( 'target' => '_blank' ) )
-			->set_plugin_row_meta( 'Rate the plugin ★★★★★', 'https://wordpress.org/support/plugin/elementskit-lite/reviews/#new-post', array( 'target' => '_blank' ) )
-			->set_plugin_action_link( 'Settings', admin_url() . 'admin.php?page=elementskit' )
+			->set_plugin_row_meta( esc_html__( 'Documentation', 'elementskit-lite' ), 'https://wpmet.com/elementskit-docs', array( 'target' => '_blank' ) )
+			->set_plugin_row_meta( esc_html__( 'Facebook Community', 'elementskit-lite' ), 'https://wpmet.com/fb-group', array( 'target' => '_blank' ) )
+			->set_plugin_row_meta( esc_html__( 'Rate the plugin ★★★★★', 'elementskit-lite' ), 'https://wordpress.org/support/plugin/elementskit-lite/reviews/#new-post', array( 'target' => '_blank' ) )
+			->set_plugin_action_link( esc_html__( 'Settings', 'elementskit-lite' ), admin_url() . 'admin.php?page=elementskit' )
 			->set_plugin_action_link(
-				( $is_pro_active ? '' : 'Go Premium' ),
-				'https://wpmet.com/plugin/elementskit',
+				( $is_pro_active ? '' : esc_html__( 'Go Premium', 'elementskit-lite' ) ),
+				'https://wpmet.com/elementskit-pricing',
 				array(
 					'target' => '_blank',
 					'style'  => 'color: #FCB214; font-weight: bold;',
-				) 
+				)
 			)
 			->call();
 		}
@@ -206,19 +222,33 @@ class Plugin {
 		->set_items_per_row(4) # @items_per_row (optional- default: 6)
 		->set_plugins(
 			[
-				'getgenie/getgenie.php' => [
-					'name' => esc_html__('GetGenie AI', 'elementskit-lite'),
-					'url'  => 'https://wordpress.org/plugins/getgenie/',
-					'icon' => 'https://ps.w.org/getgenie/assets/icon-256x256.gif?rev=2798355',
-					'desc' => esc_html__('Your personal AI assistant for content and SEO. Write content that ranks on Google with NLP keywords and SERP analysis data.', 'elementskit-lite'),
-					'docs' => 'https://getgenie.ai/docs/',
-				],
 				'gutenkit-blocks-addon/gutenkit-blocks-addon.php' => [
 					'name' => esc_html__('GutenKit', 'elementskit-lite'),
 					'url'  => 'https://wordpress.org/plugins/gutenkit-blocks-addon/',
-					'icon' => 'https://ps.w.org/gutenkit-blocks-addon/assets/icon-256x256.png?rev=3044956',
+					'icon' => 'https://ps.w.org/gutenkit-blocks-addon/assets/icon-256x256.gif?rev=3044956',
 					'desc' => esc_html__('Gutenberg blocks, patterns, and templates that extend the page-building experience using the WordPress block editor.', 'elementskit-lite'),
 					'docs' => 'https://wpmet.com/docs/gutenkit/',
+				],
+				'rox-dynamic-cpt-fields-engine/rox-dynamic-cpt-fields-engine.php' => [
+					'name' => esc_html__('Dynamic CPT Fields Engine', 'elementskit-lite'),
+					'url'  => 'https://wordpress.org/plugins/rox-dynamic-cpt-fields-engine/',
+					'icon' => 'https://ps.w.org/rox-dynamic-cpt-fields-engine/assets/icon-128x128.jpeg?rev=3538537',
+					'desc' => esc_html__('Build custom post types, fields, taxonomies, and dynamic frontend layouts for WordPress, with zero coding and full AI-generated schema.', 'elementskit-lite'),
+					'docs' => 'https://wpmet.com/doc/rox-dynamic-cpt-fields-engine/',
+				],
+				'rox-appointment-booking/rox-appointment-booking.php' => [
+					'name' => esc_html__('Rox Appointment Booking', 'elementskit-lite'),
+					'url'  => 'https://wordpress.org/plugins/rox-appointment-booking/',
+					'icon' => 'https://ps.w.org/rox-appointment-booking/assets/icon-128x128.png?rev=3575641',
+					'desc' => esc_html__(' Manage bookings, agents, payments, and calendars from one dashboard! A complete appointment and scheduling solution for WordPress.', 'elementskit-lite'),
+					'docs' => 'https://wpmet.com/doc/rox-appointment-booking/',
+				],
+				'metform/metform.php' => [
+					'name' => esc_html__('MetForm', 'elementskit-lite'),
+					'url'  => 'https://wordpress.org/plugins/genie-image-ai/',
+					'icon' => 'https://ps.w.org/metform/assets/icon-256x256.png?rev=2544152',
+					'desc' => esc_html__('Drag & drop form builder for Elementor to create contact forms, multi-step forms, and more — smoother, faster, and better!', 'elementskit-lite'),
+					'docs' => 'https://wpmet.com/doc/metform/',
 				],
 				'shopengine/shopengine.php' => [
 					'name' => esc_html__('ShopEngine', 'elementskit-lite'),
@@ -227,12 +257,26 @@ class Plugin {
 					'desc' => esc_html__('Complete WooCommerce solution for Elementor to fully customize any pages including cart, checkout, shop page, and so on.', 'elementskit-lite'),
 					'docs' => 'https://wpmet.com/doc/shopengine/',
 				],
-				'metform/metform.php' => [
-					'name' => esc_html__('MetForm', 'elementskit-lite'),
-					'url'  => 'https://wordpress.org/plugins/genie-image-ai/',
-					'icon' => 'https://ps.w.org/metform/assets/icon-256x256.png?rev=2544152',
-					'desc' => esc_html__('Drag & drop form builder for Elementor to create contact forms, multi-step forms, and more — smoother, faster, and better!', 'elementskit-lite'),
-					'docs' => 'https://wpmet.com/doc/metform/',
+				'popup-builder-block/popup-builder-block.php' => [
+					'name' => esc_html__('PopupKit', 'elementskit-lite'),
+					'url'  => 'https://wordpress.org/plugins/popup-builder-block/',
+					'icon' => 'https://ps.w.org/popup-builder-block/assets/icon-256x256.png?rev=3316844',
+					'desc' => esc_html__('Design popups that convert, right in your WordPress dashboard.', 'elementskit-lite'),
+					'docs' => 'https://wpmet.com/docs/popupkit/',
+				],
+				'table-builder-block/table-builder-block.php' => [
+					'name' => esc_html__('TableKit', 'elementskit-lite'),
+					'url'  => 'https://wordpress.org/plugins/table-builder-block/',
+					'icon' => 'https://ps.w.org/table-builder-block/assets/icon-256x256.jpg?rev=3168211',
+					'desc' => esc_html__('Fully Customizable. Multi-Media Integration. Synch Any Data Files. All Within Block Editor.', 'elementskit-lite'),
+					'docs' => 'https://wpmet.com/docs/tablekit/',
+				],
+				'getgenie/getgenie.php' => [
+					'name' => esc_html__('GetGenie AI', 'elementskit-lite'),
+					'url'  => 'https://wordpress.org/plugins/getgenie/',
+					'icon' => 'https://ps.w.org/getgenie/assets/icon-256x256.gif?rev=2798355',
+					'desc' => esc_html__('Your personal AI assistant for content and SEO. Write content that ranks on Google with NLP keywords and SERP analysis data.', 'elementskit-lite'),
+					'docs' => 'https://getgenie.ai/docs/',
 				],
 				'emailkit/EmailKit.php' => [
 					'name' => esc_html__('EmailKit', 'elementskit-lite'),
@@ -248,33 +292,12 @@ class Plugin {
 					'desc' => esc_html__('Add social share, login, and engagement counter — unified solution for all social media with tons of different styles for your website.', 'elementskit-lite'),
 					'docs' => 'https://wpmet.com/doc/wp-social/',
 				],
-				'wp-ultimate-review/wp-ultimate-review.php' => [
-					'name' => esc_html__('WP Ultimate Review', 'elementskit-lite'),
-					'url'  => 'https://wordpress.org/plugins/wp-ultimate-review/',
-					'icon' => 'https://ps.w.org/wp-ultimate-review/assets/icon-256x256.png?rev=2544187',
-					'desc' => esc_html__('Collect and showcase reviews on your website to build brand credibility and social proof with the easiest solution.', 'elementskit-lite'),
-					'docs' => 'https://wpmet.com/doc/wp-ultimate-review/',
-				],
-				'wp-fundraising-donation/wp-fundraising.php' => [
-					'name' => esc_html__('FundEngine', 'elementskit-lite'),
-					'url'  => 'https://wordpress.org/plugins/wp-fundraising-donation/',
-					'icon' => 'https://ps.w.org/wp-fundraising-donation/assets/icon-256x256.png?rev=2544150',
-					'desc' => esc_html__('Create fundraising, crowdfunding, and donation websites with PayPal and Stripe payment gateway integration.', 'elementskit-lite'),
-					'docs' => 'https://wpmet.com/doc/fundengine/',
-				],
 				'blocks-for-shopengine/shopengine-gutenberg-addon.php' => [
 					'name' => esc_html__('Blocks for ShopEngine', 'elementskit-lite'),
 					'url'  => 'https://wordpress.org/plugins/blocks-for-shopengine/',
 					'icon' => 'https://ps.w.org/blocks-for-shopengine/assets/icon-256x256.gif?rev=2702483',
 					'desc' => esc_html__('All in one WooCommerce solution for Gutenberg! Build your WooCommerce pages in a block editor with full customization.', 'elementskit-lite'),
 					'docs' => 'https://wpmet.com/doc/shopengine/shopengine-gutenberg/',
-				],
-				'genie-image-ai/genie-image-ai.php' => [
-					'name' => esc_html__('Genie Image', 'elementskit-lite'),
-					'url'  => 'https://wordpress.org/plugins/genie-image-ai/',
-					'icon' => 'https://ps.w.org/genie-image-ai/assets/icon-256x256.png?rev=2977297',
-					'desc' => esc_html__('AI-powered text-to-image generator for WordPress with OpenAI’s DALL-E 2 technology to generate high-quality images in one click.', 'elementskit-lite'),
-					'docs' => 'https://getgenie.ai/docs/',
 				],
 			]
 		) # @plugins
@@ -287,8 +310,8 @@ class Plugin {
 		 *
 		 */
 		if (
-			class_exists('WooCommerce') 
-			&& !class_exists('EmailKit') 
+			class_exists('WooCommerce')
+			&& !class_exists('EmailKit')
 			&& !did_action('edit_with_emailkit_loaded')
 			&& class_exists('\Wpmet\Libs\Emailkit')
 			&& $user_consent
@@ -298,18 +321,18 @@ class Plugin {
 
 		/**
 		 * Initializes the Template Library of the Gutenkit plugin
-		 * 
+		 *
 		 * This code block checks if certain conditions are met and then initializes the Template Library of the Gutenkit plugin.
-		 * 
+		 *
 		 * Conditions:
 		 * - The action 'edit_with_gutenkit_loaded' has not been performed yet.
 		 * - The class '\ElementsKit_Lite\Libs\Template_Library\Init' exists.
 		 * - The setting 'ekit_user_consent_for_banner' in the Utils class is set to 'yes'.
 		 * - The plugin 'gutenkit-blocks-addon' is not active or install.
-		 * 
-		 * If any of the above conditions are met, the Template Library is initialized by creating a new instance of 
+		 *
+		 * If any of the above conditions are met, the Template Library is initialized by creating a new instance of
 		 * the class '\ElementsKit_Lite\Libs\Template_Library\Init'.
-		 * 
+		 *
 		 * @since 3.1.4
 		 */
 		if ($user_consent && class_exists('\ElementsKit_Lite\Libs\Template_Library\Init') && !did_action('gutenkit/init')) {
@@ -352,18 +375,6 @@ class Plugin {
 	/**
 	 * Enqueue scripts
 	 *
-	 * Enqueue js and css to frontend.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 */
-	public function enqueue_frontend() {
-		wp_enqueue_script( 'elementskit-framework-js-frontend', \ElementsKit_Lite::lib_url() . 'framework/assets/js/frontend-script.js', array( 'jquery' ), \ElementsKit_Lite::version(), true );
-	}
-
-	/**
-	 * Enqueue scripts
-	 *
 	 * Enqueue js and css to admin.
 	 *
 	 * @since 1.0.0
@@ -376,14 +387,17 @@ class Plugin {
 			return;
 		}
 
-		wp_register_style( 'fontawesome', \ElementsKit_Lite::widget_url() . 'init/assets/css/font-awesome.min.css', false, \ElementsKit_Lite::version() );
+		// Use the Font Awesome bundled with Elementor instead of shipping our own copy.
+		if ( defined( 'ELEMENTOR_ASSETS_URL' ) ) {
+			wp_register_style( 'fontawesome', ELEMENTOR_ASSETS_URL . 'lib/font-awesome/css/all.min.css', false, ELEMENTOR_VERSION );
+		}
 		wp_register_style( 'elementskit-font-css-admin', \ElementsKit_Lite::module_url() . 'elementskit-icon-pack/assets/css/ekiticons.css', false, \ElementsKit_Lite::version() );
 		wp_register_style( 'elementskit-init-css-admin', \ElementsKit_Lite::lib_url() . 'framework/assets/css/admin-style.css', false, \ElementsKit_Lite::version() );
 
 		wp_enqueue_style( 'fontawesome' );
 		wp_enqueue_style( 'elementskit-font-css-admin' );
 		wp_enqueue_style( 'elementskit-init-css-admin' );
-		
+
 		wp_enqueue_script( 'ekit-admin-core', \ElementsKit_Lite::lib_url() . 'framework/assets/js/ekit-admin-core.js', array( 'jquery' ), \ElementsKit_Lite::version(), true );
 
 		$data['rest_url'] = get_rest_url();
@@ -396,6 +410,14 @@ class Plugin {
 			'ekit_ajax_var',
 			array(
 				'nonce' => wp_create_nonce( 'ajax-nonce' ),
+			)
+		);
+
+		wp_localize_script(
+			'ekit-admin-core',
+			'ekit_admin_i18n',
+			array(
+				'disabled' => esc_html__( 'Disabled', 'elementskit-lite' ),
 			)
 		);
 	}
@@ -435,12 +457,16 @@ class Plugin {
 	 * @access public
 	 */
 	public function add_meta_for_search_excluded() {
-		if ( in_array(
-			get_post_type(),
-			array( 'elementskit_widget', 'elementskit_template', 'elementskit_content' )
-		)
-			) {
-			echo '<meta name="robots" content="noindex,nofollow" />', "\n";
+		if (
+			! is_admin() &&
+			is_singular() &&
+			in_array(
+				get_post_type(),
+				array( 'elementskit_widget', 'elementskit_template', 'elementskit_content' ),
+				true
+			)
+		) {
+			header( 'X-Robots-Tag: noindex', true );
 		}
 	}
 

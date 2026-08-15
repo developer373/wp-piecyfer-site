@@ -1,7 +1,7 @@
 <div class="elementskit-testimonial-slider arrow_inside <?php echo !empty($settings['ekit_testimonial_show_dot']) ? 'slider-dotted' : '' ?>" <?php $this->print_render_attribute_string('wrapper'); ?>>
 	<div <?php $this->print_render_attribute_string('swiper-container'); ?>>
 		<div class="swiper-wrapper">
-			<?php 
+			<?php
 			foreach ($testimonials as $testimonial):
 				$wrapTag = 'div';
 
@@ -12,8 +12,8 @@
 			?>
 			<div class="swiper-slide">
 				<div class="swiper-slide-inner">
-					<<?php echo esc_attr( $wrapTag ); ?> class="elementskit-testimonial-inner" <?php echo $this->get_render_attribute_string( 'link-' . esc_attr($testimonial['_id'] )); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped by elementor ?>>
-						<div class="elementskit-single-testimonial-slider <?php echo esc_attr(!empty($testimonial['ekit_testimonial_active']) ? 'testimonial-active' : ''); ?> ekit_testimonial_style_2">
+					<<?php echo esc_attr( $wrapTag ); ?> class="elementskit-testimonial-inner elementor-repeater-item-<?php echo esc_attr( $testimonial[ '_id' ] ); ?>" <?php echo $this->get_render_attribute_string( 'link-' . esc_attr($testimonial['_id'] )); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped by elementor ?>>
+						<div class="elementskit-single-testimonial-slider  <?php echo esc_attr(!empty($testimonial['ekit_testimonial_active']) ? 'testimonial-active' : ''); ?> ekit_testimonial_style_2">
 							<div class="elementskit-commentor-content">
 								<?php
 									if (isset($testimonial['client_logo']) && !empty($testimonial['client_logo']['url']) && sizeof($testimonial['client_logo']) > 0) {	?>
@@ -21,7 +21,7 @@
 										<?php if (isset($testimonial['client_logo_active']) && sizeof($testimonial['client_logo_active']) > 0 && $testimonial['use_hover_logo'] == 'yes') : ?>
 											<?php echo wp_kses( \Elementskit_Lite\Utils::get_attachment_image_html($testimonial, 'client_logo_active', 'full', [
 												'class'	=> 'elementskit-testimonial-client-active-logo'
-											]), \ElementsKit_Lite\Utils::get_kses_array()); ?>	
+											]), \ElementsKit_Lite\Utils::get_kses_array()); ?>
 										<?php endif; ?>
 										<?php echo wp_kses( \Elementskit_Lite\Utils::get_attachment_image_html($testimonial, 'client_logo', 'full', [
 											'class'	=> 'elementskit-testimonial-client-logo'

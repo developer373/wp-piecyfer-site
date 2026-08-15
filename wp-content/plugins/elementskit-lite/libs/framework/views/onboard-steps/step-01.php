@@ -1,7 +1,7 @@
 <div class="ekit-admin-fields-container-fieldset">
 	<?php
 		$filter = \ElementsKit_Lite\Libs\Framework\Attr::instance()->utils->get_option( 'settings', array() );
-		
+
 		$this->utils->input(
 			array(
 				'type'        => 'radio',
@@ -39,6 +39,15 @@
 				),
 			)
 		);
+
+		// Hidden input to enable inline SVG by default
+		$this->utils->input(
+			array(
+				'type'        => 'hidden',
+				'name'        => 'user_data[inline_svg][is_enable]',
+				'value'       => '1',
+			)
+		);
 		?>
 </div>
 
@@ -52,6 +61,6 @@
 </div>
 
 <div class="ekit-onboard-pagination">
-	<a class="ekit-onboard-btn ekit-onboard-pagi-btn prev" href="#"><i class="icon icon-arrow-left"></i><?php echo esc_html__( 'Back', 'elementskit-lite' ); ?></a>
+	<a class="ekit-onboard-btn ekit-onboard-pagi-btn prev" href="#"><i class="icon icon-left-arrow"></i><?php echo esc_html__( 'Back', 'elementskit-lite' ); ?></a>
 	<a class="ekit-onboard-btn ekit-onboard-pagi-btn next" href="#"><?php echo esc_html__( 'Next Step', 'elementskit-lite' ); ?></a>
 </div>

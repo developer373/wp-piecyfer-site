@@ -127,7 +127,7 @@ class Root {
 			)
 		) {
 			$result = aioseo()->core->db->execute(
-				"SELECT count(*) as amountOfUrls FROM (
+				"SELECT (COUNT(DISTINCT YEAR(post_date)) + COUNT(*)) as amountOfUrls FROM (
 					SELECT post_date
 					FROM {$postsTable}
 					WHERE post_type = 'post' AND post_status = 'publish'
@@ -265,7 +265,8 @@ class Root {
 	/**
 	 * Builds the author archive indexes.
 	 *
-	 * @since 4.3.1
+	 * @since   4.3.1
+	 * @version 4.9.9 Use getAuthorPostTypes() instead of includedPostTypes() for consistent lastmod with author-sitemap.xml.
 	 *
 	 * @param  integer $amountOfAuthors The amount of author archives.
 	 * @return array                    The indexes.
@@ -275,7 +276,7 @@ class Root {
 			return [];
 		}
 
-		$postTypes = aioseo()->sitemap->helpers->includedPostTypes();
+		$postTypes = aioseo()->sitemap->helpers->getAuthorPostTypes();
 		$filename  = aioseo()->sitemap->filename;
 		$chunks    = $amountOfAuthors / aioseo()->sitemap->linksPerIndex;
 		if ( $chunks < 1 ) {
@@ -348,6 +349,14 @@ class Root {
 			}, $excludedPostIds );
 		}
 
+		if ( 'page' === $postType ) {
+			$isStaticHomepage = 'page' === get_option( 'show_on_front' );
+			if ( $isStaticHomepage ) {
+				$blogPageId = (int) get_option( 'page_for_posts' );
+				$excludedPostIds[] = $blogPageId;
+			}
+		}
+
 		$whereClause         = '';
 		$excludedPostsString = aioseo()->sitemap->helpers->excludedPosts();
 		if ( ! empty( $excludedPostsString ) ) {
@@ -364,13 +373,26 @@ class Root {
 			aioseo()->helpers->isWooCommerceActive() &&
 			'product' === $postType
 		) {
+			// Exclude products when excluded from both catalog and search.
 			$whereClause .= " AND p.ID NOT IN (
 				SELECT CONVERT(tr.object_id, unsigned) AS object_id
 				FROM {$termRelationshipsTable} AS tr
 				JOIN {$termTaxonomyTable} AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
 				JOIN {$termsTable} AS t ON tt.term_id = t.term_id
-				WHERE t.name = 'exclude-from-catalog'
+				WHERE t.name IN ('exclude-from-catalog', 'exclude-from-search')
+				GROUP BY tr.object_id
+				HAVING COUNT(DISTINCT t.name) = 2
 			)";
+		}
+
+		// Include the blog page in the posts post type unless manually excluded.
+		$blogPageId = (int) get_option( 'page_for_posts' );
+		if (
+			$blogPageId &&
+			! in_array( $blogPageId, $excludedPostIds, true ) &&
+			'post' === $postType
+		) {
+			$whereClause .= " OR `p`.`ID` = $blogPageId ";
 		}
 
 		$posts = aioseo()->core->db->execute(
@@ -382,7 +404,7 @@ class Root {
 						SELECT p.ID, ap.priority, p.post_modified_gmt
 						FROM {$postsTable} AS p
 						LEFT JOIN {$aioseoPostsTable} AS ap ON p.ID = ap.post_id
-						WHERE p.post_status IN ( 'publish', 'inherit' )
+						WHERE p.post_status = %s
 							AND p.post_type = %s
 							AND p.post_password = ''
 							AND (ap.robots_noindex IS NULL OR ap.robots_default = 1 OR ap.robots_noindex = 0)
@@ -394,6 +416,7 @@ class Root {
 				) AS y
 				WHERE rownum = 1 OR rownum % %d = 1;",
 				[
+					'attachment' === $postType ? 'inherit' : 'publish',
 					$postType,
 					$linksPerIndex
 				]
@@ -406,13 +429,14 @@ class Root {
 				"SELECT COUNT(*) as count
 				FROM {$postsTable} as p
 				LEFT JOIN {$aioseoPostsTable} as ap ON p.ID = ap.post_id
-				WHERE p.post_status IN ( 'publish', 'inherit' )
+				WHERE p.post_status = %s
 					AND p.post_type = %s
 					AND p.post_password = ''
 					AND (ap.robots_noindex IS NULL OR ap.robots_default = 1 OR ap.robots_noindex = 0)
 					{$whereClause}
 				",
 				[
+					'attachment' === $postType ? 'inherit' : 'publish',
 					$postType
 				]
 			),
@@ -514,14 +538,13 @@ class Root {
 				$ids = array_map( function( $post ) {
 					return $post->ID;
 				}, $chunk );
-				$ids = implode( "', '", $ids );
 
 				$lastModified = null;
 				if ( ! apply_filters( 'aioseo_sitemap_lastmod_disable', false ) ) {
 					$lastModified = aioseo()->core->db
 						->start( aioseo()->core->db->db->posts . ' as p', true )
 						->select( 'MAX(`p`.`post_modified_gmt`) as last_modified' )
-						->whereRaw( "( `p`.`ID` IN ( '$ids' ) )" )
+						->whereIn( 'p.ID', $ids )
 						->run()
 						->result();
 				}

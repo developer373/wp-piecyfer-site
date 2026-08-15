@@ -3,8 +3,13 @@ namespace Elementor;
 
 use Elementor\Core\Common\Modules\Ajax\Module as Ajax;
 use Elementor\Core\Utils\Collection;
-use Elementor\Core\Utils\Exceptions;
 use Elementor\Core\Utils\Force_Locale;
+use Elementor\Modules\AtomicWidgets\Elements\Atomic_Button\Atomic_Button;
+use Elementor\Modules\AtomicWidgets\Elements\Atomic_Divider\Atomic_Divider;
+use Elementor\Modules\AtomicWidgets\Elements\Atomic_Heading\Atomic_Heading;
+use Elementor\Modules\AtomicWidgets\Elements\Atomic_Image\Atomic_Image;
+use Elementor\Modules\AtomicWidgets\Elements\Atomic_Paragraph\Atomic_Paragraph;
+use Elementor\Modules\AtomicWidgets\Elements\Atomic_Svg\Atomic_Svg;
 use Elementor\Modules\NestedAccordion\Widgets\Nested_Accordion;
 use Elementor\Modules\NestedElements\Module as NestedElementsModule;
 use Elementor\Modules\NestedTabs\Widgets\NestedTabs;
@@ -52,6 +57,14 @@ class Widgets_Manager {
 			NestedTabs::class,
 			Nested_Accordion::class,
 		],
+		'atomic_widgets' => [
+			Atomic_Heading::class,
+			Atomic_Image::class,
+			Atomic_Paragraph::class,
+			Atomic_Button::class,
+			Atomic_Svg::class,
+			Atomic_Divider::class,
+		],
 	];
 
 	/**
@@ -62,10 +75,12 @@ class Widgets_Manager {
 	 *
 	 * @since 2.0.0
 	 * @access private
-	*/
+	 */
 	private function init_widgets() {
 		$build_widgets_filename = [
+			'common-base',
 			'common',
+			'common-optimized',
 			'inner-section',
 			'heading',
 			'image',
@@ -97,7 +112,6 @@ class Widgets_Manager {
 			'sidebar',
 			'read-more',
 			'rating',
-			'share-buttons',
 		];
 
 		$this->_widget_types = [];
@@ -155,7 +169,7 @@ class Widgets_Manager {
 	 *
 	 * @since 2.0.0
 	 * @access private
-	*/
+	 */
 	private function register_wp_widgets() {
 		global $wp_widget_factory;
 
@@ -196,7 +210,7 @@ class Widgets_Manager {
 	 *
 	 * @since 2.0.0
 	 * @access private
-	*/
+	 */
 	private function require_files() {
 		require ELEMENTOR_PATH . 'includes/base/widget-base.php';
 	}
@@ -224,7 +238,7 @@ class Widgets_Manager {
 	 * @param Widget_Base $widget Elementor widget.
 	 *
 	 * @return true True if the widget was registered.
-	*/
+	 */
 	public function register_widget_type( Widget_Base $widget ) {
 		Plugin::$instance->modules_manager->get_modules( 'dev-tools' )->deprecation->deprecated_function(
 			__METHOD__,
@@ -294,7 +308,7 @@ class Widgets_Manager {
 	 * @param string $name Widget name.
 	 *
 	 * @return true True if the widget was unregistered, False otherwise.
-	*/
+	 */
 	public function unregister_widget_type( $name ) {
 		Plugin::$instance->modules_manager->get_modules( 'dev-tools' )->deprecation->deprecated_function(
 			__METHOD__,
@@ -338,7 +352,7 @@ class Widgets_Manager {
 	 * @param string $widget_name Optional. Widget name. Default is null.
 	 *
 	 * @return Widget_Base|Widget_Base[]|null Registered widget types.
-	*/
+	 */
 	public function get_widget_types( $widget_name = null ) {
 		if ( is_null( $this->_widget_types ) ) {
 			$this->init_widgets();
@@ -360,7 +374,7 @@ class Widgets_Manager {
 	 * @access public
 	 *
 	 * @return array Registered widget types with each widget config.
-	*/
+	 */
 	public function get_widget_types_config() {
 		$config = [];
 
@@ -372,7 +386,7 @@ class Widgets_Manager {
 	}
 
 	/**
-	 * @throws \Exception
+	 * @throws \Exception If current user don't have permissions to edit the post.
 	 */
 	public function ajax_get_widget_types_controls_config( array $data ) {
 		Plugin::$instance->documents->check_permissions( $data['editor_post_id'] );
@@ -393,6 +407,33 @@ class Widgets_Manager {
 		}
 
 		return $config;
+	}
+
+	/**
+	 * @throws \Exception If current user don't have permissions to edit the post.
+	 */
+	public function ajax_refresh_widgets_config( array $data ) {
+		Plugin::$instance->documents->check_permissions( $data['editor_post_id'] );
+
+		wp_raise_memory_limit( 'admin' );
+
+		$widgets = [];
+
+		foreach ( $this->get_widget_types() as $widget_key => $widget ) {
+			$widget_config = $widget->get_config();
+
+			// get_config() omits controls when the stack isn't initialized yet (see Widget_Base::get_initial_config).
+			// During an AJAX refresh the instances are fresh, so we force-initialize and merge them explicitly.
+			$widget_config['controls'] = $widget->get_stack( false )['controls'];
+			$widget_config['tabs_controls'] = $widget->get_tabs_controls();
+
+			$widgets[ $widget_key ] = $widget_config;
+		}
+
+		return [
+			'widgets' => $widgets,
+			'categories' => Plugin::$instance->elements_manager->get_categories(),
+		];
 	}
 
 	public function ajax_get_widgets_default_value_translations( array $data = [] ) {
@@ -480,7 +521,7 @@ class Widgets_Manager {
 	 * @param array $request Ajax request.
 	 *
 	 * @return bool|string Rendered widget form.
-	 * @throws \Exception
+	 * @throws \Exception If current user don't have permissions to edit the post.
 	 */
 	public function ajax_get_wp_widget_form( $request ) {
 		Plugin::$instance->documents->check_permissions( $request['editor_post_id'] );
@@ -520,7 +561,7 @@ class Widgets_Manager {
 	 *
 	 * @since 1.0.0
 	 * @access public
-	*/
+	 */
 	public function render_widgets_content() {
 		foreach ( $this->get_widget_types() as $widget ) {
 			$widget->print_template();
@@ -537,7 +578,7 @@ class Widgets_Manager {
 	 * @access public
 	 *
 	 * @return array Registered widget types with settings keys for each widget.
-	*/
+	 */
 	public function get_widgets_frontend_settings_keys() {
 		$keys = [];
 
@@ -614,10 +655,16 @@ class Widgets_Manager {
 	 *
 	 * @since 1.3.0
 	 * @access public
-	*/
+	 */
 	public function enqueue_widgets_scripts() {
 		foreach ( $this->get_widget_types() as $widget ) {
 			$widget->enqueue_scripts();
+		}
+	}
+
+	public function register_frontend_handlers() {
+		foreach ( $this->get_widget_types() as $widget ) {
+			$widget->register_frontend_handlers();
 		}
 	}
 
@@ -697,7 +744,7 @@ class Widgets_Manager {
 	 *
 	 * @since 1.0.0
 	 * @access public
-	*/
+	 */
 	public function __construct() {
 		$this->require_files();
 
@@ -719,17 +766,19 @@ class Widgets_Manager {
 		$ajax_manager->register_ajax_action( 'editor_get_wp_widget_form', [ $this, 'ajax_get_wp_widget_form' ] );
 		$ajax_manager->register_ajax_action( 'get_widgets_config', [ $this, 'ajax_get_widget_types_controls_config' ] );
 
+		$ajax_manager->register_ajax_action( 'refresh_widgets_config', [ $this, 'ajax_refresh_widgets_config' ] );
+
 		$ajax_manager->register_ajax_action( 'get_widgets_default_value_translations', function ( array $data ) {
 			return $this->ajax_get_widgets_default_value_translations( $data );
 		} );
 	}
 
 	/**
-	 * @param $experiment_name
-	 * @param $classes
+	 * @param string $experiment_name
+	 * @param array  $classes
 	 * @return void
 	 */
-	public function register_promoted_active_widgets( string $experiment_name, array $classes ) : void {
+	public function register_promoted_active_widgets( string $experiment_name, array $classes ): void {
 		if ( ! Plugin::$instance->experiments->is_feature_active( $experiment_name ) || empty( $classes ) ) {
 			return;
 		}

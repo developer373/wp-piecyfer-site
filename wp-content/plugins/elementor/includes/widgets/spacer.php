@@ -104,6 +104,10 @@ class Widget_Spacer extends Widget_Base {
 		return [ 'widget-spacer' ];
 	}
 
+	public function has_widget_inner_wrapper(): bool {
+		return ! Plugin::$instance->experiments->is_feature_active( 'e_optimized_markup' );
+	}
+
 	/**
 	 * Register spacer widget controls.
 	 *
@@ -187,5 +191,9 @@ class Widget_Spacer extends Widget_Base {
 			<div class="elementor-spacer-inner"></div>
 		</div>
 		<?php
+	}
+
+	public function render_markdown(): string {
+		return '';
 	}
 }

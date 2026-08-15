@@ -1,54 +1,97 @@
-=== Broken Link Checker by AIOSEO – Easily Fix/Monitor Internal and External links ===
+=== Broken Link Checker by AIOSEO – Find & Fix Broken Internal, External & Video Links ===
 Contributors: aioseo, smub, benjaminprojas
-Tags: broken links, internal link, external link, check links, seo
-Tested up to: 6.7
-Requires at least: 5.3
-Requires PHP: 5.6
-Stable tag: 1.2.3
+Tags: broken link checker, broken links, link checker, dead links, 404
+Tested up to: 7.0
+Requires at least: 5.7
+Requires PHP: 7.2
+Stable tag: 1.3.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
-Broken Link Checker by AIOSEO ensures all links on your website are working. Check your site for broken links and easily fix them to improve SEO.
+Broken link checker that finds and fixes broken links, broken images, and dead video links to protect your site's SEO.
 
 == Description ==
 
-=== Broken Link Checker by AIOSEO - Easily Fix/Monitor Internal and External links ===
+Broken links hurt your SEO and send visitors to dead 404 pages. Broken Link Checker by AIOSEO scans your whole WordPress site for broken links and shows you exactly which ones to fix. It checks internal links, external links, broken images, and video links, then lets you fix or remove them in a few clicks without editing each post by hand.
 
-The Broken Link Checker by AIOSEO for WordPress is a must-have tool for website owners and managers. Its granular control and detailed reporting features ensure that your website's links are healthy and functioning correctly, providing your visitors with a seamless browsing experience. With this plugin, you can detect and fix broken links quickly and easily, ensuring that your website is always up-to-date and running smoothly.
+This free plugin connects to your AIOSEO account and scans up to 250 internal links every month at no cost, with credits that renew each month. Upgrade to a paid subscription to scan more internal and external links, monitor more frequently, and cover larger sites. [See Broken Link Checker pricing and upgrade here.](https://aioseo.com/pricing-broken-link-checker/?utm_source=wprepo&utm_medium=link&utm_campaign=liteplugin)
 
-Unlike other broken link checker plugins, **AIOSEO's Broken Link Checker is offered as a SaaS and requires an AIOSEO account**. This means that the tool is hosted on the AIOSEO servers, rather than being installed on your website's server. **This approach has several benefits, including preventing your server IP from being blocked, and avoiding hosting providers from forcing you to upgrade** due to increased resource usage.
+= 🔗 Find Broken Internal and External Links =
 
-By using Broken Link Checker as a SaaS, you can rest assured that your website's performance won't be negatively affected, and that you'll have access to the most up-to-date version of the service at all times. Additionally, it's incredibly user-friendly and provides actionable recommendations for fixing broken links, making it an essential tool for maintaining the health and functionality of your website.
+Broken Link Checker monitors every internal link and external link on your WordPress website and reports which links work and which are broken. It crawls your content on a schedule and records the status of each link: a working 200 response, a 301 or 302 redirect, or a broken 404. You get a clear list of broken links to fix, so dead links never sit on your pages unnoticed.
 
-When you install this plugin, you’ll have the opportunity to register for a free account that includes scanning up to 200 internal links. Those 200 link credits will renew every month for free, and you’ll only be upgraded if you scan more than 200 links during the month. Or, if you already have an AIOSEO Broken Link Checker subscription, you can simply connect this plugin to it.
+= 🎥 Check Broken Video Links on YouTube, Vimeo, and More =
 
-=== Link Monitoring ===
+Video links break in a way that a normal link check misses. A YouTube or Vimeo page can still load and return a working status long after the video was deleted, set to private, or removed by the uploader. Broken Link Checker auto-detects video links and verifies that the video behind each link still exists. It checks the video itself across YouTube, Vimeo, and more than ten other platforms, then flags the ones that are gone so you can swap in a working video. This keeps tutorials, reviews, and any post built around an embedded or linked video from quietly going stale.
 
-The Broken Link Checker plugin monitors all internal and external links on your WordPress website, ensuring that they are functioning correctly. It crawls your website periodically and checks each link to ensure that it is not broken. The plugin will also show whether or not a link worked properly (200 status) or worked with redirects (301/302 status) or was broken (404 status).
+= 🖼️ Detect Broken Images =
 
-=== Granular Control ===
+Broken Link Checker also finds broken images. If an image file was moved, renamed, or deleted, the plugin reports the broken image URL next to your broken links so you can replace it before visitors land on a missing graphic.
 
-The plugin provides granular control over which post types and statuses it will monitor. You can choose which post types, such as pages, posts, or custom post types, the plugin will monitor. You can also choose which post statuses, such as published, draft, or pending review, the plugin will monitor to look for broken links.
+= ☁️ Cloud-Based Scanning That Does Not Slow Down Your Site =
 
-=== URL Exclusions ===
+Broken Link Checker by AIOSEO runs as a cloud service connected to your AIOSEO account, so the link scanning happens on our servers instead of yours. Other broken link checker plugins crawl from your own server, which can spike resource usage, get your hosting account flagged, or cause your server IP to be blocked. With cloud-based link scanning, your site speed stays the same and your hosting provider has no reason to throttle you, even on large sites with thousands of links.
 
-You can exclude certain URLs from being checked by the plugin. For example, if you have a third-party tracking link that redirects to another website, you can exclude it from being checked.
+= 🎯 Granular Control Over What Gets Scanned =
 
-=== Features ===
+You decide what Broken Link Checker monitors. Choose which post types to scan, such as pages, posts, and custom post types, and which post statuses to include, such as published, draft, or pending review. This keeps the scan focused on the content that matters and your link credits spent where they count.
 
-* Monitors all internal and external links on your WordPress website.
-* Detects valid links, broken links and redirects.
-* Provides granular control over which post types and statuses the plugin will monitor.
-* Allows you to exclude certain URLs from being checked.
-* Schedules checks to run automatically at regular intervals.
-* Excludes links that are broken from search engine crawling.
-* Allows inline editing of links to reduce time spent updating each post.
+= 🚫 Exclude URLs You Do Not Want Checked =
 
-=== Credits ===
+Some links should not be checked at all. Affiliate links, tracking redirects, and third-party URLs that block automated requests can show up as false broken links. Broken Link Checker lets you exclude specific URLs and domains so your broken link report stays accurate.
+
+= 🛠️ Fix Broken Links Without Leaving WordPress =
+
+Finding broken links is only half the job. Broken Link Checker lets you fix them straight from the dashboard. Edit a link inline to point it at the correct URL, unlink it, or remove it, and the change is written back to your post automatically. You can clear out many broken links in a single sitting instead of opening each post one at a time.
+
+Broken links are also marked in red on the frontend with the Broken Links Highlighter, so they are easy to spot, and the plugin can stop search engines from following broken links while you work through them. If you use the AIOSEO Redirects feature, you can send a broken link straight to a working URL with a redirect.
+
+= 🏢 Who Uses Broken Link Checker =
+
+Broken Link Checker works for any WordPress site that links out or links internally:
+
+* **Bloggers and publishers** - keep years of posts free of dead links and broken video embeds.
+* **eCommerce stores** - catch broken product links, broken images, and supplier URLs.
+* **Affiliate marketers** - find broken affiliate links before they cost you commissions.
+* **Agencies and freelancers** - monitor client sites and fix broken links from one place.
+* **Local businesses** - make sure menu, booking, and map links keep working.
+
+= 📋 Full Broken Link Checker Feature List =
+
+* [Broken Link Checker](https://aioseo.com/features/broken-link-checker/?utm_source=wprepo&utm_medium=link&utm_campaign=liteplugin) - scan your whole WordPress site for broken links and fix them from one dashboard.
+* Internal link checker - monitor every internal link between your posts and pages.
+* External link checker - check outbound links to other websites for 404 errors.
+* Broken video link checker - verify videos on YouTube, Vimeo, and 10+ platforms still exist.
+* Broken image detector - find images that no longer load.
+* Redirect detection - see which links return a 301 or 302 redirect.
+* Cloud-based scanning - link checks run on AIOSEO servers, not your server.
+* Scheduled automatic scans - links are rechecked on a regular schedule.
+* Inline link editing - fix or update a broken link without opening the post editor.
+* Unlink and remove - clear out dead links in one click.
+* Broken Links Highlighter - broken links are marked in red on the frontend.
+* AIOSEO Redirects integration - redirect a broken link to a working URL.
+* Granular post type control - choose which post types and statuses to scan.
+* URL and domain exclusions - skip affiliate links, trackers, and URLs you do not want checked.
+* Link status filters - filter links by good, broken, redirect, or not yet checked.
+* Broken link count column - see broken link counts in the AIOSEO Details post column.
+* Link Distribution dashboard widget - view link health from your WordPress dashboard.
+* Media link checking - index and check media file URLs.
+* Second-chance rechecks - broken links are verified again client-side to reduce false positives.
+* Free monthly link credits - scan up to 250 internal links every month for free.
+
+= 🛡️ Built by the Team at AIOSEO =
+
+Broken Link Checker is built by AIOSEO, the team behind the All in One SEO plugin used on more than 3 million WordPress websites. The same focus on practical, results-driven SEO goes into keeping your links healthy and your visitors out of 404 pages.
+
+= 🔎 A Better Way to Check Broken Links Than Ahrefs, Screaming Frog & Other Tools =
+
+If you have looked for a way to find broken links, you have probably tried tools like Ahrefs, Screaming Frog, Dr. Link Check, or Dead Link Checker. Those tools can crawl a site, but they run outside WordPress, so you copy URLs back and forth and fix every broken link by hand in the editor. Broken Link Checker by AIOSEO lives inside your WordPress dashboard. It finds broken links, broken images, and dead video links, and it fixes them in place. Because the scanning runs in the cloud, it does this without loading your server the way an on-site crawler plugin does.
+
+= Credits =
 
 This plugin is created by <a href="https://benjaminrojas.net/" rel="friend" title="Benjamin Rojas">Benjamin Rojas</a> and <a href="https://syedbalkhi.com/" rel="friend" title="Syed Balkhi">Syed Balkhi</a>.
 
-=== Branding Guideline ===
+= Branding Guideline =
 
 AIOSEO&reg; is a registered trademark of Semper Plugins LLC. When writing about the WordPress SEO plugin by AIOSEO, please use the following format.
 
@@ -58,7 +101,7 @@ AIOSEO&reg; is a registered trademark of Semper Plugins LLC. When writing about 
 * All in 1 SEO (incorrect)
 * AISEO (incorrect)
 
-=== What's Next ===
+= What's Next =
 
 If you like our Broken Link Checker plugin, then consider checking out our other projects:
 
@@ -83,8 +126,102 @@ If you like our Broken Link Checker plugin, then consider checking out our other
 
 Visit <a href="http://www.wpbeginner.com/" rel="friend" title="WPBeginner">WPBeginner</a> to learn from our <a href="http://www.wpbeginner.com/category/wp-tutorials/" rel="friend" title="WordPress Tutorials">WordPress Tutorials</a> and find out about the <a href="http://www.wpbeginner.com/category/plugins/" rel="friend" title="Best WordPress Plugins">best WordPress plugins</a>.
 
+== Installation ==
+
+1. Install Broken Link Checker by AIOSEO either through the WordPress plugin directory or by uploading the plugin files to your server.
+2. Activate the plugin through the Plugins screen in WordPress.
+3. Connect the plugin to a free or paid AIOSEO account when prompted. This is required because the link scanning runs as a cloud service.
+4. Choose which post types and post statuses you want to scan in the settings.
+5. Broken Link Checker starts scanning and reports any broken links, broken images, and dead video links in your dashboard.
+
+== Frequently Asked Questions ==
+
+= Does Broken Link Checker slow down my website? =
+
+No. The link scanning runs on AIOSEO's servers rather than your own, so checking your links does not use your site's resources or affect page speed.
+
+= Do I need an account to use Broken Link Checker? =
+
+Yes. Because Broken Link Checker runs as a cloud service, it requires an AIOSEO account. The free account scans up to 250 internal links per month, and those credits renew every month.
+
+= Can it check external links and video links? =
+
+Yes. Broken Link Checker checks internal links, external links, and broken images. It also checks video links and verifies whether the video still exists on YouTube, Vimeo, and more than ten other platforms.
+
+= How does it check broken video links? =
+
+A video page can return a working status even after the video was deleted or made private. Broken Link Checker detects video links and checks the video itself, so it can flag videos that are gone even when the URL still loads.
+
+= Can I fix broken links without editing each post? =
+
+Yes. You can edit, unlink, or remove a broken link directly from the Broken Link Checker dashboard, and the change is saved back to your content for you.
+
+= How often does it scan for broken links? =
+
+Broken Link Checker runs automatic scans on a schedule. Paid subscriptions can monitor more frequently and cover more links.
 
 == Changelog ==
+
+**New in Version 1.3.0**
+
+* New: Video support - Broken Link Checker now auto-detects video links and checks whether the linked video still exists, instead of just making sure that the link works. YouTube, Vimeo and 10+ platforms supported!
+* New: Broken links are now scanned a second time client-side to reduce false-negatives due to WAF blocks or timeouts.
+* Updated: Added support for HTML API for WP 6.6 and above to make link updates/removals more reliable.
+* Updated: Added a license recheck action link to settings to refresh subscription data (useful in case of connection issues/subscription upgrades) + an indicator for the amount of sites that are active under the subscription.
+* Updated: Added a mechanism to prevent duplicate actions from being scheduled.
+* Updated: Link Assistant and Broken Link Checker now clean up database rows for trashed, private, or deleted posts so tables don't accumulate invisible bloat over time.
+* Updated: Hardened options against unintended frontend exposure.
+* Fixed: Setup Wizard sometimes not triggering due to missing cache table.
+* Fixed: Relative URLs are now resolved against the post permalink before storing them to the DB.
+* Fixed: Malformed URLs sent to Broken Link Checker server in rare cases.
+* Fixed: Scan sometimes getting stuck due to duplicate rows in the DB.
+
+**New in Version 1.2.10**
+
+* Fixed: PHP error when connecting BLC when AIOSEO is not active.
+
+**New in Version 1.2.9**
+
+* Updated: Links that have never been checked before are now prioritized better.
+* Updated: Improved scheduled action scheduling to prevent duplicate actions.
+* Updated: Improved request handling with concurrency guards and caching to reduce outbound request volume.
+* Updated: Added transient fallback mechanism for caching in case aioseo_blc_cache table doesn't exist.
+* Updated: Various performance improvements.
+* Fixed: Subsite database table cache no longer includes tables of all other subsites for multisites.
+* Fixed: Rare issue where some links wouldn't be indexed due to special characters like new lines.
+
+**New in Version 1.2.8**
+
+* Updated: Changed wording to reflect that free subscriptions never expire, but that their quota resets each month.
+
+**New in Version 1.2.7**
+
+* New: Users using AIOSEO, Broken Link Checker and Link Assistant now see their broken links count in the AIOSEO Details post column.
+* Updated: Compatibility with WordPress 6.9.
+* Updated: Cache class now uses JSON instead of PHP serialization to prevent cache misses when charsets don't match.
+* Updated: Various database performance improvements.
+* Updated: Hardened database queries against SQL attacks.
+* Fixed: "Good" filter now no longer shows URLs that still need to be scanned for the first time.
+
+**New in Version 1.2.6**
+
+* New: Added Link Distribution dashboard widget to the WordPress admin dashboard.
+* New: Added reminder emails to inform users when Broken Link Checker is not connected.
+* Updated: All BLC plans, including free, now support external links.
+* Updated: The free BLC plan now includes 50 more links for free, for a total of 250.
+* Updated: Added warning messages when indexed link count is larger than plan link quota or link quota is (almost) depleted.
+* Updated: Added hook to filter URLs when they are indexed to add compatibility with WP Offload Media.
+* Updated: Hardened REST API routes and added permission checks to improve security.
+* Fixed: Link scan sometimes getting stuck if AIOSEO is not installed due to missing function.
+
+**New in Version 1.2.5**
+
+* Fixed: Link status scan sometimes getting stuck due to URL hash collisions.
+* Fixed: Free plan not indicating that external links are not supported.
+
+**New in Version 1.2.4**
+
+* Updated: Hardening of ORDER BY/LIMIT clauses for database queries.
 
 **New in Version 1.2.3**
 
@@ -103,7 +240,7 @@ Visit <a href="http://www.wpbeginner.com/" rel="friend" title="WPBeginner">WPBeg
 * New: Added an admin notice to inform users when they have not connected Broken Link Checker yet.
 * Fixed: Image URIs could cause catastrophical regex backtracking, freezing up the site.
 * Fixed: Links with leading/trailing spaces in their URL or anchor text could not be edited or unlinked.
-* Fixed: Broken links sometimes not highlighted for pages and CPTs. 
+* Fixed: Broken links sometimes not highlighted for pages and CPTs.
 
 **New in Version 1.2.0**
 
@@ -115,33 +252,10 @@ Visit <a href="http://www.wpbeginner.com/" rel="friend" title="WPBeginner">WPBeg
 * Fixed: Unified URL rows now correctly respect the included post types, included post status, excluded posts and excluded domain settings.
 * Fixed: When deleting a post, the confirmation modal now correctly shows up again.
 
-**New in Version 1.1.2**
-
-* Fixed: PHP error causing settings screen not to load when using default excluded domains value.
-
-**New in Version 1.1.1**
-
-* New: You can now exclude specific domains from being checked through the settings.
-* Fixed: Limit Modified Date setting sometimes not working because WordPress Core was overriding it.
-* Fixed: PHP notice when indexing links due to missing URL scheme.
-
-**New in Version 1.1.0**
-
-* New: Unified Links - Duplicate links are now grouped together in the UI for an improved user experience.
-* Updated: Added support for PHP 8.2.
-* Updated: Added sorting for the URL column in the Broken Links report table.
-* Updated: Added a progress bar for the link status scan.
-* Updated: Added a confirmation modal to prevent user from trashing posts by mistake.
-* Updated: Improved performance of rechecking links in bulk.
-* Updated: Improved general performance of database queries.
-* Updated: "Broken Links" is now the default table filter after the link status scan has been completed.
-* Fixed: Various issues where updating, removing or force-rechecking certain links sometimes failed.
-* Fixed: Connecting to remote server sometimes hanged until the user refreshed the page.
-
 **See our [changelog on aioseo.com](https://aioseo.com/changelog/broken-link-checker/?utm_source=wprepo&utm_medium=link&utm_campaign=blc) for previous releases.**
 
 == Upgrade Notice ==
 
-= 1.2.3 =
+= 1.3.0 =
 
-This update adds major improvements and bug fixes.
+Broken Link Checker now checks video links on YouTube, Vimeo, and 10+ platforms, rechecks broken links client-side to reduce false positives, and includes several fixes and performance improvements.

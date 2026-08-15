@@ -195,10 +195,10 @@ trait Options {
 			if ( $preserveHtml ) {
 				if ( is_array( $defaults[ $name ]['value'] ) ) {
 					foreach ( $defaults[ $name ]['value'] as $k => $v ) {
-						$defaults[ $name ]['value'][ $k ] = html_entity_decode( $v, ENT_NOQUOTES );
+						$defaults[ $name ]['value'][ $k ] = aioseo()->helpers->decodeHtmlEntities( $v );
 					}
 				} else {
-					$defaults[ $name ]['value'] = html_entity_decode( $defaults[ $name ]['value'], ENT_NOQUOTES );
+					$defaults[ $name ]['value'] = aioseo()->helpers->decodeHtmlEntities( $defaults[ $name ]['value'] );
 				}
 			}
 			$value = $defaults[ $name ]['value'];
@@ -516,6 +516,10 @@ trait Options {
 	 * @return array           The modified values.
 	 */
 	protected function resetValues( $values, $defaults, $keys = [], $include = [], $exclude = [] ) {
+		if ( ! is_array( $values ) ) {
+			return $values;
+		}
+
 		$values = $this->allFiltered( $values, $include, $exclude );
 		foreach ( $values as $key => $value ) {
 			$option = $this->isAnOption( $key, $defaults, $keys );
@@ -526,10 +530,31 @@ trait Options {
 
 			$keys[]         = $key;
 			$values[ $key ] = $this->resetValues( $value, $defaults, $keys );
+
+			if ( 'llms' === $key ) {
+				$this->handleLlmsReset();
+			}
+
 			array_pop( $keys );
 		}
 
 		return $values;
+	}
+
+	/**
+	 * Handles LLMS reset operations.
+	 *
+	 * @since 4.8.8
+	 *
+	 * @return void
+	 */
+	protected function handleLlmsReset() {
+		// Add LLMS cleanup when doing a full reset
+		aioseo()->actionScheduler->unschedule( aioseo()->llms->llmsTxtSingleAction );
+		aioseo()->actionScheduler->unschedule( aioseo()->llms->llmsTxtRecurrentAction );
+
+		// Regenerate the LLMS files after reset
+		aioseo()->llms->generateLlmsTxt();
 	}
 
 	/**
@@ -1028,7 +1053,19 @@ trait Options {
 	public function getDbOptions( $optionsName ) {
 		$cache = aioseo()->core->optionsCache->getDb( $optionsName );
 		if ( empty( $cache ) ) {
-			$options = json_decode( get_option( $optionsName ), true );
+			// NOTE: get_option() can return a non-string (e.g. an array from a row stored
+			// unencoded), which fatals in json_decode() on PHP 8+.
+			$dbOptions = get_option( $optionsName );
+			if ( is_string( $dbOptions ) ) {
+				$options = json_decode( $dbOptions, true );
+			} else {
+				// Row holds a non-string value (typically a serialized array left by an
+				// external tool: WP-CLI `--format=json`, site migration plugin, etc.).
+				// Use the data as-is and mark the instance dirty so the shutdown save
+				// rewrites the row as JSON — self-heals the corrupted storage.
+				$options          = is_array( $dbOptions ) ? $dbOptions : [];
+				$this->shouldSave = true;
+			}
 			$options = ! empty( $options ) ? $options : [];
 
 			// Set the cache.

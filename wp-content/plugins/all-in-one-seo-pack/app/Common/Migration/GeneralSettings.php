@@ -62,7 +62,6 @@ class GeneralSettings {
 			'aiosp_schema_person_manual_name'  => [ 'type' => 'string', 'newOption' => [ 'searchAppearance', 'global', 'schema', 'personName' ] ],
 			'aiosp_schema_organization_logo'   => [ 'type' => 'string', 'newOption' => [ 'searchAppearance', 'global', 'schema', 'organizationLogo' ] ],
 			'aiosp_schema_person_manual_image' => [ 'type' => 'string', 'newOption' => [ 'searchAppearance', 'global', 'schema', 'personLogo' ] ],
-			'aiosp_schema_search_results_page' => [ 'type' => 'boolean', 'newOption' => [ 'searchAppearance', 'advanced', 'sitelinks' ] ],
 			'aiosp_togglekeywords'             => [ 'type' => 'boolean', 'newOption' => [ 'searchAppearance', 'advanced', 'useKeywords' ] ],
 			'aiosp_use_categories'             => [ 'type' => 'boolean', 'newOption' => [ 'searchAppearance', 'advanced', 'useCategoriesForMetaKeywords' ] ],
 			'aiosp_use_tags_as_keywords'       => [ 'type' => 'boolean', 'newOption' => [ 'searchAppearance', 'advanced', 'useTagsForMetaKeywords' ] ],
@@ -122,7 +121,7 @@ class GeneralSettings {
 			->start( 'postmeta' . ' as pm' )
 			->select( 'pm.meta_key, pm.meta_value' )
 			->where( 'pm.post_id', $post->ID )
-			->whereRaw( "`pm`.`meta_key` LIKE '_aioseop_%'" )
+			->whereLike( 'pm.meta_key', '_aioseop_%', true )
 			->run()
 			->result();
 
@@ -650,6 +649,8 @@ class GeneralSettings {
 			'wikipedia.org'  => 'wikipediaUrl',
 			'myspace.com'    => 'myspaceUrl',
 			'wordpress.org'  => 'wordpressUrl',
+			'bsky.app'       => 'blueskyUrl',
+			'threads.net'    => 'threadsUrl'
 		];
 
 		$found = false;

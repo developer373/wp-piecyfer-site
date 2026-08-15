@@ -14,8 +14,16 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
 
     public function __construct( $data = [], $args = null ) {
 		parent::__construct( $data, $args );
-		$this->add_script_depends('magnific-popup');
 	}
+
+    public function get_style_depends() {
+        return ['magnific-popup', 'ekit-header-search'];
+    }
+
+	public function get_script_depends() {
+		return ['ekit-header-search', 'magnific-popup'];
+	}
+
 
     public function get_name() {
         return Handler::get_name();
@@ -98,8 +106,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
                     'size' => '20',
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .ekit_navsearch-button' => 'font-size: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .ekit_navsearch-button svg'    => 'max-width: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .ekit_navsearch-button :is(i, svg)' => 'font-size: {{SIZE}}{{UNIT}};',
                 ],
 
             ]
@@ -129,8 +136,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
                     'label' =>esc_html__( 'Color', 'elementskit-lite' ),
                     'type' => Controls_Manager::COLOR,
                     'selectors' => [
-                        '{{WRAPPER}} .ekit_navsearch-button, {{WRAPPER}} .ekit_search-button i' => 'color: {{VALUE}};',
-                        '{{WRAPPER}} .ekit_navsearch-button svg path, {{WRAPPER}} .ekit_search-button svg path'   => 'stroke: {{VALUE}}; fill: {{VALUE}};',
+                        '{{WRAPPER}} .ekit_navsearch-button, {{WRAPPER}} .ekit_search-button' => 'color: {{VALUE}}; fill: {{VALUE}};',
                     ],
                 ]
             );
@@ -159,8 +165,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
                     'label' =>esc_html__( 'Color', 'elementskit-lite' ),
                     'type' => Controls_Manager::COLOR,
                     'selectors' => [
-                        '{{WRAPPER}} .ekit_navsearch-button:hover, {{WRAPPER}} .ekit_search-button:hover i' => 'color: {{VALUE}};',
-                        '{{WRAPPER}} .ekit_navsearch-button:hover svg path, {{WRAPPER}} .ekit_search-button:hover svg path'   => 'stroke: {{VALUE}}; fill: {{VALUE}};',
+                        '{{WRAPPER}} .ekit_navsearch-button:hover, {{WRAPPER}} .ekit_search-button:hover' => 'color: {{VALUE}}; fill: {{VALUE}};',
                     ],
                 ]
             );
@@ -177,7 +182,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
             );
             $this->end_controls_tab();
         $this->end_controls_tabs();
-		
+
         $this->add_group_control(
             Group_Control_Border::get_type(),
             [
@@ -354,7 +359,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
 				'name' => 'ekit_search_backdrop_background',
 				'label' => __( 'Background', 'elementskit-lite' ),
 				'types' => [ 'classic', 'gradient' ],
-				'selector' => '{{WRAPPER}} .ekit_modal-searchPanel .ekit-search-group input:not([type="submit"])',
+				'selector' => '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-group input:not([type="submit"])',
 			]
         );
 
@@ -364,8 +369,8 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
 				'label' => __( 'Color', 'elementskit-lite' ),
 				'type' => Controls_Manager::COLOR,
 				'selectors' => [
-					'{{WRAPPER}} .ekit_modal-searchPanel .ekit-search-group input:not([type=submit]), {{WRAPPER}} button.mfp-close' => 'border-color: {{VALUE}}',
-					'{{WRAPPER}} .ekit_modal-searchPanel .ekit-search-group .ekit_search-button, {{WRAPPER}} .ekit-promo-popup .mfp-close, {{WRAPPER}} .ekit_search-field' => 'color: {{VALUE}}',
+                    '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-group input:not([type=submit]), .ekit-popup-{{ID}} button.mfp-close' => 'border-color: {{VALUE}}',
+                    '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-group .ekit_search-button, .ekit-popup-{{ID}} .ekit-promo-popup .mfp-close, .ekit-popup-{{ID}} .ekit_search-field' => 'color: {{VALUE}}',
 				],
 			]
         );
@@ -375,12 +380,12 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
 			[
 				'label' => __( 'Placeholder Color', 'elementskit-lite' ),
 				'type' => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} .ekit_search-field::-webkit-input-placeholder' => 'color: {{VALUE}}',
-					'{{WRAPPER}} .ekit_search-field::-moz-placeholder' => 'color: {{VALUE}}',
-					'{{WRAPPER}} .ekit_search-field:-ms-input-placeholder' => 'color: {{VALUE}}',
-					'{{WRAPPER}} .ekit_search-field:-moz-placeholder' => 'color: {{VALUE}}',
-				],
+                'selectors' => [
+                    '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-group .ekit_search-field::-webkit-input-placeholder' => 'color: {{VALUE}}',
+                    '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-group .ekit_search-field::-moz-placeholder' => 'color: {{VALUE}}',
+                    '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-group .ekit_search-field:-ms-input-placeholder' => 'color: {{VALUE}}',
+                    '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-group .ekit_search-field:-moz-placeholder' => 'color: {{VALUE}}',
+                ],
 			]
         );
 
@@ -390,7 +395,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
                 'name' => 'ekit_search_input_typography',
                 'label' => esc_html__( 'Typography', 'elementskit-lite' ),
                 'exclude' => [ 'line_height', 'text_decoration', 'text_transform', 'font_style' ],
-                'selector' => '{{WRAPPER}} .ekit_modal-searchPanel .ekit_search-field',
+                'selector' => '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit_search-field',
             ]
         );
         $this->add_control(
@@ -408,7 +413,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
 				'name' => 'ekit_search_border',
 				'label' => esc_html__( 'Border Type', 'elementskit-lite' ),
                 'default' =>'',
-				'selector' => '{{WRAPPER}} .ekit_modal-searchPanel .ekit-search-group input:not([type="submit"])',
+				'selector' => '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-group input:not([type="submit"])',
 			]
 		);
 
@@ -419,7 +424,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
                 'type' => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', '%', 'em' ],
                 'selectors' => [
-                    '{{WRAPPER}} .ekit_modal-searchPanel .ekit-search-group input:not([type="submit"])' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-group input:not([type="submit"])' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ],
                 'separator' => 'after',
             ]
@@ -439,7 +444,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
 					],
 				],
 				'selectors' => [
-					'{{WRAPPER}} .ekit_modal-searchPanel .ekit-search-group input:not([type="submit"])' => 'height: {{SIZE}}{{UNIT}};',
+                    '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-group input:not([type="submit"])' => 'height: {{SIZE}}{{UNIT}};',
 				],
 			]
 		);
@@ -457,7 +462,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
 					],
 				],
 				'selectors' => [
-					'{{WRAPPER}} .ekit_modal-searchPanel .ekit-search-panel' => 'max-width: {{SIZE}}{{UNIT}};',
+                    '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-panel' => 'max-width: {{SIZE}}{{UNIT}};',
 				],
 			]
 		);
@@ -476,8 +481,8 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
                     ],
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .ekit_modal-searchPanel .ekit-search-group .ekit_search-button i, 
-                    {{WRAPPER}} .ekit_modal-searchPanel .ekit-search-group .ekit_search-button svg' => 'font-size: {{SIZE}}{{UNIT}}; max-width: {{SIZE}}{{UNIT}};',
+                    '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-group .ekit_search-button i' => 'font-size: {{SIZE}}{{UNIT}}; max-width: {{SIZE}}{{UNIT}};',
+                    '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-group .ekit_search-button svg' => 'font-size: {{SIZE}}{{UNIT}}; max-width: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -496,7 +501,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
 					],
 				],
 				'selectors' => [
-					'{{WRAPPER}} .ekit_modal-searchPanel .ekit-search-group .ekit_search-button' => 'right: {{SIZE}}{{UNIT}};',
+                    '.ekit-popup-{{ID}} .ekit_modal-searchPanel .ekit-search-group .ekit_search-button' => 'right: {{SIZE}}{{UNIT}};',
 				],
 			]
 		);
@@ -507,7 +512,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
 				'label' => esc_html__( 'Background Overlay Color', 'elementskit-lite' ),
 				'type' => \Elementor\Controls_Manager::COLOR,
 				'selectors' => [
-					'{{WRAPPER}} .mfp-bg.ekit-promo-popup' => 'background-color: {{VALUE}}',
+                    '.ekit-popup-{{ID}} ' => 'background-color: {{VALUE}}',
 				],
                 'separator' => 'before',
 			]
@@ -534,7 +539,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
                 ],
                 'toggle' => true,
                 'selectors' => [
-                    '{{WRAPPER}} .ekit-wid-con .ekit-promo-popup > .mfp-container > .mfp-content' => 'vertical-align: {{VALUE}};',
+                    '.ekit-popup-{{ID}} > .mfp-container > .mfp-content' => 'vertical-align: {{VALUE}};',
                 ],
             ]
         );
@@ -546,7 +551,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
                 'type' => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', '%', 'em' ],
                 'selectors' => [
-                    '{{WRAPPER}} .ekit-wid-con .ekit-promo-popup > .mfp-container > .mfp-content' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '.ekit-popup-{{ID}} > .mfp-container > .mfp-content' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ],
             ]
         );
@@ -575,7 +580,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
 					'max' => 100,
 				],
                 'selectors' => [
-                    '{{WRAPPER}} .ekit-promo-popup .mfp-close' => 'border-radius: {{SIZE}}{{UNIT}};',
+                    '.ekit-popup-{{ID}}.ekit-promo-popup .mfp-close' => 'border-radius: {{SIZE}}{{UNIT}};',
                 ],
 
             ]
@@ -594,8 +599,8 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
 					],
 				],
                 'selectors' => [
-                    '{{WRAPPER}} .ekit-promo-popup .mfp-close' => 'height: {{SIZE}}{{UNIT}}; width: {{SIZE}}{{UNIT}}; line-height: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .ekit-promo-popup .mfp-close:hover' => 'width: {{SIZE}}{{UNIT}};',
+                    '.ekit-popup-{{ID}}.ekit-promo-popup .mfp-close' => 'height: {{SIZE}}{{UNIT}}; width: {{SIZE}}{{UNIT}}; line-height: {{SIZE}}{{UNIT}};',
+                    '.ekit-popup-{{ID}}.ekit-promo-popup .mfp-close:hover' => 'width: {{SIZE}}{{UNIT}};',
                 ],
 
             ]
@@ -616,7 +621,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
                 'label' =>esc_html__( 'Color', 'elementskit-lite' ),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .ekit-promo-popup .mfp-close' => 'color: {{VALUE}}; border-color: {{VALUE}}',
+                    '.ekit-popup-{{ID}}.ekit-promo-popup .mfp-close' => 'color: {{VALUE}}; border-color: {{VALUE}}',
                 ],
             ]
         );
@@ -627,7 +632,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
                 'label' =>esc_html__( 'Background Color', 'elementskit-lite' ),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .ekit-promo-popup .mfp-close' => 'background-color: {{VALUE}};',
+                    '.ekit-popup-{{ID}}.ekit-promo-popup .mfp-close' => 'background-color: {{VALUE}};',
                 ],
             ]
         );
@@ -646,7 +651,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
                 'label' =>esc_html__( 'Color', 'elementskit-lite' ),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .ekit-promo-popup .mfp-close:hover' => 'color: {{VALUE}}; border-color: {{VALUE}}',
+                    '.ekit-popup-{{ID}}.ekit-promo-popup .mfp-close:hover' => 'color: {{VALUE}}; border-color: {{VALUE}}',
                 ],
             ]
         );
@@ -657,7 +662,7 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
                 'label' =>esc_html__( 'Background Color', 'elementskit-lite' ),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .ekit-promo-popup .mfp-close:hover' => 'background-color: {{VALUE}};',
+                    '.ekit-popup-{{ID}}.ekit-promo-popup .mfp-close:hover' => 'background-color: {{VALUE}};',
                 ],
             ]
         );
@@ -690,9 +695,12 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
         $language_prefix = (!function_exists('pll_current_language') ? '' : pll_current_language());
 
 		$ekit_search_link = apply_filters('ekit_search_link', home_url( '/'.$language_prefix ));
-		$placeholder_and_label = $settings['ekit_search_placeholder_text']; 
+		$placeholder_and_label = $settings['ekit_search_placeholder_text'];
+		// Persistent accessible name for the search field: reuse the placeholder text
+		// when set (placeholders alone are an unreliable label), otherwise "Search".
+		$ekit_search_field_label = ( '' !== trim( (string) $placeholder_and_label ) ) ? $placeholder_and_label : esc_html__( 'Search', 'elementskit-lite' );
         ?>
-        <a href="#ekit_modal-popup-<?php echo esc_attr($this->get_id()); ?>" class="ekit_navsearch-button ekit-modal-popup" aria-label="navsearch-button">
+        <a href="#ekit_modal-popup-<?php echo esc_attr($this->get_id()); ?>" class="ekit_navsearch-button ekit-modal-popup" role="button" aria-haspopup="dialog" aria-label="<?php echo esc_attr__( 'Search', 'elementskit-lite' ); ?>">
             <?php
                 // new icon
                 $migrated = isset( $settings['__fa4_migrated']['ekit_search_icons'] );
@@ -710,12 +718,12 @@ class ElementsKit_Widget_Header_Search extends Widget_Base
         </a>
         <!-- language switcher strart -->
         <!-- xs modal -->
-        <div class="zoom-anim-dialog mfp-hide ekit_modal-searchPanel" id="ekit_modal-popup-<?php echo esc_attr($this->get_id()); ?>">
+        <div class="zoom-anim-dialog mfp-hide ekit_modal-searchPanel" id="ekit_modal-popup-<?php echo esc_attr($this->get_id()); ?>" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr__( 'Search', 'elementskit-lite' ); ?>">
             <div class="ekit-search-panel">
             <!-- Polylang search - thanks to Alain Melsens -->
                 <form role="search" method="get" class="ekit-search-group" action="<?php echo esc_url( $ekit_search_link ); ?>">
-                    <input type="search" class="ekit_search-field" aria-label="search-form" placeholder="<?php echo esc_attr($placeholder_and_label); ?>" value="<?php echo esc_attr(get_search_query()); ?>" name="s">
-					<button type="submit" class="ekit_search-button" aria-label="search-button">
+                    <input type="search" class="ekit_search-field" aria-label="<?php echo esc_attr($ekit_search_field_label); ?>" placeholder="<?php echo esc_attr($placeholder_and_label); ?>" value="<?php echo esc_attr(get_search_query()); ?>" name="s">
+					<button type="submit" class="ekit_search-button" aria-label="<?php echo esc_attr__( 'Search', 'elementskit-lite' ); ?>">
                         <?php
                             // new icon
                             $migrated = isset( $settings['__fa4_migrated']['ekit_search_icons'] );

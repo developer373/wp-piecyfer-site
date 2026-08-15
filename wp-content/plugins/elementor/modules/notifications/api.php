@@ -1,6 +1,7 @@
 <?php
 namespace Elementor\Modules\Notifications;
 
+use Elementor\Includes\EditorAssetsAPI;
 use Elementor\User;
 
 class API {
@@ -30,31 +31,16 @@ class API {
 	}
 
 	private static function get_notifications( $force_request = false ) {
-		$notifications = self::get_transient( '_elementor_notifications_data' );
-
-		if ( $force_request || false === $notifications ) {
-			$notifications = static::fetch_data();
-
-			static::set_transient( '_elementor_notifications_data', $notifications, '+1 hour' );
-		}
+		$editor_assets_api = new EditorAssetsAPI( [
+			EditorAssetsAPI::ASSETS_DATA_URL => self::NOTIFICATIONS_URL,
+			EditorAssetsAPI::ASSETS_DATA_TRANSIENT_KEY => '_elementor_notifications_data',
+			EditorAssetsAPI::ASSETS_DATA_KEY => 'notifications',
+			EditorAssetsAPI::ASSETS_DATA_EXPIRATION => '+12 hours',
+		] );
+		$notifications = $editor_assets_api->get_assets_data( $force_request );
+		$notifications = apply_filters( 'elementor/core/admin/notifications', $notifications );
 
 		return $notifications;
-	}
-
-	private static function fetch_data() : array {
-		$response = wp_remote_get( self::NOTIFICATIONS_URL );
-
-		if ( is_wp_error( $response ) ) {
-			return [];
-		}
-
-		$data = json_decode( wp_remote_retrieve_body( $response ), true );
-
-		if ( empty( $data['notifications'] ) || ! is_array( $data['notifications'] ) ) {
-			return [];
-		}
-
-		return $data['notifications'];
 	}
 
 	private static function add_to_array( $filtered_notifications, $notification ) {
@@ -88,7 +74,7 @@ class API {
 			// Reset results for each condition.
 			$result = false;
 			switch ( $condition['type'] ) {
-				case 'wordpress': // phpcs:ignore WordPress.WP.CapitalPDangit.Misspelled
+				case 'wordpress': // phpcs:ignore WordPress.WP.CapitalPDangit.MisspelledInText
 					// include an unmodified $wp_version
 					include ABSPATH . WPINC . '/version.php';
 					$result = version_compare( $wp_version, $condition['version'], $condition['operator'] );
@@ -102,7 +88,7 @@ class API {
 					break;
 				case 'plugin':
 					if ( ! function_exists( 'is_plugin_active' ) ) {
-						require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+						require_once ABSPATH . 'wp-admin/includes/plugin.php';
 					}
 
 					$is_plugin_active = is_plugin_active( $condition['plugin'] );
@@ -152,28 +138,5 @@ class API {
 		}
 
 		return $result;
-	}
-
-	private static function get_transient( $cache_key ) {
-		$cache = get_option( $cache_key );
-
-		if ( empty( $cache['timeout'] ) ) {
-			return false;
-		}
-
-		if ( current_time( 'timestamp' ) > $cache['timeout'] ) {
-			return false;
-		}
-
-		return json_decode( $cache['value'], true );
-	}
-
-	private static function set_transient( $cache_key, $value, $expiration = '+12 hours' ) {
-		$data = [
-			'timeout' => strtotime( $expiration, current_time( 'timestamp' ) ),
-			'value' => json_encode( $value ),
-		];
-
-		return update_option( $cache_key, $data, false );
 	}
 }

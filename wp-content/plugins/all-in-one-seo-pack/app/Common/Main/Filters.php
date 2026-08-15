@@ -44,6 +44,10 @@ abstract class Filters {
 		// This action needs to run on AJAX/cron for scheduled rewritten posts in Yoast Duplicate Post.
 		add_action( 'duplicate_post_after_rewriting', [ $this, 'updateRescheduledPostMeta' ], 10, 2 );
 
+		// These need to run on AJAX/cron too so that scheduled tasks (e.g. LLMs.txt generation) exclude internal CPTs.
+		add_filter( 'aioseo_public_post_types', [ $this, 'removeInvalidPublicPostTypes' ] );
+		add_filter( 'aioseo_public_taxonomies', [ $this, 'removeInvalidPublicTaxonomies' ] );
+
 		if ( wp_doing_ajax() || wp_doing_cron() ) {
 			return;
 		}
@@ -58,6 +62,8 @@ abstract class Filters {
 		if ( isset( $_SERVER['REQUEST_URI'] ) && preg_match( '#(/default-sitemap\.xsl)$#i', (string) sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) ) ) {
 			add_filter( 'weglot_active_translation_before_treat_page', '__return_false' );
 		}
+
+		add_filter( 'wpml_tm_adjust_translation_fields', [ $this, 'defineMetaFieldsForWpml' ] );
 
 		if ( isset( $_SERVER['REQUEST_URI'] ) && preg_match( '#(\.xml)$#i', (string) sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) ) ) {
 			add_filter( 'jetpack_boost_should_defer_js', '__return_false' );
@@ -82,9 +88,6 @@ abstract class Filters {
 		// Clear the site authors cache.
 		add_action( 'profile_update', [ $this, 'clearAuthorsCache' ] );
 		add_action( 'user_register', [ $this, 'clearAuthorsCache' ] );
-
-		add_filter( 'aioseo_public_post_types', [ $this, 'removeInvalidPublicPostTypes' ] );
-		add_filter( 'aioseo_public_taxonomies', [ $this, 'removeInvalidPublicTaxonomies' ] );
 
 		add_action( 'admin_print_scripts', [ $this, 'removeEmojiDetectionScripts' ], 0 );
 
@@ -137,7 +140,7 @@ abstract class Filters {
 	 * Resets the current user if bbPress is active.
 	 * We have to do this because our calls to wp_get_current_user() set the current user early and this breaks core functionality in bbPress.
 	 *
-	 * @link https://github.com/awesomemotive/aioseo/issues/22300
+
 	 *
 	 * @since 4.1.5
 	 *
@@ -153,7 +156,7 @@ abstract class Filters {
 	/**
 	 * Removes the bbPress title filter when adding a new reply with empty title to avoid fatal error.
 	 *
-	 * @link https://github.com/awesomemotive/aioseo/issues/4183
+
 	 *
 	 * @since 4.3.1
 	 *
@@ -396,16 +399,49 @@ abstract class Filters {
 	 *
 	 * @since 4.1.9
 	 *
-	 * @param  array[object]|array[string] $postTypes The post types.
-	 * @return array[object]|array[string]            The filtered post types.
+	 * @param  object[]|string[] $postTypes The post types.
+	 * @return array                        The filtered post types.
 	 */
 	public function removeInvalidPublicPostTypes( $postTypes ) {
 		$postTypesToRemove = [
 			'fusion_element', // Avada
 			'elementor_library',
+			'e-floating-buttons', // Elementor floating buttons / contact widgets.
+			'elementor_component', // Elementor reusable components.
 			'redirect_rule', // Safe Redirect Manager
 			'seedprod',
 			'tcb_lightbox',
+			'bricks_template', // Bricks Builder
+			'_et_pb_speculation', // Divi Visual Builder prerender post type.
+
+			// Thrive Themes internal post types.
+			'tva_module',
+			'tvo_display',
+			'tvo_capture',
+			'tva_module',
+			'tve_lead_1c_signup',
+			'tve_form_type',
+			'tvd_login_edit',
+			'tve_global_cond_set',
+			'tve_cond_display',
+			'tve_lead_2s_lightbox',
+			'tcb_symbol',
+			'td_nm_notification',
+			'tvd_content_set',
+			'tve_saved_lp',
+			'tve_notifications',
+			'tve_user_template',
+			'tve_video_data',
+			'tva_course_type',
+			'tva-acc-restriction',
+			'tva_course_overview',
+			'tve_ult_schedule',
+			'tqb_optin',
+			'tqb_splash',
+			'tva_certificate',
+			'tva_course_overview',
+
+			// BuddyPress post types.
 			BuddyPressIntegration::getEmailCptSlug()
 		];
 
@@ -428,19 +464,21 @@ abstract class Filters {
 	 *
 	 * @since 4.2.4
 	 *
-	 * @param  array[object]|array[string] $taxonomies The taxonomies.
-	 * @return array[object]|array[string]             The filtered taxonomies.
+	 * @param  object[]|string[] $taxonomies The taxonomies.
+	 * @return array                         The filtered taxonomies.
 	 */
 	public function removeInvalidPublicTaxonomies( $taxonomies ) {
-		// Check if the Avada Builder plugin is enabled.
-		if ( ! defined( 'FUSION_BUILDER_VERSION' ) ) {
-			return $taxonomies;
-		}
-
 		$taxonomiesToRemove = [
 			'fusion_tb_category',
 			'element_category',
-			'template_category'
+			'template_category',
+
+			// Bricks Builder internal taxonomies.
+			'template_tag',
+			'template_bundle',
+
+			// Thrive Themes internal taxonomies.
+			'tcb_symbols_tax'
 		];
 
 		foreach ( $taxonomies as $index => $taxonomy ) {
@@ -574,5 +612,34 @@ abstract class Filters {
 		}
 
 		return $tables;
+	}
+
+	/**
+	 * Defines specific meta fields for WPML so character limits can be applied when auto-translating fields.
+	 *
+	 * @since 4.8.3.2
+	 *
+	 * @param  array $fields The fields.
+	 * @return array         The modified fields.
+	 */
+	public function defineMetaFieldsForWpml( $fields ) {
+		foreach ( $fields as &$field ) {
+			if ( empty( $field['field_type'] ) ) {
+				continue;
+			}
+
+			$fieldKey = strtolower( preg_replace( '/^(field-)(.*)(-0)$/', '$2', $field['field_type'] ) );
+
+			switch ( $fieldKey ) {
+				case '_aioseo_title':
+					$field['purpose'] = 'seo_title';
+					break;
+				case '_aioseo_description':
+					$field['purpose'] = 'seo_meta_description';
+					break;
+			}
+		}
+
+		return $fields;
 	}
 }

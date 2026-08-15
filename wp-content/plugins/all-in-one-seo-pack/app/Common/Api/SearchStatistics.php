@@ -96,12 +96,9 @@ class SearchStatistics {
 	 *
 	 * @since 4.3.0
 	 *
-	 * @param  \WP_REST_Request  $request The REST Request
 	 * @return \WP_REST_Response          The response.
 	 */
-	public static function deleteAuth( $request ) {
-		$body = $request->get_json_params();
-
+	public static function deleteAuth() {
 		if ( ! aioseo()->searchStatistics->api->auth->isConnected() ) {
 			return new \WP_REST_Response( [
 				'success' => false,
@@ -109,21 +106,15 @@ class SearchStatistics {
 			], 200 );
 		}
 
-		$force   = ! empty( $body['force'] ) && true === $body['force'];
-		$deleted = aioseo()->searchStatistics->api->auth->delete( $force );
+		aioseo()->searchStatistics->api->auth->delete();
+		aioseo()->searchStatistics->cancelActions();
 
-		if ( $deleted || $force ) {
-			aioseo()->searchStatistics->cancelActions();
-
-			return new \WP_REST_Response( [
-				'success' => true,
-				'message' => 'Successfully deauthenticated.'
-			], 200 );
-		}
+		// Mark SEO Checklist item as incomplete.
+		aioseo()->seoChecklist->uncompleteCheck( 'connectGoogleSearchConsole' );
 
 		return new \WP_REST_Response( [
-			'success' => false,
-			'message' => 'Could not deauthenticate, please try again.'
+			'success' => true,
+			'message' => 'Successfully deauthenticated.'
 		], 200 );
 	}
 

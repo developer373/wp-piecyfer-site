@@ -1,10 +1,14 @@
 <?php
 /**
- * template: add element details and summary - start
+ * Template: add element details and summary - start
+ *
  * @since 3.35
+ * @package Click_To_Chat
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 ?>
 

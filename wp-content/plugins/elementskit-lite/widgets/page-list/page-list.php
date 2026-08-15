@@ -34,6 +34,11 @@ class ElementsKit_Widget_Page_List extends Widget_Base {
     public function get_help_url() {
         return 'https://wpmet.com/doc/page-list/';
     }
+
+    public function get_style_depends() {
+        return ['ekit-page-list'];
+    }
+
     protected function is_dynamic_content(): bool {
         return false;
     }
@@ -122,7 +127,7 @@ class ElementsKit_Widget_Page_List extends Widget_Base {
 				'default' => '',
 				'selectors' => [
 					'{{WRAPPER}} {{CURRENT_ITEM}} .elementor-icon-list-icon i' => 'color: {{VALUE}};',
-					'{{WRAPPER}} {{CURRENT_ITEM}} .elementor-icon-list-icon svg path'	=> 'stroke: {{VALUE}}; fill: {{VALUE}};'
+					'{{WRAPPER}} {{CURRENT_ITEM}} .elementor-icon-list-icon svg'	=> 'fill: {{VALUE}};'
 				],
 				'condition' => [
 					'ekit_page_list_show_icon' => 'yes'
@@ -311,7 +316,7 @@ class ElementsKit_Widget_Page_List extends Widget_Base {
 			]
 		);
 
-		
+
 		$this->end_controls_section();
 
 		$this->start_controls_section(
@@ -718,7 +723,7 @@ class ElementsKit_Widget_Page_List extends Widget_Base {
 				'default' => '',
 				'selectors' => [
 					'{{WRAPPER}} .elementor-icon-list-item:hover .elementor-icon-list-icon i' => 'color: {{VALUE}};',
-					'{{WRAPPER}} .elementor-icon-list-item:hover .elementor-icon-list-icon svg path'	=> 'stroke: {{VALUE}}; fill: {{VALUE}};'
+					'{{WRAPPER}} .elementor-icon-list-item:hover .elementor-icon-list-icon svg'	=> 'fill: {{VALUE}};'
 				],
 			]
 		);
@@ -989,12 +994,12 @@ class ElementsKit_Widget_Page_List extends Widget_Base {
     protected function render_raw( ) {
 		$settings = $this->get_settings_for_display();
 
-		$grid_d = empty($settings['page_grid']) ? '' : 'col-lg-'.$settings['page_grid'];
-		$grid_t = empty($settings['page_grid_tablet']) ? '' : 'col-md-'.$settings['page_grid_tablet'];
-		$grid_m = empty($settings['page_grid_mobile']) ? '' : 'col-xs-'.$settings['page_grid_mobile'];
+		$grid_d = empty($settings['page_grid']) ? '' : 'ekit-col-'.$settings['page_grid'];
+		$grid_t = empty($settings['page_grid_tablet']) ? '' : 'ekit-col-tablet-'.$settings['page_grid_tablet'];
+		$grid_m = empty($settings['page_grid_mobile']) ? '' : 'ekit-col-mobile-'.$settings['page_grid_mobile'];
 
-		$this->add_render_attribute( 'icon_list', 'class', 'elementor-icon-list-items' );
-		$this->add_render_attribute( 'icon_list', 'class', (!empty($settings['page_grid']) ? 'row' : '') );
+		$this->add_render_attribute( 'icon_list', 'class', 'elementor-icon-list-itemsfg' );
+		$this->add_render_attribute( 'icon_list', 'class', (!empty($settings['page_grid']) ? 'ekit-row' : '') );
 		$this->add_render_attribute( 'list_item', 'class', 'elementor-icon-list-item' );
 
 		if ( 'inline' === $settings['view'] ) {

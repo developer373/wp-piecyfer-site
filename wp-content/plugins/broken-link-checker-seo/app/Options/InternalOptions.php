@@ -37,6 +37,7 @@ class InternalOptions {
 		'internal' => [
 			'firstActivated'      => [ 'type' => 'number', 'default' => 0 ],
 			'lastActiveVersion'   => [ 'type' => 'string', 'default' => '0.0' ],
+			'lastSchemaVersion'   => [ 'type' => 'string', 'default' => '0.0' ],
 			'scanId'              => [ 'type' => 'string', 'default' => null ],
 			'minimumLinkScanDate' => [ 'type' => 'string', 'default' => null ],
 			'license'             => [
@@ -47,15 +48,16 @@ class InternalOptions {
 				'connectionError'  => [ 'type' => 'boolean', 'default' => false ],
 				'activationsError' => [ 'type' => 'boolean', 'default' => false ],
 				'requestError'     => [ 'type' => 'boolean', 'default' => false ],
-				'lastChecked'      => [ 'type' => 'number', 'default' => 0 ],
 				'level'            => [ 'type' => 'string' ],
-				'licenseKey'       => [ 'type' => 'string', 'default' => '' ],
+				'counts'           => [ 'type' => 'string', 'default' => '' ],
 				'quota'            => [ 'type' => 'number', 'default' => 0 ],
 				'quotaRemaining'   => [ 'type' => 'number', 'default' => 0 ]
+			],
+			'emails'              => [
+				'connectReminder'       => [ 'type' => 'number', 'default' => 0 ],
+				'connectReminderSecond' => [ 'type' => 'number', 'default' => 0 ],
+				'emailDisabled'         => [ 'type' => 'boolean', 'default' => false ]
 			]
-		],
-		'database' => [
-			'installedTables' => [ 'type' => 'string' ]
 		]
 		// phpcs:enable WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 	];

@@ -6,5 +6,6 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'League\\HTMLToMarkdown\\' => array($vendorDir . '/league/html-to-markdown/src'),
     'AIOSEO\\Plugin\\' => array($baseDir . '/app'),
 );

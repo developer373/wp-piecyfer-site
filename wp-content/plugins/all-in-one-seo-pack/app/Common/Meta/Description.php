@@ -49,7 +49,9 @@ class Description {
 		$description = aioseo()->options->searchAppearance->global->metaDescription;
 		if ( aioseo()->helpers->isWpmlActive() ) {
 			// Allow WPML to translate the title if the homepage is not static.
+			// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 			$description = apply_filters( 'wpml_translate_single_string', $description, 'admin_texts_aioseo_options_localized', '[aioseo_options_localized]searchAppearance_global_metaDescription' );
+			// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 		}
 
 		$description = $this->helpers->prepare( $description );
@@ -82,7 +84,11 @@ class Description {
 			}
 
 			if ( is_attachment() ) {
-				$post    = empty( $post ) ? aioseo()->helpers->getPost() : $post;
+				$post = empty( $post ) ? aioseo()->helpers->getPost() : $post;
+				if ( empty( $post ) ) {
+					return '';
+				}
+
 				$caption = wp_get_attachment_caption( $post->ID );
 
 				return $caption ? $this->helpers->prepare( $caption ) : $this->helpers->prepare( $post->post_content );

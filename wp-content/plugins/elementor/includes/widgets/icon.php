@@ -74,6 +74,10 @@ class Widget_Icon extends Widget_Base {
 		return [ 'basic' ];
 	}
 
+	public function has_widget_inner_wrapper(): bool {
+		return ! Plugin::$instance->experiments->is_feature_active( 'e_optimized_markup' );
+	}
+
 	/**
 	 * Get widget keywords.
 	 *
@@ -181,18 +185,23 @@ class Widget_Icon extends Widget_Base {
 				'label' => esc_html__( 'Alignment', 'elementor' ),
 				'type' => Controls_Manager::CHOOSE,
 				'options' => [
-					'left' => [
-						'title' => esc_html__( 'Left', 'elementor' ),
+					'start' => [
+						'title' => esc_html__( 'Start', 'elementor' ),
 						'icon' => 'eicon-text-align-left',
 					],
 					'center' => [
 						'title' => esc_html__( 'Center', 'elementor' ),
 						'icon' => 'eicon-text-align-center',
 					],
-					'right' => [
-						'title' => esc_html__( 'Right', 'elementor' ),
+					'end' => [
+						'title' => esc_html__( 'End', 'elementor' ),
 						'icon' => 'eicon-text-align-right',
 					],
+				],
+				'classes' => 'elementor-control-start-end',
+				'selectors_dictionary' => [
+					'left' => is_rtl() ? 'end' : 'start',
+					'right' => is_rtl() ? 'start' : 'end',
 				],
 				'default' => 'center',
 				'selectors' => [
@@ -328,7 +337,7 @@ class Widget_Icon extends Widget_Base {
 					'selected_icon[library]' => 'svg',
 				],
 				'selectors' => [
-					'{{WRAPPER}} .elementor-icon-wrapper svg' => 'width: 100%;',
+					'{{WRAPPER}} .elementor-icon-wrapper svg' => 'width: auto;',
 				],
 			]
 		);
@@ -461,13 +470,13 @@ class Widget_Icon extends Widget_Base {
 
 		?>
 		<div <?php $this->print_render_attribute_string( 'wrapper' ); ?>>
-			<<?php Utils::print_unescaped_internal_string( $icon_tag . ' ' . $this->get_render_attribute_string( 'icon-wrapper' ) ); ?>>
+			<<?php Utils::print_validated_html_tag( $icon_tag ); ?> <?php $this->print_render_attribute_string( 'icon-wrapper' ); ?>>
 			<?php if ( $is_new || $migrated ) :
 				Icons_Manager::render_icon( $settings['selected_icon'], [ 'aria-hidden' => 'true' ] );
 			else : ?>
 				<i <?php $this->print_render_attribute_string( 'icon' ); ?>></i>
 			<?php endif; ?>
-			</<?php Utils::print_unescaped_internal_string( $icon_tag ); ?>>
+			</<?php Utils::print_validated_html_tag( $icon_tag ); ?>>
 		</div>
 		<?php
 	}
@@ -487,19 +496,24 @@ class Widget_Icon extends Widget_Base {
 			return;
 		}
 
-		let link = '';
+		let iconTag = 'div';
 
-		if ( settings.link.url ) {
-			view.addRenderAttribute( 'link_url', 'href', elementor.helpers.sanitizeUrl( settings.link.url ) );
-			link = view.getRenderAttributeString( 'link_url' );
+		if ( settings.link?.url ) {
+			view.addRenderAttribute( 'link_url', 'href', elementor.helpers.sanitizeUrl( settings.link?.url ) );
+			iconTag = 'a';
 		}
 
 		const iconHTML = elementor.helpers.renderIcon( view, settings.selected_icon, { 'aria-hidden': true }, 'i' , 'object' ),
-			migrated = elementor.helpers.isIconMigrated( settings, 'selected_icon' ),
-			iconTag = link ? 'a' : 'div';
+			migrated = elementor.helpers.isIconMigrated( settings, 'selected_icon' );
+
+		view.addRenderAttribute( 'icon', 'class', 'elementor-icon' );
+
+		if ( '' !== settings.hover_animation ) {
+			view.addRenderAttribute( 'icon', 'class', 'elementor-animation-' + settings.hover_animation );
+		}
 		#>
 		<div class="elementor-icon-wrapper">
-			<{{{ iconTag }}} class="elementor-icon elementor-animation-{{ settings.hover_animation }}" {{{ link }}}>
+			<{{{ iconTag }}} {{{ view.getRenderAttributeString( 'icon' ) }}}  {{{ view.getRenderAttributeString( 'link_url' ) }}}>
 				<# if ( iconHTML && iconHTML.rendered && ( ! settings.icon || migrated ) ) { #>
 					{{{ iconHTML.value }}}
 				<# } else { #>
@@ -508,5 +522,9 @@ class Widget_Icon extends Widget_Base {
 			</{{{ iconTag }}}>
 		</div>
 		<?php
+	}
+
+	public function render_markdown(): string {
+		return '';
 	}
 }

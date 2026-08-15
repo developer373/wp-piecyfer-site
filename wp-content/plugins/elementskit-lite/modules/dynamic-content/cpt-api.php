@@ -11,35 +11,79 @@ class ElementsKit_Cpt_Api extends Core\Handler_Api {
 	}
 
 	public function get_content_editor() {
-		
-		if (current_user_can('edit_posts')) {
-			$content_key  = $this->request['key'];
-			$content_type = $this->request['type'];
-			$builder_post_title = 'dynamic-content-' . $content_type . '-' . $content_key;
-			$builder_post_id    = Utils::get_page_by_title( $builder_post_title, 'elementskit_content' );
 
-			if ( is_null( $builder_post_id ) ) {
-				$defaults        = array(
+		if ( ! is_user_logged_in() ) {
+			wp_die(
+				esc_html__( 'You must be logged in.', 'elementskit-lite' ),
+				401
+			);
+		}
+
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_die(
+				esc_html__( 'You are not allowed to access this page.', 'elementskit-lite' ),
+				403
+			);
+		}
+
+		$content_key        = sanitize_key( $this->request['key'] );
+		$content_type       = sanitize_key( $this->request['type'] );
+		$builder_post_title = 'dynamic-content-' . $content_type . '-' . $content_key;
+
+		$builder_post_slug = Utils::get_page_by_title( $builder_post_title, 'elementskit_content' );
+
+		if ( is_null( $builder_post_slug ) ) {
+
+			// Contributors -> pending
+			// Authors/Editors/Admins -> publish
+			$post_status = current_user_can( 'publish_posts' )
+				? 'publish'
+				: 'pending';
+
+			$builder_post_id = wp_insert_post(
+				array(
 					'post_content' => '',
 					'post_title'   => $builder_post_title,
-					'post_status'  => 'publish',
+					'post_name'    => sanitize_title( $builder_post_title ),
+					'post_status'  => $post_status,
 					'post_type'    => 'elementskit_content',
+					'post_author'  => get_current_user_id(),
+				)
+			);
+
+			if ( ! is_wp_error( $builder_post_id ) ) {
+				update_post_meta(
+					$builder_post_id,
+					'_wp_page_template',
+					'elementor_canvas'
 				);
-				$builder_post_id = wp_insert_post( $defaults );
-				update_post_meta( $builder_post_id, '_wp_page_template', 'elementor_canvas' );
-			} else {
-				$builder_post_id = $builder_post_id->ID;
 			}
+
 		} else {
-			wp_die( esc_html__( 'You are not allowed to access this page.', 'elementskit-lite' ) );
+
+			$builder_post_id = $builder_post_slug->ID;
+
+			// Prevent users editing other users' content unless they have permission.
+			if (
+				! current_user_can( 'edit_others_posts' ) &&
+				(int) get_post_field( 'post_author', $builder_post_id ) !== get_current_user_id()
+			) {
+				wp_die(
+					esc_html__( 'You are not allowed to edit this content.', 'elementskit-lite' ),
+					403
+				);
+			}
 		}
 
-		// if wpml is active and wpml not set for this post
+		// WPML support.
 		if ( defined( 'ICL_SITEPRESS_VERSION' ) ) {
-			$builder_post_id = $this->set_wpml_data($builder_post_id);
+			$builder_post_id = $this->set_wpml_data( $builder_post_id );
 		}
 
-		$url = admin_url( 'post.php?post=' . $builder_post_id . '&action=elementor' );
+		$url = admin_url(
+			'post.php?post=' . absint( $builder_post_id ) . '&action=elementor'
+		);
+
 		wp_safe_redirect( $url );
 		exit;
 	}

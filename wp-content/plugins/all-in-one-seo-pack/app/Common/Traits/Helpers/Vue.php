@@ -8,6 +8,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use AIOSEO\Plugin\Common\Integrations\WpCode as WpCodeIntegration;
 use AIOSEO\Plugin\Common\Models;
+use AIOSEO\Plugin\Common\SpellChecker\Dictionary;
+use AIOSEO\Plugin\Common\SpellChecker\SafeWords;
 use AIOSEO\Plugin\Common\Tools;
 
 /**
@@ -16,33 +18,6 @@ use AIOSEO\Plugin\Common\Tools;
  * @since 4.1.4
  */
 trait Vue {
-	/**
-	 * Holds the data for Vue.
-	 *
-	 * @since 4.4.9
-	 *
-	 * @var array
-	 */
-	private $data = [];
-
-	/**
-	 * Optional arguments for setting the data.
-	 *
-	 * @since 4.4.9
-	 *
-	 * @var array
-	 */
-	private $args = [];
-
-	/**
-	 * Holds the cached data.
-	 *
-	 * @since 4.5.1
-	 *
-	 * @var array
-	 */
-	private $cache = [];
-
 	/**
 	 * Returns the data for Vue.
 	 *
@@ -74,13 +49,67 @@ trait Vue {
 		$this->setSearchAppearanceData();
 		$this->setSocialNetworksData();
 		$this->setSeoRevisionsData();
+		$this->setAiBulkGenerateData();
 		$this->setToolsOrSettingsData();
-		$this->setPageBuilderData();
 		$this->setWritingAssistantData();
+		$this->setBreadcrumbsData();
+		$this->setSeoAnalyzerData();
+		$this->setAiData();
+		$this->setAiAssistantData();
+		$this->setAiImageGeneratorData();
+		$this->setAiInsightsData();
+		$this->setGeneralSettingsData();
 
 		$this->cache[ $hash ] = $this->data;
 
 		return $this->cache[ $hash ];
+	}
+
+	/**
+	 * Removes site-global configuration from a Vue data payload for users who cannot manage AIOSEO.
+	 *
+	 * Surfaces that localize the full payload for low-privilege users (the user's own profile page, the
+	 * posts/terms list details column) call this so site options and the admin email are not disclosed.
+	 * Pro features (e.g. Redirects) nest a copy of the payload under their own key, so that copy is
+	 * stripped as well.
+	 *
+	 * @since 4.9.10
+	 *
+	 * @param  array $data A Vue data payload from {@see getVueData()}.
+	 * @return array       The payload, with site-global configuration removed for non-managers.
+	 */
+	public function filterPrivilegedVueData( $data ) {
+		if ( aioseo()->access->canManage() ) {
+			return $data;
+		}
+
+		$data = $this->stripPrivilegedVueData( $data );
+
+		// Pro features nest a copy of the payload under their own key (e.g. 'redirects'), which would
+		// otherwise re-expose the groups removed above.
+		if ( ! empty( $data['redirects'] ) && is_array( $data['redirects'] ) ) {
+			$data['redirects'] = $this->stripPrivilegedVueData( $data['redirects'] );
+		}
+
+		return $data;
+	}
+
+	/**
+	 * Removes the site-global configuration groups from a single Vue data payload level.
+	 *
+	 * @since 4.9.10
+	 *
+	 * @param  array $data A Vue data payload level.
+	 * @return array       The payload level without site-global configuration.
+	 */
+	private function stripPrivilegedVueData( $data ) {
+		unset( $data['options'], $data['internalOptions'], $data['dynamicOptions'] );
+
+		if ( isset( $data['data']['adminEmail'] ) ) {
+			unset( $data['data']['adminEmail'] );
+		}
+
+		return $data;
 	}
 
 	/**
@@ -91,9 +120,12 @@ trait Vue {
 	 * @return void
 	 */
 	private function setInitialData() {
-		$screen           = aioseo()->helpers->getCurrentScreen();
-		$isStaticHomePage = 'page' === get_option( 'show_on_front' );
-		$staticHomePage   = intval( get_option( 'page_on_front' ) );
+		$screen             = aioseo()->helpers->getCurrentScreen();
+		$isStaticHomePage   = 'page' === get_option( 'show_on_front' );
+		$staticHomePage     = intval( get_option( 'page_on_front' ) );
+		$themeVersion       = aioseo()->helpers->getThemeVersion();
+		$themeParentVersion = aioseo()->helpers->getThemeVersion( true );
+		$settingsPagePath   = 'admin.php?page=aioseo-settings';
 
 		$this->data = [
 			'page'               => $this->args['page'],
@@ -105,15 +137,20 @@ trait Vue {
 			],
 			'internalOptions'    => aioseo()->internalOptions->all(),
 			'options'            => aioseo()->options->all(),
+			'sensitiveOptions'   => array_merge(
+				aioseo()->sensitiveOptions->allHas(),
+				! empty( aioseo()->networkSensitiveOptions ) ? aioseo()->networkSensitiveOptions->allHas() : []
+			),
 			'dynamicOptions'     => aioseo()->dynamicOptions->all(),
 			'deprecatedOptions'  => aioseo()->internalOptions->getAllDeprecatedOptions( true ),
-			'settings'           => aioseo()->settings->all(),
+			'settings'           => aioseo()->settings ? aioseo()->settings->all() : [],
 			'additional_scripts' => apply_filters( 'aioseo_vue_additional_scripts_enabled', true ),
 			'tags'               => aioseo()->tags->all( true ),
 			'nonce'              => wp_create_nonce( 'wp_rest' ),
 			'urls'               => [
 				'domain'            => $this->getSiteDomain(),
 				'mainSiteUrl'       => $this->getSiteUrl(),
+				'siteFavicon'       => get_site_icon_url(),
 				'siteLogo'          => aioseo()->helpers->getSiteLogoUrl(),
 				'home'              => home_url(),
 				'restUrl'           => aioseo()->helpers->getRestUrl(),
@@ -122,9 +159,10 @@ trait Vue {
 				'assetsPath'        => aioseo()->core->assets->getAssetsPath(),
 				'generalSitemapUrl' => aioseo()->sitemap->helpers->getUrl( 'general' ),
 				'rssSitemapUrl'     => aioseo()->sitemap->helpers->getUrl( 'rss' ),
+				'llmsUrl'           => aioseo()->helpers->getLlmsUrl(),
 				'robotsTxtUrl'      => $this->getSiteUrl() . '/robots.txt',
-				'blockedBotsLogUrl' => wp_upload_dir()['baseurl'] . '/aioseo/logs/aioseo-bad-bot-blocker.log',
-				'upgradeUrl'        => apply_filters( 'aioseo_upgrade_link', AIOSEO_MARKETING_URL ),
+				'marketingSiteUrl'  => $this->getMarketingSiteUrl(),
+				'upgradeUrl'        => apply_filters( 'aioseo_upgrade_link', AIOSEO_MARKETING_URL . 'lite-upgrade/' ),
 				'staticHomePage'    => 'page' === get_option( 'show_on_front' ) ? get_edit_post_link( get_option( 'page_on_front' ), 'url' ) : null,
 				'feeds'             => [
 					'rdf'            => get_bloginfo( 'rdf_url' ),
@@ -141,6 +179,7 @@ trait Vue {
 				], defined( 'AIOSEO_CONNECT_URL' ) ? AIOSEO_CONNECT_URL : 'https://connect.aioseo.com' ),
 				'aio'               => [
 					'about'            => is_network_admin() ? network_admin_url( 'admin.php?page=aioseo-about' ) : admin_url( 'admin.php?page=aioseo-about' ),
+					'aiSuite'          => admin_url( 'admin.php?page=aioseo-ai-insights' ),
 					'dashboard'        => admin_url( 'admin.php?page=aioseo' ),
 					'featureManager'   => admin_url( 'admin.php?page=aioseo-feature-manager' ),
 					'linkAssistant'    => admin_url( 'admin.php?page=aioseo-link-assistant' ),
@@ -150,13 +189,14 @@ trait Vue {
 					'searchAppearance' => admin_url( 'admin.php?page=aioseo-search-appearance' ),
 					'searchStatistics' => admin_url( 'admin.php?page=aioseo-search-statistics' ),
 					'seoAnalysis'      => admin_url( 'admin.php?page=aioseo-seo-analysis' ),
-					'settings'         => admin_url( 'admin.php?page=aioseo-settings' ),
+					'settings'         => admin_url( $settingsPagePath ),
 					'sitemaps'         => admin_url( 'admin.php?page=aioseo-sitemaps' ),
 					'socialNetworks'   => admin_url( 'admin.php?page=aioseo-social-networks' ),
 					'tools'            => admin_url( 'admin.php?page=aioseo-tools' ),
 					'wizard'           => admin_url( 'index.php?page=aioseo-setup-wizard' ),
-					'networkSettings'  => is_network_admin() ? network_admin_url( 'admin.php?page=aioseo-settings' ) : '',
+					'networkSettings'  => is_network_admin() ? network_admin_url( $settingsPagePath ) : '',
 					'seoRevisions'     => admin_url( 'admin.php?page=aioseo-seo-revisions' ),
+					'aiBulkGenerate'   => admin_url( 'admin.php?page=aioseo-ai-bulk-generate' )
 				],
 				'admin'             => [
 					'widgets'          => admin_url( 'widgets.php' ),
@@ -164,7 +204,6 @@ trait Vue {
 					'scheduledActions' => admin_url( '/tools.php?page=action-scheduler&status=pending&s=aioseo' ),
 					'generalSettings'  => admin_url( 'options-general.php' )
 				],
-				'truSeoWorker'      => aioseo()->core->assets->jsUrl( 'src/app/tru-seo/analyzer/main.js' )
 			],
 			'backups'            => [],
 			'importers'          => [],
@@ -176,9 +215,6 @@ trait Vue {
 					'rewriteExists'     => null,
 					'sitemapUrls'       => []
 				],
-				'logSizes'              => [
-					'badBotBlockerLog' => null
-				],
 				'status'                => [],
 				'htaccess'              => '',
 				'isMultisite'           => is_multisite(),
@@ -189,6 +225,7 @@ trait Vue {
 				'isBBPressActive'       => class_exists( 'bbPress' ),
 				'isClassicEditorActive' => $this->isClassicEditorActive(),
 				'isWooCommerceActive'   => $this->isWooCommerceActive(),
+				'isWooCommerceShopPage' => $this->isWooCommerceShopPage(),
 				'staticHomePage'        => $isStaticHomePage ? $staticHomePage : false,
 				'staticBlogPage'        => $this->getBlogPageId(),
 				'staticBlogPageTitle'   => get_the_title( $this->getBlogPageId() ),
@@ -197,6 +234,7 @@ trait Vue {
 				'isSsl'                 => is_ssl(),
 				'hasUrlTrailingSlash'   => '/' === user_trailingslashit( '' ),
 				'permalinkStructure'    => get_option( 'permalink_structure' ),
+				'usingPermalinks'       => aioseo()->helpers->usingPermalinks(),
 				'dateFormat'            => get_option( 'date_format' ),
 				'timeFormat'            => get_option( 'time_format' ),
 				'siteName'              => aioseo()->helpers->getWebsiteName(),
@@ -205,27 +243,35 @@ trait Vue {
 					'toc' => [
 						'hashPrefix' => apply_filters( 'aioseo_toc_hash_prefix', 'aioseo-' )
 					]
-				]
-			],
-			'user'               => [
-				'canManage'      => aioseo()->access->canManage(),
-				'capabilities'   => aioseo()->access->getAllCapabilities(),
-				'customRoles'    => $this->getCustomRoles(),
-				'data'           => wp_get_current_user(),
-				'locale'         => function_exists( 'get_user_locale' ) ? get_user_locale() : get_locale(),
-				'roles'          => $this->getUserRoles(),
-				'unfilteredHtml' => current_user_can( 'unfiltered_html' )
+				],
+				'vueComponentsDefaults' => $this->getVueComponentsDefaults(),
 			],
 			'plugins'            => $this->getPluginData(),
 			'postData'           => [
-				'postTypes'    => $this->getPublicPostTypes( false, false, true ),
-				'taxonomies'   => $this->getPublicTaxonomies( false, true ),
-				'archives'     => $this->getPublicPostTypes( false, true, true ),
-				'postStatuses' => $this->getPublicPostStatuses()
+				'postTypes'    => array_values( $this->getPublicPostTypes( false, false, true ) ),
+				'taxonomies'   => array_values( $this->getPublicTaxonomies( false, true ) ),
+				'archives'     => array_values( $this->getPublicPostTypes( false, true, true ) ),
+				'postStatuses' => array_values( $this->getPublicPostStatuses() )
 			],
-			'notifications'      => array_merge( Models\Notification::getNotifications( false ), [
+			'notifications'      => array_merge( Models\Notification::getNotifications( true ), [
 				'force' => $this->showNotificationsDrawer()
 			] ),
+			'newsroom'           => [
+				'items'      => array_map(
+					function ( $item ) {
+						// Tagged here rather than in the feed: the medium names the surface, and
+						// the same item is served to the widget and modal under their own.
+						$item['url'] = aioseo()->helpers->utmUrl( $item['url'], 'newsroom-drawer', null, false );
+						// Formatted here so the drawer shows the site's date format without
+						// reimplementing PHP's format tokens in JS.
+						$item['dateFormatted'] = aioseo()->newsroom->formatDate( $item['date'] );
+
+						return $item;
+					},
+					array_slice( aioseo()->newsroom->getItems(), 0, 6 )
+				),
+				'archiveUrl' => aioseo()->newsroom->getArchiveUrl( 'newsroom-drawer' )
+			],
 			'addons'             => aioseo()->addons->getAddons(),
 			'features'           => aioseo()->features->getFeatures(),
 			'version'            => AIOSEO_VERSION,
@@ -237,8 +283,59 @@ trait Vue {
 			],
 			'integration'        => $this->args['integration'],
 			'theme'              => [
-				'features' => aioseo()->helpers->getThemeFeatures()
+				'features'        => aioseo()->helpers->getThemeFeatures(),
+				'version'         => $themeVersion, // The active skin/child version
+				'parentVersion'   => $themeParentVersion, // The parent version (nullable)
+				'templateVersion' => $themeParentVersion ?? $themeVersion // Always the framework/base version
 			]
+		];
+
+		// In multisite, super admins may not have explicit roles on subsites.
+		// Ensure they have administrator role and capabilities for proper access.
+		$userData     = wp_get_current_user();
+		$roles        = $userData->roles;
+		$capabilities = $userData->allcaps;
+
+		// If the user is a network admin, and doesn't have a user on the subsite, give him admin role/caps.
+		if ( is_multisite() && is_super_admin() && empty( $roles ) ) {
+			$roles     = [ 'administrator' ];
+			$adminRole = get_role( 'administrator' );
+			if ( is_a( $adminRole, 'WP_Role' ) ) {
+				$capabilities = $adminRole->capabilities;
+			}
+		}
+
+		$this->data['user'] = [
+			'login'          => $userData->user_login,
+			'emailAddress'   => $userData->user_email,
+			'roles'          => $roles,
+			'capabilities'   => $capabilities,
+			'customRoles'    => $this->getCustomRoles(),
+			'userRoles'      => aioseo()->helpers->getUserRoles(),
+			'locale'         => function_exists( 'get_user_locale' ) ? get_user_locale() : get_locale(),
+			'unfilteredHtml' => current_user_can( 'unfiltered_html' ),
+			'canManage'      => aioseo()->access->canManage()
+		];
+
+		$dictionary                 = new Dictionary();
+		$safeWords                  = new SafeWords();
+		// TruSEO analyzes the post content, which is in the site language — not the
+		// editor's per-user admin locale. Resolve from get_locale() so the "Default"
+		// option matches the content and the backend pre-download in Activate/Updates.
+		$userLocaleResolved         = $dictionary->resolveUserLocale( get_locale() );
+		$this->data['spellChecker'] = [
+			'enabled'                 => (bool) aioseo()->options->advanced->spellChecker,
+			'dictionaryBaseUrl'       => $dictionary->getDictionaryBaseUrl(),
+			'safeWordsUrl'            => $safeWords->exists() ? $safeWords->getSafeWordsUrl() : '',
+			'safeWordsMetaUrl'        => $safeWords->matchCaseExists() ? $safeWords->getMatchCaseUrl() : '',
+			'settingsUrl'             => admin_url( $settingsPagePath ) . '#/advanced',
+			'userLocale'              => $userLocaleResolved['locale'],
+			'userLanguageLabel'       => $userLocaleResolved['nativeLabel'] ?: $userLocaleResolved['label'],
+			'userLocaleSupported'     => $userLocaleResolved['supported'],
+			'userLocaleHasSpellCheck' => $userLocaleResolved['hasSpellChecker'],
+			'userLocaleNeedsDownload' => $userLocaleResolved['needsDownload'],
+			'supportedLanguages'      => $dictionary->getSupportedLanguages(),
+			'installedLocales'        => $dictionary->getInstalledLocales()
 		];
 	}
 
@@ -261,7 +358,8 @@ trait Vue {
 	/**
 	 * Set Vue post data.
 	 *
-	 * @since 4.4.9
+	 * @since   4.4.9
+	 * @version 5.0.0.1 Keyword columns fall back to the legacy keyphrases column.
 	 *
 	 * @return void
 	 */
@@ -275,6 +373,7 @@ trait Vue {
 		$post           = Models\Post::getPost( $postId );
 		$wpPost         = get_post( $postId );
 		$staticHomePage = intval( get_option( 'page_on_front' ) );
+		$keywordColumns = Models\Post::getKeywordColumnsWithLegacyFallback( $post );
 
 		$this->data['currentPost'] = [
 			'context'                        => 'post',
@@ -290,9 +389,15 @@ trait Vue {
 			'keywords'                       => ! empty( $post->keywords ) ? $post->keywords : [],
 			'keyphrases'                     => Models\Post::getKeyphrasesDefaults( $post->keyphrases ),
 			'page_analysis'                  => Models\Post::getPageAnalysisDefaults( $post->page_analysis ),
+			'truseo'                         => Models\Post::getTruseoDefaults( $post->truseo ?? null ),
+			'focus_keyword'                  => $keywordColumns['focus_keyword'],
+			'additional_keywords'            => $keywordColumns['additional_keywords'],
+			'truseo_locale'                  => $post->truseo_locale,
+			'wooProduct'                     => aioseo()->helpers->getWooCommerceProductData( $postId ),
 			'loading'                        => [
 				'focus'      => false,
 				'additional' => [],
+				'score'      => false,
 			],
 			'type'                           => $postTypeObj->labels->singular_name,
 			'postType'                       => 'type' === $postTypeObj->name ? '_aioseo_type' : $postTypeObj->name,
@@ -300,6 +405,7 @@ trait Vue {
 			'postAuthor'                     => (int) $wpPost->post_author,
 			'isSpecialPage'                  => $this->isSpecialPage( $postId ),
 			'isTruSeoEligible'               => $this->isTruSeoEligible( $postId ),
+			'supportsPageAnalysis'           => $this->supportsPageAnalysis( $postId ),
 			'isStaticPostsPage'              => aioseo()->helpers->isStaticPostsPage(),
 			'isHomePage'                     => $postId === $staticHomePage,
 			'isWooCommercePageWithoutSchema' => $this->isWooCommercePageWithoutSchema( $postId ),
@@ -335,6 +441,7 @@ trait Vue {
 			'twitter_image_type'             => $post->twitter_image_type,
 			'twitter_title'                  => $post->twitter_title,
 			'twitter_description'            => $post->twitter_description,
+			'ai'                             => Models\Post::getDefaultAiOptions( $post->ai ),
 			'schema'                         => Models\Post::getDefaultSchemaOptions( $post->schema, aioseo()->helpers->getPost( $postId ) ),
 			'metaDefaults'                   => [
 				'title'       => aioseo()->meta->title->getPostTypeTitle( $postTypeObj->name ),
@@ -385,6 +492,8 @@ trait Vue {
 		$this->data['setupWizard']['isCompleted'] = aioseo()->standalone->setupWizard->isCompleted();
 		$this->data['seoOverview']                = aioseo()->postSettings->getPostTypesOverview();
 		$this->data['importers']                  = aioseo()->importExport->plugins();
+
+		$this->setSeoChecklistData();
 	}
 
 	/**
@@ -408,6 +517,7 @@ trait Vue {
 			$this->data['seoOverview']        = aioseo()->postSettings->getPostTypesOverview();
 			$this->data['searchStatistics']   = array_merge( $this->data['searchStatistics'], aioseo()->searchStatistics->getVueData() );
 			$this->data['keywordRankTracker'] = aioseo()->searchStatistics->keywordRankTracker->getVueData();
+			$this->data['indexStatus']        = aioseo()->searchStatistics->indexStatus->getVueData();
 		}
 	}
 
@@ -455,6 +565,8 @@ trait Vue {
 			'staticHomePageTitle'       => $isStaticHomePage ? aioseo()->meta->title->getTitle( $staticHomePage ) : '',
 			'staticHomePageDescription' => $isStaticHomePage ? aioseo()->meta->description->getDescription( $staticHomePage ) : '',
 		];
+
+		$this->setSeoChecklistData();
 	}
 
 	/**
@@ -511,12 +623,79 @@ trait Vue {
 	 */
 	private function setSeoRevisionsData() {
 		if ( 'post' === $this->args['page'] ) {
-			$this->data['seoRevisions'] = aioseo()->seoRevisions->getVueDataEdit();
+			$this->data['seoRevisions'] = aioseo()->seoRevisions->getVueDataEdit( $this->args['staticPostId'] ?? null );
 		}
 
 		if ( 'seo-revisions' === $this->args['page'] ) {
 			$this->data['seoRevisions'] = aioseo()->seoRevisions->getVueDataCompare();
 		}
+	}
+
+	/**
+	 * Set Vue AI bulk generate data.
+	 *
+	 * @since 4.9.6
+	 *
+	 * @return void
+	 */
+	private function setAiBulkGenerateData() {
+		if ( 'ai-bulk-generate' !== $this->args['page'] ) {
+			return;
+		}
+
+		// phpcs:disable HM.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Recommended
+		$ids = [];
+		if ( ! empty( $_GET['ids'] ) ) {
+			$ids = array_map( 'intval', explode( ',', sanitize_text_field( wp_unslash( $_GET['ids'] ) ) ) );
+		}
+
+		$type = 'title';
+		if ( ! empty( $_GET['type'] ) && in_array( $_GET['type'], [ 'title', 'description', 'alt' ], true ) ) {
+			$type = sanitize_text_field( wp_unslash( $_GET['type'] ) );
+		}
+		// phpcs:enable HM.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Recommended
+
+		$postType    = '';
+		$posts       = [];
+		if ( ! empty( $ids ) ) {
+			$isAlt       = 'alt' === $type;
+			$postObjects = get_posts( [
+				'post__in'               => $ids,
+				'post_type'              => 'any',
+				'post_status'            => 'any',
+				'posts_per_page'         => count( $ids ),
+				'orderby'                => 'post__in',
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false
+			] );
+
+			if ( $isAlt ) {
+				// Prime meta cache to avoid N+1 queries in wp_get_attachment_image_url().
+				update_postmeta_cache( $ids );
+			}
+
+			if ( ! empty( $postObjects ) ) {
+				$postType = $postObjects[0]->post_type;
+			}
+
+			foreach ( $postObjects as $post ) {
+				// Intentionally missing the translation domain to use the WordPress core translation.
+				$data = [ 'title' => $post->post_title ?: __( '(no title)' ) ]; // phpcs:ignore AIOSEO.Wp.I18n.MissingArgDomain, WordPress.WP.I18n.MissingArgDomain
+
+				if ( $isAlt ) {
+					$data['thumbnailUrl'] = wp_get_attachment_image_url( $post->ID, 'thumbnail' );
+				}
+
+				$posts[ $post->ID ] = $data;
+			}
+		}
+
+		$this->data['aiBulkGenerate'] = [
+			'ids'      => $ids,
+			'type'     => $type,
+			'postType' => $postType,
+			'posts'    => $posts
+		];
 	}
 
 	/**
@@ -543,9 +722,6 @@ trait Vue {
 				'rewriteExists'     => aioseo()->robotsTxt->rewriteRulesExist(),
 				'sitemapUrls'       => array_merge( aioseo()->sitemap->helpers->getSitemapUrlsPrefixed(), aioseo()->sitemap->helpers->extractSitemapUrlsFromRobotsTxt() )
 			];
-			$this->data['data']['logSizes']       = [
-				'badBotBlockerLog' => $this->convertFileSize( aioseo()->badBotBlocker->getLogSize() )
-			];
 			$this->data['data']['status']         = Tools\SystemStatus::getSystemStatusInfo();
 			$this->data['data']['htaccess']       = aioseo()->htaccess->getContents();
 			$this->data['data']['v3Options']      = ! empty( get_option( 'aioseop_options' ) );
@@ -566,29 +742,9 @@ trait Vue {
 			is_network_admin()
 		) {
 			$this->data['data']['network'] = [
-				'sites'   => aioseo()->helpers->getSites( aioseo()->settings->tablePagination['networkDomains'] ),
+				'sites'   => aioseo()->helpers->getSites(),
 				'backups' => []
 			];
-		}
-	}
-
-	/**
-	 * Set Vue Page Builder data.
-	 *
-	 * @since   4.4.9
-	 * @version 4.5.2 Renamed.
-	 *
-	 * @return void
-	 */
-	private function setPageBuilderData() {
-		if ( empty( $this->args['integration'] ) ) {
-			return;
-		}
-
-		if ( 'divi' === $this->args['integration'] ) {
-			// This needs to be dropped in order to prevent JavaScript errors in Divi's visual builder.
-			// Some of the data from the site analysis can contain HTML tags, e.g. the search preview, and somehow that causes JSON.parse to fail on our localized Vue data.
-			unset( $this->data['internalOptions']['internal']['siteAnalysis'] );
 		}
 	}
 
@@ -606,7 +762,7 @@ trait Vue {
 		$locale = [
 			'' => [
 				'domain' => $domain,
-				'lang'   => is_admin() && function_exists( 'get_user_locale' ) ? get_user_locale() : get_locale(),
+				'lang'   => is_admin() && function_exists( 'get_user_locale' ) ? get_user_locale() : get_locale()
 			],
 		];
 
@@ -621,7 +777,7 @@ trait Vue {
 
 			foreach ( $entry->translations as $translation ) {
 				// If any of the translated strings contains an HTML line break, we need to ignore it. Otherwise, logging into the admin breaks.
-				// https://github.com/awesomemotive/aioseo/issues/2074
+
 				if ( preg_match( '/<br[\s\/\\\\]*>/', (string) $translation ) ) {
 					continue 2;
 				}
@@ -672,5 +828,259 @@ trait Vue {
 		}
 
 		return $showNotificationsDrawer;
+	}
+
+	/**
+	 * Set Vue breadcrumbs data.
+	 *
+	 * @since 4.8.3
+	 *
+	 * @return void
+	 */
+	private function setBreadcrumbsData() {
+		if (
+			! empty( $this->args['page'] ) &&
+			'settings' !== $this->args['page'] &&
+			'post' !== $this->args['page'] &&
+			! aioseo()->helpers->isScreenBase( 'term' )
+		) {
+			return;
+		}
+
+		$this->data['breadcrumbs']['defaultTemplate'] = aioseo()->helpers->encodeOutputHtml( aioseo()->breadcrumbs->frontend->getDefaultTemplate() );
+	}
+
+	/**
+	 * Set Vue SEO Analyzer data.
+	 *
+	 * @since 4.8.3
+	 *
+	 * @return void
+	 */
+	private function setSeoAnalyzerData() {
+		if ( 'seo-analysis' !== $this->args['page'] ) {
+			return;
+		}
+
+		$this->data['analyzer'] = aioseo()->seoAnalysis->getVueData();
+	}
+
+	/**
+	 * Set Vue AI data.
+	 *
+	 * @since 4.9.6
+	 *
+	 * @return void
+	 */
+	private function setAiData() {
+		$this->data['ai'] = [
+			'options' => aioseo()->ai->options
+		];
+	}
+
+	/**
+	 * Set Vue AI Assistant data.
+	 *
+	 * @since 4.9.1
+	 *
+	 * @return void
+	 */
+	private function setAiAssistantData() {
+		if ( 'post' === $this->args['page'] ) {
+			$this->data['aiAssistant'] = aioseo()->ai->assistant->getVueDataEdit();
+		}
+	}
+
+	/**
+	 * Set Vue AI Image Generator data.
+	 *
+	 * @since 4.8.9
+	 *
+	 * @return void
+	 */
+	private function setAiImageGeneratorData() {
+		if ( 'post' === $this->args['page'] ) {
+			$this->data['aiImageGenerator'] = aioseo()->ai->image->getVueDataEdit();
+		}
+	}
+
+	/**
+	 * Returns the marketing site URL.
+	 *
+	 * @since 4.8.4
+	 *
+	 * @return string The marketing site URL.
+	 */
+	private function getMarketingSiteUrl() {
+		if ( defined( 'AIOSEO_MARKETING_SITE_URL' ) && AIOSEO_MARKETING_SITE_URL ) {
+			return AIOSEO_MARKETING_SITE_URL;
+		}
+
+		return 'https://aioseo.com/';
+	}
+
+	/**
+	 * Returns default values and settings for Vue components. These settings can be customized
+	 * by a filter.
+	 *
+	 * @since 4.8.7
+	 *
+	 * @return array The default values for Vue components.
+	 */
+	private function getVueComponentsDefaults() {
+		$defaults = [
+			'fieldGroupRepeater' => [
+				'maxGroups' => 50
+			]
+		];
+
+		return apply_filters( 'aioseo_vue_components_defaults', $defaults );
+	}
+
+	/**
+	 * Set Vue AI Insights data.
+	 *
+	 * @since   4.9.1
+	 * @version 4.9.8 Added the `mcp` sub-array with server-side status data for the AIOSEO MCP tab.
+	 *
+	 * @return void
+	 */
+	private function setAiInsightsData() {
+		if ( 'ai-insights' !== $this->args['page'] ) {
+			return;
+		}
+
+		$rateLimit = aioseo()->core->cache->get( 'ai_insights_rate_limit' );
+
+		$this->data['aiInsights'] = [
+			'rateLimit' => ! empty( $rateLimit ) ? $rateLimit : null,
+			'mcp'       => [
+				'abilitiesApiAvailable' => function_exists( 'wp_register_ability' ),
+				// Total across all plugins; 0 on WP 6.9+ means the Abilities API is being suppressed
+				// since Core always registers its own abilities.
+				'totalAbilities'        => function_exists( 'wp_get_abilities' ) ? count( wp_get_abilities() ) : 0,
+				'mcpAdapterActive'      => class_exists( '\\WP\\MCP\\Core\\McpAdapter' ),
+				'mcpAdapterInstalled'   => '' !== \AIOSEO\Plugin\Common\Api\AiAgents::getInstalledMcpAdapterFile(),
+				'hasAppPassword'        => $this->currentUserHasMcpAppPassword(),
+				// `supported` is core's HTTPS/local-env gate (replicated inline — the core helper
+				// is WP 5.9+); `available` also accounts for a security plugin or filter/constant
+				// disabling the feature. Each false-by-cause drives distinct guidance in the UI.
+				'appPasswordsSupported' => is_ssl() || 'local' === wp_get_environment_type(),
+				'appPasswordsAvailable' => $this->applicationPasswordsAvailable(),
+				'abilities'             => $this->getRegisteredMcpAbilities()
+			]
+		];
+	}
+
+	/**
+	 * Returns the AIOSEO abilities registered with the WordPress Abilities API.
+	 *
+	 * @since 4.9.8
+	 *
+	 * @return array The registered AIOSEO abilities with name, label, description and category data.
+	 */
+	private function getRegisteredMcpAbilities() {
+		if ( ! function_exists( 'wp_get_abilities' ) ) {
+			return [];
+		}
+
+		$categoryLabels = [];
+		if ( function_exists( 'wp_get_ability_categories' ) ) {
+			foreach ( wp_get_ability_categories() as $category ) {
+				$categoryLabels[ $category->get_slug() ] = $category->get_label();
+			}
+		}
+
+		$abilities = [];
+		foreach ( wp_get_abilities() as $ability ) {
+			$name = $ability->get_name();
+			if ( 0 !== strpos( $name, 'aioseo-' ) ) {
+				continue;
+			}
+
+			$category    = $ability->get_category();
+			$abilities[] = [
+				'name'          => $name,
+				'label'         => $ability->get_label(),
+				'description'   => $ability->get_description(),
+				'category'      => $category,
+				'categoryLabel' => ! empty( $categoryLabels[ $category ] ) ? $categoryLabels[ $category ] : $category
+			];
+		}
+
+		return $abilities;
+	}
+
+	/**
+	 * Checks whether Application Passwords can be generated for the current user.
+	 *
+	 * Returns false when the feature is disabled — by the HTTPS/local-env gate, a security
+	 * plugin, or the `wp_is_application_passwords_available[_for_user]` filter/constant.
+	 * The per-user core function internally calls the global one, so this covers every cause.
+	 *
+	 * @since 4.9.10
+	 *
+	 * @return bool
+	 */
+	private function applicationPasswordsAvailable() {
+		if ( ! function_exists( 'wp_is_application_passwords_available' ) ) {
+			return false;
+		}
+
+		$userId = get_current_user_id();
+		if ( $userId && function_exists( 'wp_is_application_passwords_available_for_user' ) ) {
+			return wp_is_application_passwords_available_for_user( $userId );
+		}
+
+		return wp_is_application_passwords_available();
+	}
+
+	/**
+	 * Checks whether the current user already has an AIOSEO MCP Application Password.
+	 *
+	 * @since 4.9.8
+	 *
+	 * @return bool Whether the current user has an Application Password generated by AIOSEO MCP.
+	 */
+	private function currentUserHasMcpAppPassword() {
+		$userId = get_current_user_id();
+		if ( ! $userId || ! class_exists( 'WP_Application_Passwords' ) ) {
+			return false;
+		}
+
+		foreach ( \WP_Application_Passwords::get_user_application_passwords( $userId ) as $appPassword ) {
+			if ( ! empty( $appPassword['app_id'] ) && 'aioseo-mcp' === $appPassword['app_id'] ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Set Vue General Settings data.
+	 *
+	 * @since 4.9.4
+	 *
+	 * @return void
+	 */
+	protected function setGeneralSettingsData() {
+		if ( 'settings' !== $this->args['page'] ) {
+			return;
+		}
+
+		$this->setSeoChecklistData();
+	}
+
+
+	/**
+	 * Set Vue SEO Checklist data.
+	 *
+	 * @since 4.9.4
+	 *
+	 * @return void
+	 */
+	protected function setSeoChecklistData() {
+		$this->data['seoChecklist'] = aioseo()->seoChecklist->getChecks();
 	}
 }

@@ -15,6 +15,25 @@ use AIOSEO\Plugin\Common\Integrations\BuddyPress as BuddyPressIntegration;
  */
 class Content {
 	/**
+	 * Methods that can be called dynamically based on sitemap index name.
+	 * This prevents collisions with user-defined post type slugs that match internal method names.
+	 *
+	 * @since 4.9.3
+	 *
+	 * @var array
+	 */
+	private $dynamicIndexMethods = [
+		'addl',
+		'author',
+		'date',
+		'postArchive',
+		'rss',
+		'bpActivity',
+		'bpGroup',
+		'bpMember'
+	];
+
+	/**
 	 * Returns the entries for the requested sitemap.
 	 *
 	 * @since 4.0.0
@@ -50,7 +69,11 @@ class Content {
 
 		// Check if requested index has a dedicated method.
 		$methodName = aioseo()->helpers->dashesToCamelCase( aioseo()->sitemap->indexName );
-		if ( method_exists( $this, $methodName ) ) {
+		if (
+			in_array( $methodName, $this->dynamicIndexMethods, true ) &&
+			method_exists( $this, $methodName ) &&
+			! in_array( aioseo()->sitemap->indexName, [ 'posts', 'terms' ], true ) // Skip posts and terms indexes because they are handled differently.
+		) {
 			return $this->$methodName();
 		}
 
@@ -114,7 +137,11 @@ class Content {
 
 		// Check if requested index has a dedicated method.
 		$methodName = aioseo()->helpers->dashesToCamelCase( aioseo()->sitemap->indexName );
-		if ( method_exists( $this, $methodName ) ) {
+		if (
+			in_array( $methodName, $this->dynamicIndexMethods, true ) &&
+			method_exists( $this, $methodName ) &&
+			! in_array( aioseo()->sitemap->indexName, [ 'posts', 'terms' ], true ) // Skip posts and terms indexes because they are handled differently.
+		) {
 			$res = $this->$methodName();
 
 			return ! empty( $res ) ? count( $res ) : 0;
@@ -299,12 +326,15 @@ class Content {
 
 			$url = get_post_type_archive_link( $postType );
 			if ( $url ) {
-				$entries[] = [
+				$entry = [
 					'loc'        => $url,
 					'lastmod'    => aioseo()->sitemap->helpers->lastModifiedPostTime( $postType ),
 					'changefreq' => aioseo()->sitemap->priority->frequency( 'archive' ),
 					'priority'   => aioseo()->sitemap->priority->priority( 'archive' ),
 				];
+
+				// To be consistent with our other entry filters, we need to pass the entry ID as well, but as null in this case.
+				$entries[] = apply_filters( 'aioseo_sitemap_archive_entry', $entry, null, $postType, 'archive' );
 			}
 		}
 
@@ -543,13 +573,16 @@ class Content {
 
 		$entries = [];
 		foreach ( $authors as $authorData ) {
-			$nicename  = $authorData->nicename ? $authorData->nicename : null;
-			$entries[] = [
-				'loc'        => ! empty( $authorData->authorUrl ) ? $authorData->authorUrl : get_author_posts_url( $authorData->ID, $nicename ),
+			$entry = [
+				'loc'        => ! empty( $authorData->authorUrl )
+					? $authorData->authorUrl
+					: get_author_posts_url( $authorData->ID, $authorData->nicename ?: '' ),
 				'lastmod'    => aioseo()->helpers->dateTimeToIso8601( $authorData->lastModified ),
 				'changefreq' => aioseo()->sitemap->priority->frequency( 'author' ),
 				'priority'   => aioseo()->sitemap->priority->priority( 'author' )
 			];
+
+			$entries[] = apply_filters( 'aioseo_sitemap_author_entry', $entry, $authorData->ID, $authorData->nicename, 'author' );
 		}
 
 		return apply_filters( 'aioseo_sitemap_author_archives', $entries );
@@ -587,14 +620,14 @@ class Content {
 			"SELECT
 				YEAR(post_date) AS `year`,
 				MONTH(post_date) AS `month`,
-				post_date_gmt,
-				post_modified_gmt
+				MAX(post_date_gmt) AS post_date_gmt,
+				MAX(post_modified_gmt) AS post_modified_gmt
 			FROM {$postsTable}
 			WHERE post_type = 'post' AND post_status = 'publish'
 			GROUP BY
 				YEAR(post_date),
 				MONTH(post_date)
-			ORDER BY post_date ASC 
+			ORDER BY post_date ASC
 			LIMIT 50000",
 			true
 		)->result();
@@ -603,23 +636,38 @@ class Content {
 			return [];
 		}
 
-		$entries = [];
-		$year    = '';
+		$yearMaxLastmod = [];
 		foreach ( $dates as $date ) {
-			$entry = [
-				'lastmod'    => aioseo()->helpers->dateTimeToIso8601( $this->getLastModified( $date ) ),
-				'changefreq' => aioseo()->sitemap->priority->frequency( 'date' ),
-				'priority'   => aioseo()->sitemap->priority->priority( 'date' ),
-			];
-
-			// Include each year only once.
-			if ( $year !== $date->year ) {
-				$year         = $date->year;
-				$entry['loc'] = get_year_link( $date->year );
-				$entries[]    = $entry;
+			$lastmod = $this->getLastModified( $date );
+			if ( ! isset( $yearMaxLastmod[ $date->year ] ) || $lastmod > $yearMaxLastmod[ $date->year ] ) {
+				$yearMaxLastmod[ $date->year ] = $lastmod;
 			}
-			$entry['loc'] = get_month_link( $date->year, $date->month );
-			$entries[]    = $entry;
+		}
+
+		$entries   = [];
+		$year      = '';
+		$changefreq = aioseo()->sitemap->priority->frequency( 'date' );
+		$priority   = aioseo()->sitemap->priority->priority( 'date' );
+		foreach ( $dates as $date ) {
+			// Include each year only once, using the max lastmod across all months in that year.
+			if ( $year !== $date->year ) {
+				$year      = $date->year;
+				$yearEntry = [
+					'loc'        => get_year_link( $date->year ),
+					'lastmod'    => aioseo()->helpers->dateTimeToIso8601( $yearMaxLastmod[ $date->year ] ),
+					'changefreq' => $changefreq,
+					'priority'   => $priority,
+				];
+				$entries[] = apply_filters( 'aioseo_sitemap_date_entry', $yearEntry, $date, 'year', 'date' );
+			}
+
+			$monthEntry = [
+				'loc'        => get_month_link( $date->year, $date->month ),
+				'lastmod'    => aioseo()->helpers->dateTimeToIso8601( $this->getLastModified( $date ) ),
+				'changefreq' => $changefreq,
+				'priority'   => $priority,
+			];
+			$entries[] = apply_filters( 'aioseo_sitemap_date_entry', $monthEntry, $date, 'month', 'date' );
 		}
 
 		return apply_filters( 'aioseo_sitemap_date_archives', $entries );
@@ -650,6 +698,18 @@ class Content {
 				'description' => get_post_field( 'post_excerpt', $post->ID ),
 				'pubDate'     => aioseo()->helpers->dateTimeToRfc822( $this->getLastModified( $post ) )
 			];
+
+			// If the entry is the homepage, we need to check if the permalink structure
+			// does not have a trailing slash. If so, we need to strip it because WordPress adds it
+			// regardless for the home_url() in get_page_link() which is used in the get_permalink() function.
+			static $homeId = null;
+			if ( null === $homeId ) {
+				$homeId = get_option( 'page_for_posts' );
+			}
+
+			if ( aioseo()->helpers->getHomePageId() === $post->ID ) {
+				$entry['guid'] = aioseo()->helpers->maybeRemoveTrailingSlash( $entry['guid'] );
+			}
 
 			$entries[] = apply_filters( 'aioseo_sitemap_post_rss', $entry, $post->ID, $post->post_type, 'post' );
 		}
@@ -696,9 +756,11 @@ class Content {
 		$query    = aioseo()->core->db
 			->start( 'bp_activity as a' )
 			->select( '`a`.`id`, `a`.`date_recorded`' )
-			->whereRaw( "a.is_spam = 0 AND a.hide_sitewide = 0 AND a.type NOT IN ('activity_comment', 'last_activity')" )
+			->where( 'a.is_spam', 0 )
+			->where( 'a.hide_sitewide', 0 )
+			->whereNotIn( 'a.type', [ 'activity_comment', 'last_activity' ] )
 			->limit( aioseo()->sitemap->linksPerIndex, aioseo()->sitemap->offset )
-			->orderBy( '`a`.`date_recorded` DESC' );
+			->orderBy( 'a.date_recorded DESC' );
 
 		$items = $query->run()
 						->result();
@@ -752,9 +814,11 @@ class Content {
 			->start( 'bp_groups as g' )
 			->select( '`g`.`id`, `g`.`date_created`, `gm`.`meta_value` as date_modified' )
 			->leftJoin( 'bp_groups_groupmeta as gm', 'g.id = gm.group_id' )
-			->whereRaw( "g.status = 'public' AND gm.meta_key = 'last_activity'" )
+			->where( 'g.status', 'public' )
+			->where( 'gm.meta_key', 'last_activity' )
 			->limit( aioseo()->sitemap->linksPerIndex, aioseo()->sitemap->offset )
-			->orderBy( '`gm`.`meta_value` DESC, `g`.`date_created` DESC' );
+			->orderBy( 'gm.meta_value DESC' )
+			->orderBy( 'g.date_created DESC' );
 
 		$items = $query->run()
 						->result();
@@ -808,9 +872,10 @@ class Content {
 		$query    = aioseo()->core->db
 			->start( 'bp_activity as a' )
 			->select( '`a`.`user_id` as id, `a`.`date_recorded`' )
-			->whereRaw( "a.component = 'members' AND a.type = 'last_activity'" )
+			->where( 'a.component', 'members' )
+			->where( 'a.type', 'last_activity' )
 			->limit( aioseo()->sitemap->linksPerIndex, aioseo()->sitemap->offset )
-			->orderBy( '`a`.`date_recorded` DESC' );
+			->orderBy( 'a.date_recorded DESC' );
 
 		$items = $query->run()
 			->result();
@@ -859,7 +924,12 @@ class Content {
 		$wcAttributeTaxonomiesTable = aioseo()->core->db->prefix . 'woocommerce_attribute_taxonomies';
 		$termTaxonomyTable          = aioseo()->core->db->prefix . 'term_taxonomy';
 
-		$selectClause = $count ? 'COUNT(*) as childProductAttributes' : 'tt.term_id, at.frequency, at.priority';
+		$selectClause = 'COUNT(*) as childProductAttributes';
+		if ( ! $count ) {
+			$selectClause = aioseo()->pro ? 'tt.term_id, tt.taxonomy, at.frequency, at.priority' : 'tt.term_id, tt.taxonomy';
+		}
+
+		$joinClause   = aioseo()->pro ? "LEFT JOIN {$aioseoTermsTable} AS at ON tt.term_id = at.term_id" : '';
 		$whereClause  = aioseo()->pro ? 'AND (at.robots_noindex IS NULL OR at.robots_noindex = 0)' : '';
 		$limitClause  = $count ? '' : 'LIMIT 50000';
 
@@ -867,7 +937,7 @@ class Content {
 			"SELECT {$selectClause}
 			FROM {$termTaxonomyTable} AS tt
 			JOIN {$wcAttributeTaxonomiesTable} AS wat ON tt.taxonomy = CONCAT('pa_', wat.attribute_name)
-			LEFT JOIN {$aioseoTermsTable} AS at ON tt.term_id = at.term_id
+			{$joinClause}
 			WHERE wat.attribute_public = 1
 				{$whereClause}
 				AND tt.count > 0
@@ -896,7 +966,7 @@ class Content {
 				'images'     => aioseo()->sitemap->image->term( $term )
 			];
 
-			$entries[] = apply_filters( 'aioseo_sitemap_product_attributes', $entry, $termId );
+			$entries[] = apply_filters( 'aioseo_sitemap_product_attributes', $entry, $termId, $term->taxonomy, 'term' );
 		}
 
 		return $entries;

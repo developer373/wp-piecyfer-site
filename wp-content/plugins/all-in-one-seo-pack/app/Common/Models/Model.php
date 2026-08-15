@@ -219,19 +219,17 @@ class Model implements \JsonSerializable {
 	 *
 	 * @since 4.0.0
 	 *
-	 * @param  string $key The table column.
+	 * @param  array $keys The array of keys to filter.
 	 * @return array       The array of valid columns for the database query.
 	 */
-	protected function filter( $key ) {
-		$table   = aioseo()->core->db->prefix . $this->table;
-		$results = aioseo()->core->db->execute( 'SHOW COLUMNS FROM `' . $table . '`', true );
-		$fields  = [];
-		$skip    = [ 'created', 'updated' ];
-		$columns = $results->result();
+	protected function filter( $keys ) {
+		$fields    = [];
+		$skip      = [ 'created', 'updated' ];
+		$dbColumns = aioseo()->core->db->getColumns( $this->table );
 
-		foreach ( $columns as $col ) {
-			if ( ! in_array( $col->Field, $skip, true ) && array_key_exists( $col->Field, $key ) ) {
-				$fields[ $col->Field ] = $key[ $col->Field ];
+		foreach ( $dbColumns as $column ) {
+			if ( ! in_array( $column, $skip, true ) && array_key_exists( $column, $keys ) ) {
+				$fields[ $column ] = $keys[ $column ];
 			}
 		}
 
@@ -363,6 +361,7 @@ class Model implements \JsonSerializable {
 				$query = aioseo()->core->db
 					->start( $this->table )
 					->where( [ $pk => $pkv ] )
+					->resetCache()
 					->run();
 
 				if ( ! $query->nullSet() ) {
@@ -471,7 +470,12 @@ class Model implements \JsonSerializable {
 			self::$columns[ get_called_class() ] = [];
 
 			// Let's set the columns that are available by default.
-			$table   = aioseo()->core->db->prefix . $this->table;
+			$table = aioseo()->core->db->prefix . $this->table;
+
+			if ( ! aioseo()->core->db->tableExists( $this->table ) ) {
+				return self::$columns[ get_called_class() ];
+			}
+
 			$results = aioseo()->core->db->start( $table )
 				->output( 'OBJECT' )
 				->execute( 'SHOW COLUMNS FROM `' . $table . '`', true )

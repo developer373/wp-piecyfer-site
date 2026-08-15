@@ -31,7 +31,12 @@ trait Widget_Notice{
                     ],
                     'default' => '1',
                     'toggle'    => false,
-                    'description' => '<span class="ekit-widget-pro-feature"> Get the  <a href="https://wpmet.com/elementskit-pricing" target="_blank">Pro version</a> for more awesome elements and powerful modules.</span>',
+                    'description' => '<span class="ekit-widget-pro-feature">' . sprintf(
+                        /* translators: 1: opening <a> tag, 2: closing </a> tag */
+                        esc_html__( 'Get the %1$s Pro version %2$s for more awesome elements and powerful modules.', 'elementskit-lite' ),
+                        '<a href="' . esc_url( 'https://wpmet.com/elementskit-pricing' ) . '" target="_blank" rel="noopener noreferrer">',
+                        '</a>'
+                    ) . '</span>',
                 ]
             );
 

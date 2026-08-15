@@ -262,7 +262,14 @@ if ( ! class_exists( 'Wpmet\Libs\Rating' ) ) {
 				return false;
 			}
 
-			$plugin_name = isset($_POST['plugin_name']) ? sanitize_key( $_POST['plugin_name'] ) : '';
+			if ( ! current_user_can( 'manage_options' ) ) {
+				return false;
+			}
+
+			$plugin_name = isset( $_POST['plugin_name'] ) ? sanitize_key( wp_unslash( $_POST['plugin_name'] ) ) : '';
+			if ( '' === $plugin_name ) {
+				return false;
+			}
 			add_option( $plugin_name . '_never_show', 'yes' );
 		}
 
@@ -363,7 +370,14 @@ if ( ! class_exists( 'Wpmet\Libs\Rating' ) ) {
 				return false;
 			}
 
-			$plugin_name = isset($_POST['plugin_name']) ? sanitize_key( $_POST['plugin_name'] ) : '';
+			if ( ! current_user_can( 'manage_options' ) ) {
+				return false;
+			}
+
+			$plugin_name = isset( $_POST['plugin_name'] ) ? sanitize_key( wp_unslash( $_POST['plugin_name'] ) ) : '';
+			if ( '' === $plugin_name ) {
+				return false;
+			}
 			if ( get_option( $plugin_name . '_ask_me_later' ) == false ) {
 				add_option( $plugin_name . '_ask_me_later', 'yes' );
 			} else {
@@ -441,7 +455,7 @@ if ( ! class_exists( 'Wpmet\Libs\Rating' ) ) {
 
                     });
 
-                    $('#" . esc_js( $this->text_domain ) . "_btn_deserved').click(function(){
+                    $('#" . esc_js( $this->text_domain ) . "_btn_deserved').on('click', function(){
                         $.ajax({
                             url: ajaxurl,
                             type: 'POST',
@@ -457,7 +471,7 @@ if ( ! class_exists( 'Wpmet\Libs\Rating' ) ) {
                         });
                     });
 
-                    $('#" . esc_js( $this->text_domain ) . "_btn_not_good').click(function(){
+                    $('#" . esc_js( $this->text_domain ) . "_btn_not_good').on('click', function(){
                         $.ajax({
                             url: ajaxurl,
                             type: 'POST',
@@ -473,7 +487,7 @@ if ( ! class_exists( 'Wpmet\Libs\Rating' ) ) {
                         });
                     });
                     
-                    $('#" . esc_js( $this->text_domain ) . "_btn_never_show').click(function(){
+                    $('#" . esc_js( $this->text_domain ) . "_btn_never_show').on('click', function(){
                         $.ajax({
                             url: ajaxurl,
                             type: 'POST',

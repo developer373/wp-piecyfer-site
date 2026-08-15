@@ -20,9 +20,18 @@ class BreadcrumbList extends Graph {
 	 * @return array The graph data.
 	 */
 	public function get() {
-		$breadcrumbs = aioseo()->schema->context['breadcrumb'] ?? '';
+		$breadcrumbs = aioseo()->breadcrumbs->frontend->getBreadcrumbs() ?? [];
 		if ( ! $breadcrumbs ) {
 			return [];
+		}
+
+		// Set the position for each breadcrumb.
+		$position = 1;
+		foreach ( $breadcrumbs as $k => $breadcrumb ) {
+			if ( ! isset( $breadcrumb['position'] ) ) {
+				$breadcrumbs[ $k ]['position'] = $position;
+			}
+			$position++;
 		}
 
 		$trailLength = count( $breadcrumbs );
@@ -32,16 +41,20 @@ class BreadcrumbList extends Graph {
 
 		$listItems = [];
 		foreach ( $breadcrumbs as $breadcrumb ) {
+			if ( empty( $breadcrumb['link'] ) || ! is_scalar( $breadcrumb['link'] ) ) {
+				continue;
+			}
+
 			$listItem = [
 				'@type'    => 'ListItem',
-				'@id'      => $breadcrumb['url'] . '#listItem',
+				'@id'      => $breadcrumb['link'] . '#listItem',
 				'position' => $breadcrumb['position'],
-				'name'     => $breadcrumb['name'] ?? ''
+				'name'     => $breadcrumb['label'] ?? ''
 			];
 
 			// Don't add "item" prop for last crumb.
 			if ( $trailLength !== $breadcrumb['position'] ) {
-				$listItem['item'] = $breadcrumb['url'];
+				$listItem['item'] = $breadcrumb['link'];
 			}
 
 			if ( 1 === $trailLength ) {
@@ -49,19 +62,19 @@ class BreadcrumbList extends Graph {
 				continue;
 			}
 
-			if ( $trailLength > $breadcrumb['position'] ) {
+			if ( $trailLength > $breadcrumb['position'] && ! empty( $breadcrumbs[ $breadcrumb['position'] ]['label'] ) ) {
 				$listItem['nextItem'] = [
 					'@type' => 'ListItem',
-					'@id'   => $breadcrumbs[ $breadcrumb['position'] ]['url'] . '#listItem',
-					'name'  => $breadcrumbs[ $breadcrumb['position'] ]['name'],
+					'@id'   => $breadcrumbs[ $breadcrumb['position'] ]['link'] . '#listItem',
+					'name'  => $breadcrumbs[ $breadcrumb['position'] ]['label'],
 				];
 			}
 
-			if ( 1 < $breadcrumb['position'] ) {
+			if ( 1 < $breadcrumb['position'] && ! empty( $breadcrumbs[ $breadcrumb['position'] - 2 ]['label'] ) ) {
 				$listItem['previousItem'] = [
 					'@type' => 'ListItem',
-					'@id'   => $breadcrumbs[ $breadcrumb['position'] - 2 ]['url'] . '#listItem',
-					'name'  => $breadcrumbs[ $breadcrumb['position'] - 2 ]['name'],
+					'@id'   => $breadcrumbs[ $breadcrumb['position'] - 2 ]['link'] . '#listItem',
+					'name'  => $breadcrumbs[ $breadcrumb['position'] - 2 ]['label'],
 				];
 			}
 

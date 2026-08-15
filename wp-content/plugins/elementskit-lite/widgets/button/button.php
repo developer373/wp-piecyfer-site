@@ -35,6 +35,11 @@ class ElementsKit_Widget_Button extends Widget_Base {
     public function get_help_url() {
         return 'https://wpmet.com/doc/button/';
     }
+
+    public function get_style_depends() {
+        return ['ekit-button'];
+    }
+
     protected function is_dynamic_content(): bool {
         return false;
     }
@@ -137,6 +142,7 @@ class ElementsKit_Widget_Button extends Widget_Base {
 			[
 				'label' =>esc_html__( 'Alignment', 'elementskit-lite' ),
 				'type' => Controls_Manager::CHOOSE,
+				'default' => 'center',
 				'options' => [
 					'left'    => [
 						'title' =>esc_html__( 'Left', 'elementskit-lite' ),
@@ -151,9 +157,14 @@ class ElementsKit_Widget_Button extends Widget_Base {
 						'icon' => 'eicon-text-align-right',
 					],
 				],
-				'default' => 'center',
+				'selectors_dictionary' => [
+					'left' => 'justify-content: flex-start;',
+					'center' => 'justify-content: center;',
+					'right' => 'justify-content: flex-end;',
+				],
+				'prefix_class' => 'elementor-align-%s',
 				'selectors' => [
-					'{{WRAPPER}} .ekit-btn-wraper' => 'text-align: {{VALUE}};',
+					'{{WRAPPER}} .ekit-btn-wraper .elementskit-btn' => '{{VALUE}};',
 				],
 			]
 		);
@@ -419,6 +430,14 @@ class ElementsKit_Widget_Button extends Widget_Base {
 			  'selector' => '{{WRAPPER}} .elementskit-btn',
 			]
 		);
+		$this->add_group_control(
+			Group_Control_Box_Shadow::get_type(),
+			[
+			  'name' => 'ekit_btn_hover_box_shadow_group',
+			  'label' => esc_html__( 'Hover Box Shadow', 'elementskit-lite' ),
+			  'selector' => '{{WRAPPER}} .elementskit-btn:hover',
+			]
+		);
 
 
 		$this->end_controls_section();
@@ -579,13 +598,13 @@ class ElementsKit_Widget_Button extends Widget_Base {
 				<a <?php $this->print_render_attribute_string( 'button' ); ?>>
 					<?php
 						echo esc_html( $btn_text );
-						Icons_Manager::render_icon($settings['ekit_btn_icons']);
+						Icons_Manager::render_icon( $settings['ekit_btn_icons'], [ 'aria-hidden' => 'true' ] );
 					?>
 				</a>
 			<?php elseif ($icon_align == 'left') : ?>
 				<a <?php $this->print_render_attribute_string( 'button' ); ?>>
 					<?php
-					Icons_Manager::render_icon($settings['ekit_btn_icons']);
+					Icons_Manager::render_icon( $settings['ekit_btn_icons'], [ 'aria-hidden' => 'true' ] );
 					echo esc_html( $btn_text );
 					?>
 				</a>

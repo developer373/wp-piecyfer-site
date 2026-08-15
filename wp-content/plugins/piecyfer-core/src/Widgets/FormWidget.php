@@ -118,6 +118,10 @@ class FormWidget extends AbstractWidget {
 		return 'forms';
 	}
 
+	public function get_script_depends(): array {
+		return array( 'elementor-recaptcha_v3-api', 'elementor-recaptcha-api' );
+	}
+
 	protected function replaces(): string {
 		return 'Elementor Pro — Forms/Form';
 	}

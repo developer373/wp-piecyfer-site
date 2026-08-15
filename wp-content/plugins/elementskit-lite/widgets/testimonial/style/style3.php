@@ -17,7 +17,7 @@
 					$clientPhoto = isset($testimonial['client_photo']['url']) ? $testimonial['client_photo']['url'] : '';  } ?>
 					<div class="swiper-slide">
 						<div class="swiper-slide-inner">
-							<<?php echo esc_attr( $wrapTag ); ?> class="elementskit-testimonial_card" style="background-image: url(<?php echo esc_url($clientPhoto);?>);" <?php echo $this->get_render_attribute_string( 'link-' . esc_attr($testimonial['_id'] )); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped by elementor ?>>
+							<<?php echo esc_attr( $wrapTag ); ?> class="elementskit-testimonial_card elementor-repeater-item-<?php echo esc_attr( $testimonial[ '_id' ] ); ?>" style="background-image: url(<?php echo esc_url($clientPhoto);?>);" <?php echo $this->get_render_attribute_string( 'link-' . esc_attr($testimonial['_id'] )); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped by elementor ?>>
 								<?php if ($ekit_testimonial_rating_enable == 'yes') : ?>
 									<ul class="elementskit-stars">
 										<?php

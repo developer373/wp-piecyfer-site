@@ -98,14 +98,23 @@ trait ThirdParty {
 			return false;
 		}
 
-		if ( ! is_admin() && ! aioseo()->helpers->isAjaxCronRestRequest() && function_exists( 'is_shop' ) ) {
+		// If the id is empty, we want to check against the queried object.
+		if (
+			empty( $id ) &&
+			function_exists( 'is_shop' ) &&
+			! is_admin() &&
+			! aioseo()->helpers->isAjaxCronRestRequest()
+		) {
 			return is_shop();
 		}
+
+		// Prevent non-numeric id.
+		$id = is_numeric( $id ) ? (int) $id : 0;
 
 		// phpcs:disable HM.Security.ValidatedSanitizedInput, HM.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Recommended
 		$id = ! $id && ! empty( $_GET['post'] )
 			? (int) sanitize_text_field( wp_unslash( $_GET['post'] ) )
-			: (int) $id;
+			: $id;
 		// phpcs:enable
 
 		return $id && wc_get_page_id( 'shop' ) === $id;
@@ -208,6 +217,75 @@ trait ThirdParty {
 	}
 
 	/**
+	 * Returns the WooCommerce product facts the TruSEO product identifier and SKU assessments need.
+	 * NOTE: reports the saved product; the editor merges in unsaved field values on top of this.
+	 *
+	 * @since 5.0.0.1
+	 *
+	 * @param  int         $postId The product ID.
+	 * @return array|null          The product data, or null when the post is not a Woo product.
+	 */
+	public function getWooCommerceProductData( $postId ) {
+		if ( ! $this->isWooCommerceActive() || ! function_exists( 'wc_get_product' ) ) {
+			return null;
+		}
+
+		$product = wc_get_product( $postId );
+		if ( ! $product ) {
+			return null;
+		}
+
+		// get_global_unique_id() is the native GTIN/UPC/EAN/ISBN field, added in WooCommerce 9.2.
+		$canRetrieveGlobalIdentifier = method_exists( $product, 'get_global_unique_id' );
+
+		$data = [
+			'productType'                   => $product->get_type(),
+			'hasVariants'                   => false,
+			'canRetrieveGlobalSku'          => true,
+			'hasGlobalSKU'                  => (bool) $product->get_sku(),
+			'canRetrieveGlobalIdentifier'   => $canRetrieveGlobalIdentifier,
+			'hasGlobalIdentifier'           => $canRetrieveGlobalIdentifier && (bool) $product->get_global_unique_id(),
+			// Only meaningful for variable products; overwritten below when variations exist.
+			'canRetrieveVariantSkus'        => true,
+			'canRetrieveVariantIdentifiers' => $canRetrieveGlobalIdentifier,
+			'doAllVariantsHaveSKU'          => true,
+			'doAllVariantsHaveIdentifier'   => true
+		];
+
+		if ( ! $product->is_type( 'variable' ) ) {
+			return $data;
+		}
+
+		$variationIds = $product->get_children();
+		if ( empty( $variationIds ) ) {
+			return $data;
+		}
+
+		$data['hasVariants'] = true;
+
+		foreach ( $variationIds as $variationId ) {
+			$variation = wc_get_product( $variationId );
+			if ( ! $variation ) {
+				continue;
+			}
+
+			if ( ! $variation->get_sku() ) {
+				$data['doAllVariantsHaveSKU'] = false;
+			}
+
+			if (
+				$canRetrieveGlobalIdentifier &&
+				method_exists( $variation, 'get_global_unique_id' ) &&
+				! $variation->get_global_unique_id()
+			) {
+				$data['doAllVariantsHaveIdentifier'] = false;
+			}
+		}
+
+		return $data;
+	}
+
+	/**
 	 * Checks whether the queried object is a WooCommerce taxonomy page.
 	 *
 	 * @since 4.5.5
@@ -250,7 +328,7 @@ trait ThirdParty {
 			$in = qtranxf_useCurrentLanguageIfNotFoundUseDefaultLanguage( $in );
 		}
 
-		return apply_filters( 'localization', $in );
+		return apply_filters( 'localization', $in ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 	}
 
 	/**
@@ -286,8 +364,7 @@ trait ThirdParty {
 	 * @return string $url  The filtered URL.
 	 */
 	public function localizedUrl( $path ) {
-		$url = apply_filters( 'wpml_home_url', home_url( '/' ) );
-
+		$url = apply_filters( 'wpml_home_url', home_url( '/' ) ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 		// Remove URL parameters.
 		preg_match_all( '/\?[\s\S]+/', (string) $url, $matches );
 
@@ -391,7 +468,6 @@ trait ThirdParty {
 			'image',
 			'gallery',
 			'link',
-			// 'taxonomy',
 		];
 
 		$types        = wp_parse_args( $types, $allowedTypes );
@@ -418,7 +494,7 @@ trait ThirdParty {
 					$imageUrl = is_array( $field['value'] ) ? $field['value']['url'] : $field['value'];
 					$imageUrl = is_numeric( $imageUrl ) ? wp_get_attachment_image_url( $imageUrl ) : $imageUrl;
 
-					$value = "<img src='$imageUrl' />";
+					$value = "<img src='$imageUrl' />"; // phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage
 					break;
 				case 'gallery':
 					$imageUrl = $field['value'];
@@ -435,7 +511,7 @@ trait ThirdParty {
 					// Image ID format.
 					$imageUrl = is_numeric( $imageUrl ) ? wp_get_attachment_image_url( $imageUrl ) : $imageUrl;
 
-					$value = ! empty( $imageUrl ) ? "<img src='{$imageUrl}' />" : '';
+					$value = ! empty( $imageUrl ) ? "<img src='{$imageUrl}' />" : ''; // phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage
 					break;
 				case 'link':
 					$value = make_clickable( $field['value']['url'] ?? $field['value'] ?? '' );
@@ -451,6 +527,58 @@ trait ThirdParty {
 		}
 
 		return $acfFields;
+	}
+
+	/**
+	 * Retrieves the ACF Flexible Content field value for a given post.
+	 *
+	 * @since 4.7.9
+	 *
+	 * @param  string     $name The name of the field.
+	 * @param  int|object $post The post ID or object.
+	 * @return string           The field value.
+	 */
+	public function getAcfFlexibleContentField( $name, $post ) {
+		$output = '';
+		if ( ! function_exists( 'acf_get_raw_field' ) || ! function_exists( 'acf_get_field' ) ) {
+			return $output;
+		}
+
+		$parentTrace = [];
+		$field       = acf_get_raw_field( $name ) ?? [];
+		while ( ! empty( $field['parent'] ) && ! empty( $field['parent_layout'] ) ) {
+			$parentField   = acf_get_field( $field['parent'] );
+			$parentTrace[] = $parentField['name'] ?? '';
+			$field         = $parentField;
+		}
+
+		$parentTrace = array_filter( $parentTrace );
+		if ( empty( $parentTrace ) ) {
+			return $output;
+		}
+
+		$parentTrace        = array_reverse( $parentTrace );
+		$parentName         = array_shift( $parentTrace );
+		$highestParentField = get_field( $parentName, $post );
+
+		for ( $i = 0; $i <= count( $parentTrace ); $i++ ) {
+			$values = array_filter( array_column( $highestParentField, $name ), 'is_scalar' );
+			if ( $values ) {
+				return implode( ' ', $values );
+			}
+
+			$highestParentField = $highestParentField[0] ?? '';
+			if (
+				! is_array( $highestParentField ) ||
+				! isset( $parentTrace[ $i ] )
+			) {
+				break;
+			}
+
+			$highestParentField = $highestParentField[ $parentTrace[ $i ] ];
+		}
+
+		return $output;
 	}
 
 	/**
@@ -540,11 +668,11 @@ trait ThirdParty {
 		}
 
 		if ( empty( $homePages ) ) {
-			$languages  = apply_filters( 'wpml_active_languages', [] );
+			$languages  = apply_filters( 'wpml_active_languages', [] ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 			$homePageId = (int) get_option( 'page_on_front' );
 			foreach ( $languages as $language ) {
 				$homePages[ $language['code'] ] = [
-					'id'  => apply_filters( 'wpml_object_id', $homePageId, 'page', false, $language['code'] ),
+					'id'  => apply_filters( 'wpml_object_id', $homePageId, 'page', false, $language['code'] ), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 					'url' => $sitepress->language_url( $language['code'] )
 				];
 			}
@@ -682,7 +810,7 @@ trait ThirdParty {
 		}
 
 		// AMP plugin requires the `wp` action to be called to function properly, otherwise, it will throw warnings.
-		// https://github.com/awesomemotive/aioseo/issues/6056
+
 		if ( did_action( 'wp' ) ) {
 			// Check for the "AMP" plugin.
 			if ( function_exists( 'amp_is_request' ) ) {
@@ -738,12 +866,12 @@ trait ThirdParty {
 		if ( ! defined( 'ET_BUILDER_VERSION' ) ) {
 			return null;
 		}
-		// phpcs:disable Squiz.NamingConventions.ValidVariableName
+		// phpcs:disable Squiz.NamingConventions.ValidVariableName, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 		global $et_pb_rendering_column_content;
 
 		$originalValue                  = $et_pb_rendering_column_content;
 		$et_pb_rendering_column_content = $flag;
-		// phpcs:enable Squiz.NamingConventions.ValidVariableName
+		// phpcs:enable Squiz.NamingConventions.ValidVariableName, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 
 		return $originalValue;
 	}
@@ -781,5 +909,49 @@ trait ThirdParty {
 			);
 
 		return ! empty( $name ) && 'pa_' === substr( $name, 0, 3 );
+	}
+
+	/**
+	 * Returns whether a plugin is active or not using abstraction.
+	 *
+	 * @since 4.8.1
+	 *
+	 * @param  string $slug The plugin slug.
+	 * @return bool         Whether the plugin is active.
+	 */
+	public function isPluginActive( $slug ) {
+		$mapped = [
+			'buddypress'  => 'buddypress/bp-loader.php',
+			'bbpress'     => 'bbpress/bbpress.php',
+			'weglot'      => 'weglot/weglot.php',
+			'universally' => 'universally-language-translation-multilingual-tool/universally.php'
+		];
+
+		static $output = [];
+		if ( isset( $output[ $slug ] ) ) {
+			return $output[ $slug ];
+		}
+
+		$mapped[ $slug ] = $mapped[ $slug ] ?? $slug;
+		$output[ $slug ] = function_exists( 'is_plugin_active' ) && is_plugin_active( $mapped[ $slug ] );
+
+		return $output[ $slug ];
+	}
+
+	/**
+	 * Call the callback given by the first parameter.
+	 *
+	 * @since 4.9.2
+	 *
+	 * @param  callable   $callback The function to be called.
+	 * @param  mixed      ...$args  Zero or more parameters to be passed to the function
+	 * @return mixed|null           The function result or null if the function is not callable.
+	 */
+	public function callFunc( $callback, ...$args ) {
+		if ( is_callable( $callback ) ) {
+			return call_user_func( $callback, ...$args );
+		}
+
+		return null;
 	}
 }

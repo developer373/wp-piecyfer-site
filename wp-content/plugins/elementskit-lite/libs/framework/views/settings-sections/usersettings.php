@@ -40,8 +40,6 @@ $pro_active = ( in_array( 'elementskit/elementskit.php', apply_filters( 'active_
 
 					</div>
 				</div>
-
-
 			</div>
 
 			<!-------------------
@@ -95,9 +93,6 @@ $pro_active = ( in_array( 'elementskit/elementskit.php', apply_filters( 'active_
 							)
 						);
 
-						$dbg    = '&app=105697909488869&sec=f64837dd6a129c23ab47bdfdc61cfe19'; //ElementsKit Plugin Review
-						$dbg    = '&app=2577123062406162&sec=a4656a1cae5e33ff0c18ee38efaa47ac'; //ElementsKit Plugin page feed
-						$scopes = '&scope=pages_show_list,pages_read_engagement,pages_manage_engagement,pages_read_user_content'; 
 						?>
 
 						<div class="ekit-admin-accordion-btn-group">
@@ -109,8 +104,8 @@ $pro_active = ( in_array( 'elementskit/elementskit.php', apply_filters( 'active_
 							<?php endif; ?>
 
 							<a class="ekit-admin-access-token ekit-admin-accordion-btn"
-							   href="<?php echo esc_url('https://token.wpmet.com/social_token.php?provider=facebook&_for=page' . $dbg . $scopes); ?>"
-							   target="_blank"> <?php echo esc_html__( 'Get access token', 'elementskit-lite' ); ?>
+							   href="<?php echo esc_url('https://wpmet.com/doc/facebook-feed-api/'); ?>"
+							   target="_blank" rel="noopener noreferrer"> <?php echo esc_html__( 'Check Token Generation Guide', 'elementskit-lite' ); ?>
 							</a>
 						</div>
 					</div>
@@ -154,7 +149,7 @@ $pro_active = ( in_array( 'elementskit/elementskit.php', apply_filters( 'active_
 
 
 						$val = ( empty( $user_data['fbp_review']['pg_token'] ) ) ? '' : ( $user_data['fbp_review']['pg_token'] );
-						$btn = ( empty( $user_data['fbp_review']['pg_token'] ) ) ? esc_html__( 'Get access token', 'elementskit-lite' ) : esc_html__( 'Refresh access token', 'elementskit-lite' ); // escaped at line: 186
+						$btn = esc_html__( 'Check Token Generation Guide', 'elementskit-lite' );
 
 						$this->utils->input(
 							array(
@@ -166,15 +161,6 @@ $pro_active = ( in_array( 'elementskit/elementskit.php', apply_filters( 'active_
 							)
 						);
 
-						/**
-						 * App name : ElementsKit Plugin page feed
-						 * App id : 2577123062406162
-						 *
-						 * Just empty the string when done debugging :D
-						 *
-						 */
-						$dbg = '&app=944119176079880&sec=03b20cdd9cf6f1d4d6e03522dc9caa2a';
-						$dbg = '';
 						?>
 
 						<div class="ekit-admin-accordion-btn-group">
@@ -186,8 +172,8 @@ $pro_active = ( in_array( 'elementskit/elementskit.php', apply_filters( 'active_
 							<?php endif; ?>
 
 							<a class="ekit-admin-access-token ekit-admin-accordion-btn"
-							   href="<?php echo esc_url('https://token.wpmet.com/social_token.php?provider=facebook&_for=page' . $dbg); ?>"
-							   target="_blank">
+							   href="<?php echo esc_url('https://wpmet.com/doc/facebook-review/'); ?>"
+							   target="_blank" rel="noopener noreferrer">
 								<?php echo esc_html( $btn ); ?>
 							</a>
 						</div>
@@ -272,9 +258,21 @@ $pro_active = ( in_array( 'elementskit/elementskit.php', apply_filters( 'active_
 							array(
 								'type'        => 'color',
 								'name'        => 'user_data[fbm_module][txt_color]',
-								'label'       => esc_html__( 'Color', 'elementskit-lite' ),
+								'label'       => esc_html__( 'Icon Color', 'elementskit-lite' ),
+								'placeholder' => '#000000',
+								'value'       => ( ! isset( $user_data['fbm_module']['txt_color'] ) ) ? '#000000' : esc_html( $user_data['fbm_module']['txt_color'] ),
+							)
+						);
+						?>
+
+						<?php
+						$this->utils->input(
+							array(
+								'type'        => 'color',
+								'name'        => 'user_data[fbm_module][bg_color]',
+								'label'       => esc_html__( 'Background Color', 'elementskit-lite' ),
 								'placeholder' => '#3b5998',
-								'value'       => ( ! isset( $user_data['fbm_module']['txt_color'] ) ) ? '#3b5998' : esc_html( $user_data['fbm_module']['txt_color'] ),
+								'value'       => ( ! isset( $user_data['fbm_module']['bg_color'] ) ) ? '#3b5998' : esc_html( $user_data['fbm_module']['bg_color'] ),
 							)
 						);
 						?>
@@ -521,9 +519,8 @@ $pro_active = ( in_array( 'elementskit/elementskit.php', apply_filters( 'active_
 								</a>
 							<?php endif; ?>
 
-							<a href="https://token.wpmet.com/social_token.php?provider=instagram"
-							   class="ekit-admin-access-token ekit-admin-accordion-btn" target="_blank">
-								<?php echo esc_html__( 'Get access token', 'elementskit-lite' ); ?>
+							<a href="https://wpmet.com/doc/instagram-feed-api/" class="ekit-admin-access-token ekit-admin-accordion-btn" target="_blank" rel="noopener noreferrer">
+								<?php echo esc_html__( 'Check Token Generation Guide', 'elementskit-lite' ); ?>
 							</a>
 						</div>
 					</div>
@@ -693,7 +690,7 @@ $pro_active = ( in_array( 'elementskit/elementskit.php', apply_filters( 'active_
 						?>
                         <div>
                             <ol>
-                                <li><?php 
+                                <li><?php
 
 								echo sprintf(
 									'%1$s <a href="%2$s" target="_blank">%2$s</a> %3$s',
@@ -723,8 +720,46 @@ $pro_active = ( in_array( 'elementskit/elementskit.php', apply_filters( 'active_
                 <?php endif ?>
             </div>
 
-			<?php do_action('elementskit/admin/sections/userdata'); ?>
+			<!-------------------
+				Inline SVG Icons
+			-------------------->
+			<div class="attr-panel ekit_accordion_card">
+				<div class="attr-panel-heading label-inline-svg" role="tab" id="inline_svg_data_headeing">
+					<a class="attr-btn attr-collapsed" role="button" data-attr-toggle="collapse"
+					   data-parent="#accordion"
+					   href="#inline_svg_data_control" aria-expanded="false"
+					   aria-controls="inline_svg_data_control">
+						<span>
+							<?php esc_html_e( 'Inline SVG', 'elementskit-lite' ); ?>
+						</span>
+					</a>
+				</div>
 
+				<div id="inline_svg_data_control" class="attr-panel-collapse attr-collapse" role="tabpanel"
+					 aria-labelledby="inline_svg_data_headeing" aria-expanded="false">
+					<div class="attr-panel-body">
+						<div class="ekit-admin-user-data-separator"></div>
+						<?php
+						$this->utils->input(
+							array(
+								'type'    => 'switch',
+								'name'    => 'user_data[inline_svg][is_enable]',
+								'label'   => esc_html__( 'Enable SVG Icon', 'elementskit-lite' ),
+								'value'   => '1',
+								'options' => array(
+									'checked' => ( isset( $user_data['inline_svg']['is_enable'] ) ? true : false ),
+								),
+							)
+						);
+						?>
+						<p>
+							<?php echo esc_html__('This is an experimental feature that you may try out. If you encounter any issues with Elementskit icons, simply disable this feature.', 'elementskit-lite'); ?>
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<?php do_action('elementskit/admin/sections/userdata'); ?>
 		</div>
 	</div>
 </div>

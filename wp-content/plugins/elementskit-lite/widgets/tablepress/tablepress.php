@@ -38,8 +38,13 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
     public function get_help_url() {
         return 'https://wpmet.com/doc/data-table-2/';
     }
+
+	public function get_style_depends() {
+		return ['ekit-tablepress'];
+	}
+
     protected function is_dynamic_content(): bool {
-        return false;
+        return true;
     }
     protected function register_controls() {
         $this->start_controls_section(
@@ -105,7 +110,7 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
                 'label'     => esc_html__( 'Nav Hide', 'elementskit-lite' ),
 				'type'      => Controls_Manager::SWITCHER,
 				'selectors' => [
-					'{{WRAPPER}} .elemenetskit-tablepress .dataTables_length' => 'display: none;',
+					'{{WRAPPER}} .elemenetskit-tablepress .dt-length' => 'display: none;',
 				],
                 ]
 		);
@@ -116,7 +121,7 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
                 'label'     => esc_html__( 'Search Hide', 'elementskit-lite' ),
 				'type'      => Controls_Manager::SWITCHER,
 				'selectors' => [
-                    '{{WRAPPER}} .elemenetskit-tablepress .dataTables_filter' => 'display: none;',
+                    '{{WRAPPER}} .elemenetskit-tablepress .dt-search' => 'display: none;',
 				],
                 ]
             );
@@ -127,7 +132,7 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
                 'label'     => esc_html__( 'Footer Info Hide', 'elementskit-lite' ),
 				'type'      => Controls_Manager::SWITCHER,
 				'selectors' => [
-					'{{WRAPPER}} .elemenetskit-tablepress .dataTables_info' => 'display: none;',
+					'{{WRAPPER}} .elemenetskit-tablepress .dt-info' => 'display: none;',
 				],
 			]
 		);
@@ -138,7 +143,7 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
                 'label'     => esc_html__( 'Pagination Hide', 'elementskit-lite' ),
                 'type'      => Controls_Manager::SWITCHER,
                 'selectors' => [
-                    '{{WRAPPER}} .elemenetskit-tablepress .dataTables_paginate' => 'display: none;',
+                    '{{WRAPPER}} .elemenetskit-tablepress .dt-paging' => 'display: none;',
                 ],
             ]
         );
@@ -211,7 +216,7 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
 				'label'     => esc_html__( 'Color', 'elementskit-lite' ),
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => [
-					'{{WRAPPER}} .elemenetskit-tablepress .dataTables_length, {{WRAPPER}} .elemenetskit-tablepress .dataTables_filter, {{WRAPPER}} .elemenetskit-tablepress .dataTables_info, {{WRAPPER}} .elemenetskit-tablepress .paginate_button' => 'color: {{VALUE}};',
+					'{{WRAPPER}} .elemenetskit-tablepress .dt-length, {{WRAPPER}} .elemenetskit-tablepress .dt-search, {{WRAPPER}} .elemenetskit-tablepress .dt-info, {{WRAPPER}} .elemenetskit-tablepress .paginate_button' => 'color: {{VALUE}};',
 				],
 			]
 		);
@@ -280,7 +285,7 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
 				'type' => Controls_Manager::DIMENSIONS,
 				'size_units' => [ 'px', '%', 'em' ],
 				'selectors' => [
-					'{{WRAPPER}} .elemenetskit-tablepress .dataTables_length, {{WRAPPER}} .elemenetskit-tablepress .dataTables_filter' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+					'{{WRAPPER}} .elemenetskit-tablepress .dt-length, {{WRAPPER}} .elemenetskit-tablepress .dt-search' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				],
 			]
 		);
@@ -292,7 +297,7 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
 				'type' => Controls_Manager::DIMENSIONS,
 				'size_units' => [ 'px', '%', 'em' ],
 				'selectors' => [
-					'{{WRAPPER}} .elemenetskit-tablepress .dataTables_info, {{WRAPPER}} .elemenetskit-tablepress .dataTables_paginate' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+					'{{WRAPPER}} .elemenetskit-tablepress .dt-info, {{WRAPPER}} .elemenetskit-tablepress .dt-paging' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				],
 			]
 		);
@@ -623,7 +628,7 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
 				'label'     => esc_html__( 'Color', 'elementskit-lite' ),
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => [
-					'{{WRAPPER}} .elemenetskit-tablepress .dataTables_filter input, {{WRAPPER}} .elemenetskit-tablepress .dataTables_length select' => 'color: {{VALUE}};',
+					'{{WRAPPER}} .elemenetskit-tablepress .dt-search input, {{WRAPPER}} .elemenetskit-tablepress .dt-length select' => 'color: {{VALUE}};',
 				],
 			]
 		);
@@ -634,7 +639,7 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
 				'label'     => esc_html__( 'Background', 'elementskit-lite' ),
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => [
-					'{{WRAPPER}} .elemenetskit-tablepress .dataTables_filter input, {{WRAPPER}} .elemenetskit-tablepress .dataTables_length select' => 'background-color: {{VALUE}};',
+					'{{WRAPPER}} .elemenetskit-tablepress .dt-search input, {{WRAPPER}} .elemenetskit-tablepress .dt-length select' => 'background-color: {{VALUE}};',
 				],
 			]
 		);
@@ -646,7 +651,7 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
 				'type'       => Controls_Manager::DIMENSIONS,
 				'size_units' => [ 'px', 'em', '%' ],
 				'selectors'  => [
-					'{{WRAPPER}} .elemenetskit-tablepress .dataTables_filter input, {{WRAPPER}} .elemenetskit-tablepress .dataTables_length select' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+					'{{WRAPPER}} .elemenetskit-tablepress .dt-search input, {{WRAPPER}} .elemenetskit-tablepress .dt-length select' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				],
 			]
 		);
@@ -658,7 +663,7 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
 				'label'       => esc_html__( 'Border', 'elementskit-lite' ),
 				'placeholder' => '1px',
 				'default'     => '1px',
-				'selector'    => '{{WRAPPER}} .elemenetskit-tablepress .dataTables_filter input, {{WRAPPER}} .elemenetskit-tablepress .dataTables_length select',
+				'selector'    => '{{WRAPPER}} .elemenetskit-tablepress .dt-search input, {{WRAPPER}} .elemenetskit-tablepress .dt-length select',
 			]
 		);
 
@@ -669,7 +674,7 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
 				'type'       => Controls_Manager::DIMENSIONS,
 				'size_units' => [ 'px', 'em', '%' ],
 				'selectors'  => [
-					'{{WRAPPER}} .elemenetskit-tablepress .dataTables_filter input, {{WRAPPER}} .elemenetskit-tablepress .dataTables_length select' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+					'{{WRAPPER}} .elemenetskit-tablepress .dt-search input, {{WRAPPER}} .elemenetskit-tablepress .dt-length select' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				],
 			]
 		);
@@ -679,7 +684,7 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
 			Group_Control_Box_Shadow::get_type(),
 			[
 				'name'     => 'ekit_tablepress_search_box_shadow',
-				'selector' => '{{WRAPPER}} .elemenetskit-tablepress .dataTables_filter input, {{WRAPPER}} .elemenetskit-tablepress .dataTables_length select',
+				'selector' => '{{WRAPPER}} .elemenetskit-tablepress .dt-search input, {{WRAPPER}} .elemenetskit-tablepress .dt-length select',
 			]
 		);
 
@@ -698,9 +703,13 @@ class ElementsKit_Widget_TablePress extends Widget_Base {
 		}
 		
 		if ( \Elementor\Plugin::instance()->editor->is_edit_mode() ) {
-			\TablePress::load_controller( 'frontend' );
-			$controller = new \TablePress_Frontend_Controller();
-			$controller->init_shortcodes();
+			// Only initialize shortcodes if they haven't been registered yet
+			if ( ! shortcode_exists( \TablePress::$shortcode ) ) {
+				
+				\TablePress::load_controller( 'frontend' );
+				$controller = new \TablePress_Frontend_Controller();
+				$controller->init_shortcodes();
+			}
 		}
 
 		$attributes = [

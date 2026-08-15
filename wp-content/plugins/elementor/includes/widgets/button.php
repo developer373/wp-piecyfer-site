@@ -2,6 +2,7 @@
 namespace Elementor;
 
 use Elementor\Includes\Widgets\Traits\Button_Trait;
+use Elementor\Modules\Promotions\Controls\Promotion_Control;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -81,6 +82,10 @@ class Widget_Button extends Widget_Base {
 		return false;
 	}
 
+	public function has_widget_inner_wrapper(): bool {
+		return ! Plugin::$instance->experiments->is_feature_active( 'e_optimized_markup' );
+	}
+
 	/**
 	 * Get widget upsale data.
 	 *
@@ -138,5 +143,21 @@ class Widget_Button extends Widget_Base {
 	 */
 	protected function render() {
 		$this->render_button();
+	}
+
+	public function render_markdown(): string {
+		$settings = $this->get_settings_for_display();
+
+		$text = Utils::html_to_plain_text( $settings['text'] ?? '' );
+
+		if ( empty( $text ) ) {
+			return '';
+		}
+
+		if ( ! empty( $settings['link']['url'] ) ) {
+			return '[' . $text . '](' . esc_url( $settings['link']['url'] ) . ')';
+		}
+
+		return '**' . $text . '**';
 	}
 }

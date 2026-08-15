@@ -1,6 +1,6 @@
 <?php
 /**
- * set default values
+ * Set default values
  * 
  * ccw_plugin_details - this values will be overwrite 
  * 
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 
 /**
- * table name: "ccw_options"
+ * Table name: "ccw_options"
  * enable, enable_sc  -  2 - enable, 1 - disable
  */
 $values = array(
@@ -45,14 +45,14 @@ $update_values = array_merge($values, $db_values);
 if ( isset( $update_values['number'] ) ) {
 
     $pre_number = $update_values['number'];
-    if ( '919494429789' == $pre_number || '919908469612' == $pre_number || '918897606725' == $pre_number ) {
+    if ( '919494429789' === $pre_number || '919908469612' === $pre_number || '918897606725' === $pre_number ) {
         $update_values['number'] = '';
     }
 }
 update_option('ccw_options', $update_values);
 
 /**
- * table name  - "ccw_options_cs"
+ * Table name  - "ccw_options_cs"
  * 
  * customize styles - options page
  * 
@@ -143,7 +143,7 @@ $plugin_details = array(
 update_option( 'ccw_plugin_details', $plugin_details );
 
 /**
- * for new interface.. in advance..
+ * For new interface.. in advance..
  */
 function new_options() {
 
@@ -175,7 +175,7 @@ new_options();
 
 
 /**
- * name: ht_ctc_switch 
+ * Name: ht_ctc_switch 
  * 
  * interface - option - yes new interface, no previous interface
  * 

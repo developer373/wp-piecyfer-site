@@ -1,7 +1,7 @@
 <?php
 /**
  * @uses ccw.php - initilaze at init
- * adds floatings style using add_action - wp_footer 
+ * Adds floatings style using add_action - wp_footer 
  * 
  * get values, check things ..
  * include styles.php and 
@@ -27,7 +27,7 @@ class HT_CCW_Chat {
     }
 
     /**
-     * add_action - wp_footer
+     * Add_action - wp_footer
      *
      * @uses this class contructor
      */
@@ -48,13 +48,12 @@ class HT_CCW_Chat {
         // similar - ht_ccw()->variables->get_option['enable'];
         $values = ht_ccw()->variables->get_option;
         
-        $enable = esc_attr( $values['enable'] );
-        $num = esc_attr( $values['number'] );
-        $val = esc_attr( $values['input_placeholder'] );
-        // $val_form_db = esc_attr( $values['input_placeholder'] );
-        // $val = __( $val_form_db, 'click-to-chat-for-whatsapp' );
+        $enable = isset( $values['enable'] ) ? esc_attr( $values['enable'] ) : '2';
+        $num = isset( $values['number'] ) ? esc_attr( $values['number'] ) : '';
+        $val = isset( $values['input_placeholder'] ) ? esc_attr( $values['input_placeholder'] ) : 'WhatsApp us';
+        // $val = esc_attr( $values['input_placeholder'] );
 
-        $position = esc_attr( $values['position'] );
+        $position = isset( $values['position'] ) ? esc_attr( $values['position'] ) : '1';
 
         // $style = esc_attr( $values['style'] );
 
@@ -70,7 +69,7 @@ class HT_CCW_Chat {
         if ( isset( $values['google_analytics'] ) ) {
             $google_analytics = 'true';
 
-            $ht_ccw_ga = get_option( 'ht_ccw_ga' );
+            $ht_ccw_ga = get_option( 'ht_ccw_ga', array() );
 
             $ga_category = esc_attr( $ht_ccw_ga['ga_category'] );
             $ga_action = esc_attr( $ht_ccw_ga['ga_action'] );
@@ -82,7 +81,7 @@ class HT_CCW_Chat {
         $page_title = esc_html( get_the_title() );
 
         /**
-         * pass values to JavaScript 
+         * Pass values to JavaScript 
          * @var string google_analytics - is enable
          */
         $ht_ccw_var = array(
@@ -98,14 +97,15 @@ class HT_CCW_Chat {
         wp_localize_script( 'ccw_app', 'ht_ccw_var', $ht_ccw_var );
 
         // enable
-        if( 1 == $enable ) {
+        // the output : is string '1'
+        if( '1' === $enable ) {
             return;
         }
         
         // $ccw_option_values =  get_option('ccw_options');
         
         $this_page_id = get_the_ID();
-        $pages_list_tohide = esc_attr( $values['list_hideon_pages'] );
+        $pages_list_tohide = isset( $values['list_hideon_pages'] ) ? esc_attr( $values['list_hideon_pages'] ) : '';
         $pages_list_tohide_array = explode(',', $pages_list_tohide);
         
         
@@ -146,7 +146,7 @@ class HT_CCW_Chat {
 
 
         // Hide styles on this catergorys - list
-        $list_hideon_cat = esc_attr( $values['list_hideon_cat'] );
+        $list_hideon_cat = isset( $values['list_hideon_cat'] ) ? esc_attr( $values['list_hideon_cat'] ) : '';
 
         // avoid calling foreach, explode when hide on categorys list is empty
         if( $list_hideon_cat ) {
@@ -168,19 +168,19 @@ class HT_CCW_Chat {
             }
         }
         
-
-        if( 1 == $position ) {
-            $p1 = 'bottom:'.esc_attr( $values['position-1_bottom'] );
-            $p2 = 'right:'.esc_attr( $values['position-1_right'] );
-        } elseif( 2 == $position ) {
-            $p1 = 'bottom:'.esc_attr( $values['position-2_bottom'] );
-            $p2 = 'left:'.esc_attr( $values['position-2_left'] );
-        } elseif( 3 == $position ) {
-            $p1 = 'top:'.esc_attr( $values['position-3_top'] );
-            $p2 = 'left:'.esc_attr( $values['position-3_left'] );
-        } elseif( 4 == $position ) {
-            $p1 = 'top:'.esc_attr( $values['position-4_top'] );
-            $p2 = 'right:'.esc_attr( $values['position-4_right'] );
+        // the value is getting in string 'num'
+        if( '1' === $position ) {
+            $p1 = 'bottom:'.(isset($values['position-1_bottom']) ? esc_attr( $values['position-1_bottom'] ) : '20px');
+            $p2 = 'right:'.(isset($values['position-1_right']) ? esc_attr( $values['position-1_right'] ) : '20px');
+        } elseif( '2' === $position ) {
+            $p1 = 'bottom:'.(isset($values['position-2_bottom']) ? esc_attr( $values['position-2_bottom'] ) : '20px');
+            $p2 = 'left:'.(isset($values['position-2_left']) ? esc_attr( $values['position-2_left'] ) : '20px');
+        } elseif( '3' === $position ) {
+            $p1 = 'top:'.(isset($values['position-3_top']) ? esc_attr( $values['position-3_top'] ) : '20px');
+            $p2 = 'left:'.(isset($values['position-3_left']) ? esc_attr( $values['position-3_left'] ) : '20px');
+        } elseif( '4' === $position ) {
+            $p1 = 'top:'.(isset($values['position-4_top']) ? esc_attr( $values['position-4_top'] ) : '20px');
+            $p2 = 'right:'.(isset($values['position-4_right']) ? esc_attr( $values['position-4_right'] ) : '20px');
         }
 
 

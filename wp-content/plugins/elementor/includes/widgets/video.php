@@ -2,6 +2,7 @@
 namespace Elementor;
 
 use Elementor\Modules\DynamicTags\Module as TagsModule;
+use Elementor\Modules\Promotions\Controls\Promotion_Control;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -104,6 +105,10 @@ class Widget_Video extends Widget_Base {
 	 */
 	public function get_style_depends(): array {
 		return [ 'widget-video' ];
+	}
+
+	public function has_widget_inner_wrapper(): bool {
+		return ! Plugin::$instance->experiments->is_feature_active( 'e_optimized_markup' );
 	}
 
 	/**
@@ -428,9 +433,9 @@ class Widget_Video extends Widget_Base {
 		);
 
 		$this->add_control(
-			'modestbranding',
+			'cc_load_policy',
 			[
-				'label' => esc_html__( 'Modest Branding', 'elementor' ),
+				'label' => esc_html__( 'Captions', 'elementor' ),
 				'type' => Controls_Manager::SWITCHER,
 				'condition' => [
 					'video_type' => [ 'youtube' ],
@@ -953,7 +958,7 @@ class Widget_Video extends Widget_Base {
 					'unit' => '%',
 				],
 				// 'selectors' => [
-				// 	'(desktop+)#elementor-lightbox-{{ID}} .elementor-video-container' => 'width: {{SIZE}}{{UNIT}};',
+				// '(desktop+)#elementor-lightbox-{{ID}} .elementor-video-container' => 'width: {{SIZE}}{{UNIT}};',
 				// ],
 				'condition' => [
 					'lightbox_video_width!' => '',
@@ -974,7 +979,7 @@ class Widget_Video extends Widget_Base {
 					'top' => esc_html__( 'Top', 'elementor' ),
 				],
 				// 'selectors' => [
-				// 	'#elementor-lightbox-{{ID}} .elementor-video-container' => '{{VALUE}}; transform: translateX(-50%);',
+				// '#elementor-lightbox-{{ID}} .elementor-video-container' => '{{VALUE}}; transform: translateX(-50%);',
 				// ],
 				'selectors_dictionary' => [
 					'top' => 'top: 60px',
@@ -1044,7 +1049,7 @@ class Widget_Video extends Widget_Base {
 			if ( $is_static_render_mode ) {
 				$video_html = Embed::get_embed_thumbnail_html( $video_url, $post_id );
 				// YouTube API requires a different markup which was set above.
-			} else if ( 'youtube' !== $settings['video_type'] ) {
+			} elseif ( 'youtube' !== $settings['video_type'] ) {
 				$video_html = Embed::get_embed_html( $video_url, $embed_params, $embed_options );
 			}
 		}
@@ -1130,7 +1135,6 @@ class Widget_Video extends Widget_Base {
 							}
 							Icons_Manager::render_icon( $settings['play_icon'], [ 'aria-hidden' => 'true' ] );
 							?>
-							<span class="elementor-screen-only"><?php $this->print_a11y_text( $settings['image_overlay'] ); ?></span>
 						</div>
 					<?php endif; ?>
 				</div>
@@ -1190,7 +1194,7 @@ class Widget_Video extends Widget_Base {
 				'controls',
 				'mute',
 				'rel',
-				'modestbranding',
+				'cc_load_policy',
 			];
 
 			if ( $settings['loop'] ) {
@@ -1329,7 +1333,6 @@ class Widget_Video extends Widget_Base {
 	}
 
 	/**
-	 * @param bool $from_media
 	 *
 	 * @return string
 	 * @since 2.1.0
@@ -1409,5 +1412,27 @@ class Widget_Video extends Widget_Base {
 		?>
 		<video class="elementor-video" src="<?php echo esc_attr( $video_url ); ?>" <?php Utils::print_html_attributes( $video_params ); ?>></video>
 		<?php
+	}
+
+	public function render_markdown(): string {
+		$settings = $this->get_settings_for_display();
+		$video_type = $settings['video_type'] ?? 'youtube';
+		$url = '';
+
+		if ( 'hosted' === $video_type ) {
+			if ( ! empty( $settings['insert_url'] ) ) {
+				$url = $settings['external_url']['url'] ?? '';
+			} else {
+				$url = $settings['hosted_url']['url'] ?? '';
+			}
+		} else {
+			$url = $settings[ $video_type . '_url' ] ?? '';
+		}
+
+		if ( empty( $url ) ) {
+			return '';
+		}
+
+		return '[Video](' . esc_url( $url ) . ')';
 	}
 }

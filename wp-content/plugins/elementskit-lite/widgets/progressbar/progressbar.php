@@ -15,6 +15,14 @@ class ElementsKit_Widget_Progressbar extends Widget_Base {
 		parent::__construct( $data, $args );
 	}
 
+	public function get_script_depends() {
+		return ['ekit-animate-numbers', 'ekit-progressbar'];
+	}
+
+	public function get_style_depends() {
+		return ['ekit-progressbar'];
+	}
+
     public function get_name() {
         return Handler::get_name();
     }
@@ -458,7 +466,7 @@ class ElementsKit_Widget_Progressbar extends Widget_Base {
                 'type'       => Controls_Manager::COLOR,
                 'selectors'  => [
                     '{{WRAPPER}} .skillbar-group .skill-track > span i' => 'color: {{VALUE}};',
-                    '{{WRAPPER}} .skillbar-group .skill-track > span svg path'  => 'stroke: {{VALUE}}; fill: {{VALUE}};',
+                    '{{WRAPPER}} .skillbar-group .skill-track > span svg'  => 'fill: {{VALUE}};',
                 ],
             ]
         );

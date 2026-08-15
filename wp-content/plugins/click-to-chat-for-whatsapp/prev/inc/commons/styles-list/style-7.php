@@ -1,6 +1,6 @@
 <?php
 /**
- * button with icon - box
+ * Button with icon - box
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -20,11 +20,11 @@ $s7_css_icon = "color: $s7_color; font-size: $s7_icon_size;";
 $s7_css_div = "background-color: $s7_box_background_color; height: $s7_box_height; width: $s7_box_width; line-height: $s7_line_height;  ";
 ?>
 <div class="ccw_plugin">
-<div class="chatbot btn_only_style_div pointer ccw-analytics animated <?= $an_on_load .' '. $an_on_hover ?>" id="style-7" data-ccw="style-7" 
-    style="<?= $p1 ?>; <?= $p2 ?>; <?= $s7_css_div ?>"
-    onmouseover = "this.style.backgroundColor = '<?= $s7_box_background_hover_color ?>', document.getElementsByClassName('ccw-s7-icon')[0].style.color = '<?= $s7_hover_color ?>' "
-    onmouseout  = "this.style.backgroundColor = '<?= $s7_box_background_color ?>', document.getElementsByClassName('ccw-s7-icon')[0].style.color = '<?= $s7_color ?>' "
-    onclick = "<?= $redirect ?>" >
-        <span class="icon icon-whatsapp2 ccw-s7-icon nofocus ccw-analytics" id="s7-icon" data-ccw="style-7" style="<?= $s7_css_icon ?>"></span>
+<div class="chatbot btn_only_style_div pointer ccw-analytics animated <?php echo esc_attr($an_on_load) .' '. esc_attr($an_on_hover) ?>" id="style-7" data-ccw="style-7" 
+    style="<?php echo esc_attr($p1) ?>; <?php echo esc_attr($p2) ?>; <?php echo esc_attr($s7_css_div) ?>"
+    onmouseover = "this.style.backgroundColor = '<?php echo esc_js($s7_box_background_hover_color) ?>', document.getElementsByClassName('ccw-s7-icon')[0].style.color = '<?php echo esc_js($s7_hover_color) ?>' "
+    onmouseout  = "this.style.backgroundColor = '<?php echo esc_js($s7_box_background_color) ?>', document.getElementsByClassName('ccw-s7-icon')[0].style.color = '<?php echo esc_js($s7_color) ?>' "
+    onclick = "<?php echo esc_attr($redirect) ?>" >
+        <span class="icon icon-whatsapp2 ccw-s7-icon nofocus ccw-analytics" id="s7-icon" data-ccw="style-7" style="<?php echo esc_attr($s7_css_icon) ?>"></span>
 </div>
 </div>

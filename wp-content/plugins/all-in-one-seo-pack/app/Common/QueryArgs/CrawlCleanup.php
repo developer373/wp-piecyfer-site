@@ -23,10 +23,62 @@ class CrawlCleanup {
 	public function __construct() {
 		// Add action to clear crawl cleanup logs.
 		add_action( 'aioseo_crawl_cleanup_clear_logs', [ $this, 'clearLogs' ] );
+
+		if ( aioseo()->options->searchAppearance->advanced->blockArgs->optimizeUtmParameters ) {
+			add_action( 'template_redirect', [ $this, 'maybeRedirectUtmParameters' ], 50 );
+		}
+	}
+
+	/**
+	 * Redirects the UTM parameters to with (#) equivalent.
+	 *
+	 * @since 4.8.0
+	 *
+	 * @return void
+	 */
+	public function maybeRedirectUtmParameters() {
+		$requestUri = aioseo()->helpers->getRequestUrl();
+		if ( empty( $requestUri ) ) {
+			return;
+		}
+
+		$parsed = wp_parse_url( $requestUri );
+		if ( empty( $parsed['query'] ) ) {
+			return;
+		}
+
+		$args = [];
+		wp_parse_str( $parsed['query'], $args );
+
+		// Reset query to reconstruct without utm_ parameters.
+		$parsed['query'] = '';
+
+		// Initialize the fragment key if it's not set.
+		if ( ! isset( $parsed['fragment'] ) ) {
+			$parsed['fragment'] = '';
+		}
+
+		// Check if there are any utm_ parameters and redirect accordingly.
+		$utmFound = false;
+		foreach ( $args as $key => $value ) {
+			$keyValue = $key . '=' . $value;
+			if ( 0 === stripos( $key, 'utm_' ) ) {
+				$utmFound = true;
+				// Rebuild the URL with # instead of ?.
+				$parsed['fragment'] .= ! empty( $parsed['fragment'] ) ? '&' . $keyValue : $keyValue;
+			} else {
+				$parsed['query'] .= ! empty( $parsed['query'] ) ? '&' . $keyValue : $keyValue;
+			}
+		}
+
+		if ( $utmFound ) {
+			aioseo()->helpers->redirect( aioseo()->helpers->buildUrl( $parsed ), 301, 'Optimize UTM parameters' );
+		}
 	}
 
 	/**
 	 * Schedule clearing of the logs.
+	 * This runs when the logs retention option is changed.
 	 *
 	 * @since 4.5.8
 	 *
@@ -34,6 +86,7 @@ class CrawlCleanup {
 	 */
 	public function scheduleClearingLogs() {
 		aioseo()->actionScheduler->unschedule( 'aioseo_crawl_cleanup_clear_logs' );
+
 		$optionLength = json_decode( aioseo()->options->searchAppearance->advanced->blockArgs->logsRetention )->value;
 		if (
 			aioseo()->options->searchAppearance->advanced->blockArgs->enable &&
@@ -90,13 +143,13 @@ class CrawlCleanup {
 			->start( 'aioseo_crawl_cleanup_logs as logs' )
 			->select( ' logs.id,
 						logs.slug,
-						logs.key,
+						logs.param,
 						logs.value,
 						logs.hits,
 						logs.updated' )
 			->leftJoin( 'aioseo_crawl_cleanup_blocked_args as blocked',
-				'blocked.key_value_hash = sha1(logs.key) OR
-					blocked.key_value_hash = sha1(concat(logs.key, "' . $keyValueSeparator . '", logs.value))' )
+				'blocked.param_value_hash = sha1(logs.param) OR
+					blocked.param_value_hash = sha1(concat(logs.param, "' . $keyValueSeparator . '", logs.value))' )
 			->limit( $limit, $offset );
 
 		if ( ! empty( $searchTerm ) ) {
@@ -122,7 +175,7 @@ class CrawlCleanup {
 		// Test logs (unblocked) to see if have some regex block.
 		$regexMatches = [];
 		foreach ( $rowsUnblocked as $unblocked ) {
-			$blockedRegex = Models\CrawlCleanupBlockedArg::matchRegex( $unblocked->key, $unblocked->value );
+			$blockedRegex = Models\CrawlCleanupBlockedArg::matchRegex( $unblocked->param, $unblocked->value );
 			if ( $blockedRegex->exists() ) {
 				$regexMatches[ $unblocked->id ] = $blockedRegex->regex;
 			}
@@ -131,7 +184,7 @@ class CrawlCleanup {
 		// Query to get Blocked Args and the total.
 		$queryBlocked = aioseo()->core->db
 			->select( ' b.id,
-						b.key,
+						b.param,
 						b.value,
 						b.regex,
 						b.hits,
@@ -148,10 +201,10 @@ class CrawlCleanup {
 			];
 
 			$comparisons = [
-				'b.key',
+				'b.param',
 				'b.value',
 				'b.regex',
-				'CONCAT(b.key, \'' . $keyValueSeparator . '\', IF(b.value, b.value, \'*\'))'
+				'CONCAT(b.param, \'' . $keyValueSeparator . '\', IF(b.value, b.value, \'*\'))'
 			];
 
 			$where = '';
@@ -161,7 +214,7 @@ class CrawlCleanup {
 						$where .= ' OR ';
 					}
 
-					$where .= aioseo()->db->db->prepare( " $comparison LIKE %s ", '%' . $s . '%' );
+					$where .= aioseo()->core->db->db->prepare( " $comparison LIKE %s ", '%' . $s . '%' );
 				}
 			}
 
@@ -237,18 +290,18 @@ class CrawlCleanup {
 		try {
 			foreach ( $body as $block ) {
 				if ( $block ) {
-					$blocked = Models\CrawlCleanupBlockedArg::getByKeyValue( $block['key'], $block['value'] );
+					$blocked = Models\CrawlCleanupBlockedArg::getByKeyValue( $block['param'], $block['value'] );
 					if ( ! $blocked->exists() && ! empty( $block['regex'] ) ) {
 						$blocked = Models\CrawlCleanupBlockedArg::getByRegex( $block['regex'] );
 					}
 
 					if ( $blocked->exists() ) {
 						$exists[] = [
-							'key'   => $block['key'],
+							'param' => $block['param'],
 							'value' => $block['value']
 						];
 
-						$keyValue = sha1( Models\CrawlCleanupBlockedArg::getKeyValueString( $block['key'], $block['value'] ) );
+						$keyValue = sha1( Models\CrawlCleanupBlockedArg::getKeyValueString( $block['param'], $block['value'] ) );
 						if ( ! in_array( $keyValue, $listSaved, true ) ) {
 							$return = false;
 							$error  = 1;
@@ -261,7 +314,7 @@ class CrawlCleanup {
 					$blocked->set( $block );
 					$blocked->save();
 
-					$listSaved[] = $blocked->key_value_hash;
+					$listSaved[] = $blocked->param_value_hash; // @phpstan-ignore-line
 				}
 			}
 		} catch ( \Throwable $th ) {

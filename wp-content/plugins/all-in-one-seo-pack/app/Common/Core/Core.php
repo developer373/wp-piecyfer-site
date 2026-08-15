@@ -37,7 +37,15 @@ class Core {
 		'aioseo_redirects_logs',
 		'aioseo_terms',
 		'aioseo_search_statistics_objects',
-		'aioseo_revisions'
+		'aioseo_search_statistics_keywords',
+		'aioseo_search_statistics_keyword_groups',
+		'aioseo_search_statistics_keyword_relationships',
+		'aioseo_revisions',
+		'aioseo_seo_analyzer_objects',
+		'aioseo_seo_analyzer_results',
+		'aioseo_writing_assistant_keywords',
+		'aioseo_writing_assistant_posts',
+		'aioseo_ai_insights_keyword_reports'
 	];
 
 	/**
@@ -86,15 +94,6 @@ class Core {
 	public $networkCache = null;
 
 	/**
-	 * CachePrune class instance.
-	 *
-	 * @since 4.2.7
-	 *
-	 * @var Utils\CachePrune
-	 */
-	public $cachePrune = null;
-
-	/**
 	 * Options Cache class instance.
 	 *
 	 * @since 4.2.7
@@ -114,54 +113,7 @@ class Core {
 		$this->db           = new Utils\Database();
 		$this->cache        = new Utils\Cache();
 		$this->networkCache = new Utils\NetworkCache();
-		$this->cachePrune   = new Utils\CachePrune();
 		$this->optionsCache = new Options\Cache();
-	}
-
-	/**
-	 * Removes all our tables and options.
-	 *
-	 * @since 4.2.3
-	 *
-	 * @param  bool $force Whether we should ignore the uninstall option or not. We ignore it when we reset all data via the Debug Panel.
-	 * @return void
-	 */
-	public function uninstallDb( $force = false ) {
-		// Don't call `aioseo()->options` as it's not loaded during uninstall.
-		$aioseoOptions = get_option( 'aioseo_options', '' );
-		$aioseoOptions = json_decode( $aioseoOptions, true );
-
-		// Confirm that user has decided to remove all data, otherwise stop.
-		if (
-			! $force &&
-			empty( $aioseoOptions['advanced']['uninstall'] )
-		) {
-			return;
-		}
-
-		// Delete all our custom tables.
-		global $wpdb;
-
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery
-		foreach ( $this->getDbTables() as $tableName ) {
-			$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $tableName ) );
-		}
-
-		// Delete all AIOSEO Locations and Location Categories.
-		$wpdb->delete( $wpdb->posts, [ 'post_type' => 'aioseo-location' ], [ '%s' ] );
-		$wpdb->delete( $wpdb->term_taxonomy, [ 'taxonomy' => 'aioseo-location-category' ], [ '%s' ] );
-
-		// Delete all the plugin settings.
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", 'aioseo\_%' ) );
-
-		// Remove any transients we've left behind.
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", '\_aioseo\_%' ) );
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", 'aioseo\_%' ) );
-
-		// Delete all entries from the action scheduler table.
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}actionscheduler_actions WHERE hook LIKE %s", 'aioseo\_%' ) );
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}actionscheduler_groups WHERE slug = %s", 'aioseo' ) );
-		// phpcs:enable
 	}
 
 	/**

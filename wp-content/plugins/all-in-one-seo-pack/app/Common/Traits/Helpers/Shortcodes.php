@@ -136,6 +136,7 @@ trait Shortcodes {
 		}
 
 		// Set a flag to indicate Divi that it's processing internal content.
+
 		$default = aioseo()->helpers->setDiviInternalRendering( true );
 
 		$content = do_shortcode( $content );

@@ -13,25 +13,31 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-$ccw_options_cs = get_option('ccw_options_cs');
+$ccw_options_cs = get_option( 'ccw_options_cs', array() );
 
 //  if it is mobile device, or tab is_mobile is 1, if not 2 or any thing
 $is_mobile = ht_ccw()->device_type->is_mobile;
 
-$return_type = esc_attr( $values['return_type'] );
-$group_id = esc_attr( $values['group_id'] );
-$page_url = get_permalink();
-$text = esc_attr( $values['initial'] );
+$return_type = isset( $values['return_type'] ) ? esc_attr( $values['return_type'] ) : 'chat';
 
-$initial_text = str_replace( '{{url}}', $page_url, $text );
+// Strict sanitization for values that will be interpolated into a JS string
+// inside an HTML onclick attribute. esc_attr alone is insufficient there:
+// the browser HTML-decodes the attribute before executing the JS, so &#039;
+// becomes ' again and can break out of the JS string.
+$group_id = isset( $values['group_id'] ) ? preg_replace( '/[^A-Za-z0-9]/', '', (string) $values['group_id'] ) : '';
+$num      = preg_replace( '/[^0-9+]/', '', (string) ( isset( $num ) ? $num : '' ) );
+
+$page_url     = get_permalink();
+$text         = isset( $values['initial'] ) ? (string) $values['initial'] : '';
+$initial_text = rawurlencode( str_replace( '{{url}}', (string) $page_url, $text ) );
 
 
 // $an_on_load = "animated bounce infinite";
-$an_on_load = esc_attr( $ccw_options_cs['an_on_load'] );
+$an_on_load = isset( $ccw_options_cs['an_on_load'] ) ? esc_attr( $ccw_options_cs['an_on_load'] ) : 'no-animation';
 
 // if yes - add's 'ccw-an' class to styles
 // for class ccw-an - animated in javascript
-$an_on_hover = esc_attr( $ccw_options_cs['an_on_hover'] );
+$an_on_hover = isset( $ccw_options_cs['an_on_hover'] ) ? esc_attr( $ccw_options_cs['an_on_hover'] ) : 'ccw-no-hover-an';
 
 
 
@@ -42,13 +48,14 @@ $an_on_hover = esc_attr( $ccw_options_cs['an_on_hover'] );
  */
 $redirect = "";
 
-if( 1 == $is_mobile ) {
+// output : 1 - for mobile, '' - for desktop
+if( 1 === $is_mobile ) {
 
     // selected style for mobile devices
-    $style = esc_attr( $values['stylemobile'] );
+    $style = isset( $values['stylemobile'] ) ? esc_attr( $values['stylemobile'] ) : '3';
 
     
-    if ( 'group_chat' == $return_type ) {
+    if ( 'group_chat' === $return_type ) {
         $redirect = "window.open('https://chat.whatsapp.com/$group_id', '_blank', 'noopener')";
         $redirect_a = "https://chat.whatsapp.com/$group_id";
     } else {
@@ -58,13 +65,13 @@ if( 1 == $is_mobile ) {
 } else {
 
     // selected style for desktop devices
-    $style = esc_attr( $values['style'] );
+    $style = isset( $values['style'] ) ? esc_attr( $values['style'] ) : '1';
 
 
     if ( isset( $values['app_first'] ) ) {
 
         // App First - so mobile based url
-        if ( 'group_chat' == $return_type ) {
+        if ( 'group_chat' === $return_type ) {
             $redirect = "window.open('https://chat.whatsapp.com/$group_id', '_blank', 'noreferrer')";
             $redirect_a = "https://chat.whatsapp.com/$group_id";
         } else {
@@ -76,7 +83,7 @@ if( 1 == $is_mobile ) {
     } else {
 
         // General - Desktop url
-        if ( 'group_chat' == $return_type ) {
+        if ( 'group_chat' === $return_type ) {
             $redirect = "window.open('https://chat.whatsapp.com/$group_id', '_blank', 'noreferrer')";
             $redirect_a = "https://chat.whatsapp.com/$group_id";
         } else {
@@ -94,8 +101,9 @@ $style = sanitize_file_name( $style );
 $path = plugin_dir_path( HT_CTC_PLUGIN_FILE ) . 'prev/inc/commons/styles-list/style-' . $style. '.php';
 
 $version = HT_CTC_VERSION;
-$comment = "<!-- Click to Chat - prev - https://holithemes.com/plugins/click-to-chat/  v$version -->";
-echo $comment;
+?>
+<!-- Click to Chat - prev - https://holithemes.com/plugins/click-to-chat/ v<?php echo esc_attr($version); ?> -->
+<?php
 
 if ( is_file( $path ) ) {
     include_once $path;

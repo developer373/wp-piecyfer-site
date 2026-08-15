@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use Elementor\Core\Kits\Documents\Tabs\Global_Colors;
+use Elementor\Modules\Promotions\Controls\Promotion_Control;
 
 /**
  * Elementor image carousel widget.
@@ -92,6 +93,24 @@ class Widget_Image_Carousel extends Widget_Base {
 	}
 
 	/**
+	 * Get script dependencies.
+	 *
+	 * Retrieve the list of script dependencies the widget requires.
+	 *
+	 * @since 3.27.0
+	 * @access public
+	 *
+	 * @return array Widget script dependencies.
+	 */
+	public function get_script_depends(): array {
+		return [ 'swiper' ];
+	}
+
+	public function has_widget_inner_wrapper(): bool {
+		return ! Plugin::$instance->experiments->is_feature_active( 'e_optimized_markup' );
+	}
+
+	/**
 	 * Get widget upsale data.
 	 *
 	 * Retrieve the widget promotion data.
@@ -125,6 +144,15 @@ class Widget_Image_Carousel extends Widget_Base {
 			'section_image_carousel',
 			[
 				'label' => esc_html__( 'Image Carousel', 'elementor' ),
+			]
+		);
+
+		$this->add_control(
+			'carousel_name',
+			[
+				'label' => esc_html__( 'Carousel Name', 'elementor' ),
+				'type' => Controls_Manager::TEXT,
+				'default' => esc_html__( 'Image Carousel', 'elementor' ),
 			]
 		);
 
@@ -631,6 +659,26 @@ class Widget_Image_Carousel extends Widget_Base {
 		);
 
 		$this->add_responsive_control(
+			'dots_gap',
+			[
+				'label' => esc_html__( 'Space Between Dots', 'elementor' ),
+				'type' => Controls_Manager::SLIDER,
+				'size_units' => [ 'px', 'em', 'rem', 'custom' ],
+				'range' => [
+					'px' => [
+						'max' => 20,
+					],
+				],
+				'selectors' => [
+					'{{WRAPPER}} .swiper-pagination-bullet' => '--swiper-pagination-bullet-horizontal-gap: {{SIZE}}{{UNIT}}; --swiper-pagination-bullet-vertical-gap: {{SIZE}}{{UNIT}};',
+				],
+				'condition' => [
+					'navigation' => [ 'dots', 'both' ],
+				],
+			]
+		);
+
+		$this->add_responsive_control(
 			'dots_size',
 			[
 				'label' => esc_html__( 'Size', 'elementor' ),
@@ -738,7 +786,7 @@ class Widget_Image_Carousel extends Widget_Base {
 			[
 				'label' => esc_html__( 'Image Spacing', 'elementor' ),
 				'type' => Controls_Manager::SLIDER,
-				'size_units' => [ 'px', 'em', 'rem', 'custom' ],
+				'size_units' => [ 'px' ],
 				'range' => [
 					'px' => [
 						'max' => 100,
@@ -796,22 +844,27 @@ class Widget_Image_Carousel extends Widget_Base {
 				'label' => esc_html__( 'Alignment', 'elementor' ),
 				'type' => Controls_Manager::CHOOSE,
 				'options' => [
-					'left' => [
-						'title' => esc_html__( 'Left', 'elementor' ),
+					'start' => [
+						'title' => esc_html__( 'Start', 'elementor' ),
 						'icon' => 'eicon-text-align-left',
 					],
 					'center' => [
 						'title' => esc_html__( 'Center', 'elementor' ),
 						'icon' => 'eicon-text-align-center',
 					],
-					'right' => [
-						'title' => esc_html__( 'Right', 'elementor' ),
+					'end' => [
+						'title' => esc_html__( 'End', 'elementor' ),
 						'icon' => 'eicon-text-align-right',
 					],
 					'justify' => [
 						'title' => esc_html__( 'Justified', 'elementor' ),
 						'icon' => 'eicon-text-align-justify',
 					],
+				],
+				'classes' => 'elementor-control-start-end',
+				'selectors_dictionary' => [
+					'left' => is_rtl() ? 'end' : 'start',
+					'right' => is_rtl() ? 'start' : 'end',
 				],
 				'default' => 'center',
 				'selectors' => [
@@ -961,7 +1014,7 @@ class Widget_Image_Carousel extends Widget_Base {
 			return;
 		}
 
-		$swiper_class = Plugin::$instance->experiments->is_feature_active( 'e_swiper_latest' ) ? 'swiper' : 'swiper-container';
+		$swiper_class = 'swiper';
 		$has_autoplay_enabled = 'yes' === $this->get_settings_for_display( 'autoplay' );
 
 		$this->add_render_attribute( [
@@ -971,6 +1024,9 @@ class Widget_Image_Carousel extends Widget_Base {
 			],
 			'carousel-wrapper' => [
 				'class' => 'elementor-image-carousel-wrapper ' . $swiper_class,
+				'role' => 'region',
+				'aria-roledescription' => 'carousel',
+				'aria-label' => $settings['carousel_name'],
 				'dir' => $settings['direction'],
 			],
 		] );
@@ -1013,7 +1069,7 @@ class Widget_Image_Carousel extends Widget_Base {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @param array $attachment
+	 * @param array  $attachment
 	 * @param object $instance
 	 *
 	 * @return array|string|false An array/string containing the attachment URL, or false if no link.
@@ -1086,5 +1142,25 @@ class Widget_Image_Carousel extends Widget_Base {
 		}
 
 		Icons_Manager::render_icon( $icon_settings, [ 'aria-hidden' => 'true' ] );
+	}
+
+	public function render_markdown(): string {
+		$settings = $this->get_settings_for_display();
+		if ( empty( $settings['carousel'] ) ) {
+			return '';
+		}
+		$images = [];
+		foreach ( $settings['carousel'] as $item ) {
+			$url = $item['url'] ?? '';
+			if ( empty( $url ) ) {
+				continue;
+			}
+			$alt = '';
+			if ( ! empty( $item['id'] ) ) {
+				$alt = get_post_meta( $item['id'], '_wp_attachment_image_alt', true );
+			}
+			$images[] = '![' . $alt . '](' . esc_url( $url ) . ')';
+		}
+		return implode( "\n\n", $images );
 	}
 }

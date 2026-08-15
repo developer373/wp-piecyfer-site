@@ -41,7 +41,11 @@ class ElementsKit_Widget_Client_Logo extends Widget_Base {
     }
 
 	public function get_style_depends() {
-		return ['swiper'];
+		return ['swiper', 'ekit-client-logo'];
+	}
+
+	public function get_script_depends() {
+		return ['ekit-client-logo', 'swiper'];
 	}
 
     protected function is_dynamic_content(): bool {
@@ -862,7 +866,7 @@ class ElementsKit_Widget_Client_Logo extends Widget_Base {
 				],
 				'selectors' => [
 					'{{WRAPPER}} .elementskit-clients-slider .swiper-navigation-button' => 'font-size: {{SIZE}}{{UNIT}};',
-					'{{WRAPPER}} .elementskit-clients-slider .swiper-navigation-button svg' => 'font-size: {{SIZE}}{{UNIT}}; width: 1em; height: 1em;',
+					'{{WRAPPER}} .elementskit-clients-slider .swiper-navigation-button svg' => 'font-size: {{SIZE}}{{UNIT}};',
 				],
 			]
         );
@@ -1591,9 +1595,7 @@ class ElementsKit_Widget_Client_Logo extends Widget_Base {
 							<div class="swiper-slide-inner">
 								<div class="single-client image-switcher" title="<?php echo esc_attr( $logo['ekit_client_logo_list_title'] ); ?>">
 									<?php if($logo['ekit_client_logo_enable_link'] == 'yes') :  ?>
-
-
-										<a <?php echo $this->get_render_attribute_string( 'button-' . esc_attr($count) ); ?> <?php echo $this->get_render_attribute_string( 'link_' . esc_attr($count) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped by elementor ?>>
+										<a <?php $this->print_render_attribute_string( 'button-' . esc_attr($count) ); ?>>
 											<span class="content-image">
 												<?php
 												echo wp_kses(
@@ -1614,11 +1616,8 @@ class ElementsKit_Widget_Client_Logo extends Widget_Base {
 												?>
 											</span>
 										</a>
-
 									<?php else:  ?>
-
 										<div class="content-image">
-
 											<?php
 											echo wp_kses(
 												\Elementskit_Lite\Utils::get_attachment_image_html($logo, 'ekit_client_logo_image_normal', 'full', [
@@ -1637,9 +1636,7 @@ class ElementsKit_Widget_Client_Logo extends Widget_Base {
 											}
 											?>
 										</div>
-
 									<?php endif; ?>
-
 								</div>
 							</div>
 						</div>

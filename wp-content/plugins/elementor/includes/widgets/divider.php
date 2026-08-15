@@ -94,6 +94,10 @@ class Widget_Divider extends Widget_Base {
 		return false;
 	}
 
+	public function has_widget_inner_wrapper(): bool {
+		return ! Plugin::$instance->experiments->is_feature_active( 'e_optimized_markup' );
+	}
+
 	/**
 	 * Get style dependencies.
 	 *
@@ -324,8 +328,8 @@ class Widget_Divider extends Widget_Base {
 		);
 	}
 
-	private function filter_styles_by( $array, $key, $value ) {
-		return array_filter( $array, function( $style ) use ( $key, $value ) {
+	private function filter_styles_by( $styles_array, $key, $value ) {
+		return array_filter( $styles_array, function( $style ) use ( $key, $value ) {
 			return $value === $style[ $key ];
 		} );
 	}
@@ -1133,5 +1137,15 @@ class Widget_Divider extends Widget_Base {
 			</span>
 		</div>
 		<?php
+	}
+
+	public function render_markdown(): string {
+		$settings = $this->get_settings_for_display();
+
+		if ( 'line_text' === ( $settings['look'] ?? '' ) && ! empty( $settings['text'] ) ) {
+			return '--- ' . Utils::html_to_plain_text( $settings['text'] ) . ' ---';
+		}
+
+		return '---';
 	}
 }

@@ -6,7 +6,7 @@ defined( 'ABSPATH' ) || exit;
 class Module_List extends \ElementsKit_Lite\Core\Config_List {
 
 	protected $type = 'module';
-	
+
 	protected function set_required_list() {
 
 		$this->required_list = array(
@@ -32,12 +32,12 @@ class Module_List extends \ElementsKit_Lite\Core\Config_List {
 			array(
 				'elementskit-icon-pack' => array(
 					'slug'       => 'elementskit-icon-pack',
-					'title'      => 'ElementsKit Icon Pack',
+					'title'      => 'Icon Pack',
 					'package'    => 'free', // free, pro, pro-disabled
 					//'path' => null,
 					//'base_class_name' => null,
 					//'live' => null
-					'attributes' => array( 'new' ),
+					// 'attributes' => array( 'new' ),
 				),
 				'header-footer' => array(
 					'slug'    => 'header-footer',
@@ -102,7 +102,7 @@ class Module_List extends \ElementsKit_Lite\Core\Config_List {
 				'masking' => array(
 					'slug'    => 'masking',
 					'package' => 'pro-disabled',
-					'title'   => 'Masking',
+					'title'   => 'Image Masking',
 				),
 				'particles' => array(
 					'slug'    => 'particles',
@@ -124,6 +124,30 @@ class Module_List extends \ElementsKit_Lite\Core\Config_List {
 					'package'           => 'pro-disabled',
 					'title'             => 'Mouse Cursor',
 				),
+				'liquid-glass' => [
+					'slug'              => 'liquid-glass',
+					'package'           => 'pro-disabled',
+					'title'             => 'Liquid Glass',
+					'attributes'        => array( 'new' ),
+				],
+				'badge' => [
+					'slug'              => 'badge',
+					'package'           => 'pro-disabled',
+					'title'             => 'Global Badge',
+					'attributes'        => array( 'new' ),
+				],
+				'scroll-reveal' => [
+					'slug'              => 'scroll-reveal',
+					'package'           => 'pro-disabled',
+					'title'             => 'Scroll Reveal',
+					'attributes'        => array( 'new' ),
+				],
+				'marquee' => [
+					'slug'              => 'marquee',
+					'package'           => 'pro-disabled',
+					'title'             => 'Marquee (Anything)',
+					'attributes'        => array( 'new' ),
+				],
 			)
 		);
 	}

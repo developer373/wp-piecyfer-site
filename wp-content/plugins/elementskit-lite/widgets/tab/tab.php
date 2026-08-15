@@ -11,6 +11,14 @@ class ElementsKit_Widget_Tab extends Widget_Base {
 
     public $base;
 
+	public function get_script_depends() {
+		return ['ui-slim','ekit-tab'];
+	}
+
+	public function get_style_depends() {
+		return ['ekit-tab'];
+	}
+
     public function get_name() {
         return Handler::get_name();
     }
@@ -543,7 +551,7 @@ class ElementsKit_Widget_Tab extends Widget_Base {
         );
 
         $this->end_controls_section();
-        
+
         // Header setting
         $this->start_controls_section(
             'ekit_tab_header_section_setting', [
@@ -763,6 +771,7 @@ class ElementsKit_Widget_Tab extends Widget_Base {
                 'default' => '#2575fc',
                 'selectors' => [
                     '{{WRAPPER}} .elementkit-tab-nav .elementkit-nav-link' => 'color: {{VALUE}};',
+                    '{{WRAPPER}} .elementskit-tab-icon :is(svg, i)' => 'fill: {{VALUE}}; color: {{VALUE}};',
                 ],
             ]
         );
@@ -774,7 +783,7 @@ class ElementsKit_Widget_Tab extends Widget_Base {
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
                     '{{WRAPPER}} .elementkit-tab-nav .elementkit-nav-link span.elementskit-tab-icon' => 'color: {{VALUE}};',
-                    '{{WRAPPER}} .elementkit-tab-nav .elementkit-nav-link span.elementskit-tab-icon path'   => 'stroke: {{VALUE}}; fill: {{VALUE}};'
+                    '{{WRAPPER}} .elementkit-tab-nav .elementkit-nav-link span.elementskit-tab-icon' => 'fill: {{VALUE}};'
                 ],
             ]
         );
@@ -837,6 +846,7 @@ class ElementsKit_Widget_Tab extends Widget_Base {
                 'default' => '#000',
                 'selectors' => [
                     '{{WRAPPER}} .elementkit-tab-nav .elementkit-nav-link.active' => 'color: {{VALUE}};',
+                    '{{WRAPPER}} .elementkit-nav-link.active .elementskit-tab-icon :is(svg, i)' => 'fill: {{VALUE}}; color: {{VALUE}};',
                 ],
             ]
         );
@@ -847,7 +857,7 @@ class ElementsKit_Widget_Tab extends Widget_Base {
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
                     '{{WRAPPER}} .elementkit-tab-nav .elementkit-nav-link.active span.elementskit-tab-icon' => 'color: {{VALUE}} !important;',
-                    '{{WRAPPER}} .elementkit-tab-nav .elementkit-nav-link.active span.elementskit-tab-icon path'    => 'stroke: {{VALUE}}; fill: {{VALUE}};',
+                    '{{WRAPPER}} .elementkit-tab-nav .elementkit-nav-link.active span.elementskit-tab-icon' => 'fill: {{VALUE}};',
                 ],
             ]
         );
@@ -2102,42 +2112,36 @@ class ElementsKit_Widget_Tab extends Widget_Base {
 
         ?>
         <div class="elementkit-tab-wraper <?php echo esc_attr($ekit_tab_style == 'vertical' ? 'vertical' : ''); ?> <?php if ($ekit_tab_fill_full_width != 'yes') : ?> elementskit-fitcontent-tab <?php endif; ?>">
-            <ul class="<?php echo esc_attr($nav_wrapper_class); ?>">
+            <ul class="<?php echo esc_attr($nav_wrapper_class); ?>" role="tablist"<?php echo ($ekit_tab_style == 'vertical') ? ' aria-orientation="vertical"' : ''; ?>>
                 <?php foreach ($ekit_tab_items as $i=>$tab) :
                     $is_active = ($tab['ekit_tab_title_is_active'] == 'yes') ? ' active show' : '';
                     $is_active = ($has_user_defined_active_tab == false && $i == 0) ? ' active show' : $is_active;
 
-                    // new icon
-                    $migrated = isset( $tab['__fa4_migrated']['ekit_tab_title_icons'] );
-                    // Check if its a new widget without previously selected icon using the old Icon control
-                    $is_new = empty( $tab['ekit_tab_title_icon'] );
-
-                    if($is_new || $migrated){
-                        ob_start();
-                            Icons_Manager::render_icon( $tab['ekit_tab_title_icons'], [ 'aria-hidden' => 'true' ] );
-                        $rendered_icon = ob_get_clean();
-
-                        $icon_html = !empty($tab['ekit_tab_title_icons']) ? ($tab['ekit_tab_title_icons']['library'] === 'svg' ? '<span class="elementskit-tab-icon">'. $rendered_icon .'</span>' : '<span class="'.  $tab['ekit_tab_title_icons']['value'] .' elementskit-tab-icon"></span>') : '';
+                    if(isset($tab['ekit_tab_title_icon_type']) && $tab['ekit_tab_title_icon_type'] == 'icon' && $tab['ekit_tab_title_icons'] != '') {
+                        $icon_html = '<span class="elementskit-tab-icon">' .  Icons_Manager::try_get_icon_html( $tab['ekit_tab_title_icons'], [ 'aria-hidden' => 'true' ] ) . '</span>';
                     } else {
-                        $icon_html = '<span class="'.  $tab['ekit_tab_title_icon'] .' elementskit-tab-icon"></span>';
+                        $icon_html = '';
                     }
 
-                   
-
                     $img_html = isset($tab['ekit_tab_title_icon_type']) && ($tab['ekit_tab_title_icon_type'] == 'image' && ! empty( $tab['ekit_tab_title_image']['url'] )) ?
-                        '<div class="ekit-icon-image">'. \Elementskit_Lite\Utils::get_attachment_image_html($tab, 'ekit_tab_title_image', 'full', [
+                        '<div class="ekit-icon-image elementskit-tab-icon">'. \Elementskit_Lite\Utils::get_attachment_image_html($tab, 'ekit_tab_title_image', 'full', [
                             'draggable' => 'false'
                         ]) .'</div>' : '';
-                    
+
                     // URL Hash id
                     $handler_id = (($tab['ekit_tab_title']) != '' ? strtolower(preg_replace("![^a-z0-9]+!i", "-", $tab['ekit_tab_title'])) : ('tab-'.$tab['_id']));
                     ?>
-                    <li class="elementkit-nav-item elementor-repeater-item-<?php echo esc_attr( $tab[ '_id' ] ); ?>">
+                    <li class="elementkit-nav-item elementor-repeater-item-<?php echo esc_attr( $tab[ '_id' ] ); ?>" role="presentation">
                         <a class="elementkit-nav-link <?php echo esc_attr($is_active);?> <?php echo esc_attr($ekit_tab_header_icon_pos_style); ?>" id="content-<?php echo esc_attr($tab['_id'].$tab_id); ?>-tab" data-ekit-handler-id="<?php echo esc_html( $handler_id ); ?>" data-ekit-toggle="tab" data-target="#content-<?php echo esc_attr($tab['_id'].$tab_id); ?>" href="#Content-<?php echo esc_attr($tab['_id'].$tab_id); ?>"
                             data-ekit-toggle-trigger="<?php echo esc_attr( $ekit_tab_trigger_type ); ?>"
-                            aria-describedby="Content-<?php echo esc_attr($tab['_id'].$tab_id); ?>">
+                            role="tab" aria-controls="content-<?php echo esc_attr($tab['_id'].$tab_id); ?>" aria-selected="<?php echo $is_active ? 'true' : 'false'; ?>">
                             <?php echo wp_kses($icon_html.$img_html, \ElementsKit_Lite\Utils::get_kses_array()); ?>
-                            <span class="elementskit-tab-title"> <?php $this->print_unescaped_setting( 'ekit_tab_title', 'ekit_tab_items', $i );?></span>
+                            <span class="elementskit-tab-title">
+                                <?php 
+                                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is sanitized by \ElementsKit_Lite\Utils::kses().
+                                echo \ElementsKit_Lite\Utils::kses( $tab['ekit_tab_title'] ); 
+                                ?>
+                            </span>
                         </a>
                     </li>
                     <?php endforeach; ?>
@@ -2149,13 +2153,13 @@ class ElementsKit_Widget_Tab extends Widget_Base {
                     $is_active = ($has_user_defined_active_tab == false && $i == 0) ? ' active show' : $is_active;
                 ?>
                     <div class="tab-pane elementkit-tab-pane elementor-repeater-item-<?php echo esc_attr( $tab[ '_id' ] ); ?> <?php echo esc_attr($is_active);?>" id="content-<?php echo esc_attr($tab['_id'].$tab_id); ?>" role="tabpanel"
-                         aria-labelledby="content-<?php echo esc_attr($tab['_id'].$tab_id); ?>-tab">
+                         aria-labelledby="content-<?php echo esc_attr($tab['_id'].$tab_id); ?>-tab" tabindex="0">
                         <div class="animated fadeIn">
                             <?php $this->print_text_editor( $tab['ekit_tab_content'] ); ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
-                
+
             </div>
             <?php
                 if ( isset( $settings['ekit_tab_schema'] ) && 'yes' === $settings['ekit_tab_schema'] ) {

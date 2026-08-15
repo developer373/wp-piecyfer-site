@@ -1,9 +1,9 @@
 === Click to Chat - HoliThemes ===
-Requires at least: 4.7
-Tested up to: 6.7.1
+Requires at least: 6.5
+Tested up to: 7.0
 Requires PHP: 5.6
-Contributors: holithemes
-Stable tag: 4.16
+Contributors: HoliThemes
+Stable tag: 4.42.1
 Tags: whatsapp, whatsapp business, click to chat, whatsapp chat, WooCommerce WhatsApp
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -14,7 +14,7 @@ WhatsApp Chat🔥. Let's make your Web page visitors contact you through 'WhatsA
 
 WhatsApp Chat. Let's make your Web page visitors contact you through "WhatsApp" or "WhatsApp Business" with a single click (WhatsApp Chat, Group).
 
-[Demo](https://holithemes.com/plugins/click-to-chat/list-of-styles/)  |  [Documentation](https://holithemes.com/plugins/click-to-chat/)  |  [Support](https://holithemes.com/plugins/click-to-chat/support/)  |  [PRO](https://holithemes.com/plugins/click-to-chat/pricing/)
+[Home](https://holithemes.com/plugins/click-to-chat/)  |  [Demo](https://holithemes.com/plugins/click-to-chat/list-of-styles/)  |  [Documentation](https://holithemes.com/plugins/click-to-chat/docs/)  |  [Support](https://holithemes.com/plugins/click-to-chat/support/)  |  [PRO](https://holithemes.com/plugins/click-to-chat/pricing/)
 
 == WhatsApp Chat ==
 
@@ -24,6 +24,7 @@ Add 'WhatsApp' or 'WhatsApp Business' Number and let your website visitors conta
 
 **💻 Desktop:** Direct visitors to the WhatsApp Desktop App or Web WhatsApp page (web.whatsapp.com)
 
+https://youtu.be/O_BF9rhazvI
 
 == 💎 Styles ==
 
@@ -57,13 +58,10 @@ The custom design element will navigate to WhatsApp based on plugin settings (Wh
 
 == 🎉 Greetings Dialog ==
 
-Encourage user participation by displaying the right message at the right time.
+Add customizable greeting dialogs for boosting user attention and increasing interaction. Seamlessly integrate these greetings into your website for better engagement.
 
-Add the greeting dialog text, Image/GIf, emojis with the rich text editor.
-Font can well decorate with font size, font family, links, text color, text background color, bold, italic, list, alignment, and more.
-
-* [Greetings-1](https://holithemes.com/plugins/click-to-chat/greetings-1/): Customizable Design
-* [Greetings-2](https://holithemes.com/plugins/click-to-chat/greetings-2/): Content Specific Design
+* [Greetings-1](https://holithemes.com/plugins/click-to-chat/greetings-1/) - Customizable Design: Personalize the design to match your branding with full control over fonts, colors, images, and more.
+* [Greetings-2](https://holithemes.com/plugins/click-to-chat/greetings-2/) - Content Specific: Deliver focused messages that resonate effectively with your users.
 
 = 📝 Form Filling =
 
@@ -89,9 +87,11 @@ PRO: [Multi-Agent](https://holithemes.com/plugins/click-to-chat/multi-agent)
 
 = ⌛ Greetings Actions =
 
-* **Click**: Displays Greetings when clicked on any element with the Class name: 'ctc_greetings'
-* **ViewPort**: Displays Greetings When an element is in/reached viewport(25% margin) with the Class name: 'ctc_greetings_now' [PRO]
-* **Time, Scroll** Display Greetings based on time, scroll [PRO]
+* **Click Action**: Displays greeting dialog when a user clicks on any element with the class name: ‘ctc_greetings’.
+* **ViewPort Action**: Displays Greetings When an element is in/reached viewport(25% margin) with the Class name: 'ctc_greetings_now' [PRO]
+* **Time, Scroll Actions**: Display Greetings based on time, scroll [PRO]
+
+These actions enhance user interaction by triggering greetings at the right moments, improving engagement and support efficiency.
 
 [Actions](https://holithemes.com/plugins/click-to-chat/greetings-actions/)
 
@@ -273,7 +273,7 @@ We highly concentrate on speed and performance.
 
 == 👓 Display Settings == 
 
-Show/Hide styles based on 
+Customize the visibility of the widget by showing or hiding styles based on specific settings, such as:
 
 * Post type
 * Post Id
@@ -355,15 +355,39 @@ Help by [Translating the plugin](https://translate.wordpress.org/projects/wp-plu
 
 == Installation ==
 
-= From Dashboard ( WordPress admin ) =
-* plugins -> Add New
-* search for 'click to chat'
-* click on Install Now and then Activate.
+Getting started is quick and simple. You can install the plugin directly from your WordPress dashboard or manually via FTP.
 
-= using FTP or similar =
-* Unzip "Click-to-Chat" file and 
-* Upload "Click-to-Chat" folder to the "/wp-content/plugins/" directory.
-* Activate the plugin through the "Plugins" menu in WordPress.
+= 🚀 Install from WordPress Dashboard (Recommended) =
+
+1. Log in to your WordPress admin dashboard.
+2. Navigate to **Plugins** > **Add New** in the left sidebar.
+3. In the top right search bar, type `Click to Chat`.
+4. Find the plugin in the search results. Check that it is built by **HoliThemes**, and click **Install Now**.
+5. Once the installation is complete, click **Activate**.
+
+= 📂 Manual Installation (via FTP) =
+
+If you prefer to install the plugin manually, use the instructions below:
+
+1. Download the plugin ZIP file and extract its contents.
+2. Access your website server using an FTP client or File Manager.
+3. Upload the extracted folder to the `/wp-content/plugins/` directory on your server.
+4. Go to the **Plugins** menu in your WordPress admin dashboard.
+5. Locate **Click to Chat** in the list and click **Activate**.
+
+= 🚀 What's Next? (Quick Setup) =
+
+Once activated, establishing your WhatsApp chat button takes less than a minute:
+
+1. In your WordPress dashboard, navigate to the newly added **Click to Chat** menu located in the left sidebar.
+2. Enter your **WhatsApp Number** (include your country code, but omit `+` or `00`).
+3. Choose a beautiful layout from the **Select Style** to match your website design.
+4. Add a **Pre-filled Message** (optional) to make it easier for users to start a conversation with you.
+5. Click **Save Changes**.
+
+🎉 **You are all set!** Your website now has a fully functional, highly engaging WhatsApp chat button. 
+
+For advanced customizations—like greeting dialogs, page-level settings, analytics, or WooCommerce integration—explore the additional tabs at the **Click to Chat** menu or visit our [Documentation](https://holithemes.com/plugins/click-to-chat/).
 
 == Frequently Asked Questions ==
 
@@ -376,7 +400,7 @@ country code +1
 number: 6123456789
 ** WhatsApp number: 16123456789 **
 
-(WhatsApp Number)[https://holithemes.com/plugins/click-to-chat/whatsapp-number/]
+[WhatsApp Number](https://holithemes.com/plugins/click-to-chat/whatsapp-number/)
 
 
 = Pre-filled Message =
@@ -501,7 +525,7 @@ Share Text - E.g.
 
 = AMP Compatibility =
 
-Click to Chat is Compatible with (AMP)[https://wordpress.org/plugins/amp/] plugin. AMP won't load plugins JavaScript files so limited functionality available.
+Click to Chat is Compatible with [AMP](https://wordpress.org/plugins/amp/) plugin. AMP won't load plugins JavaScript files so limited functionality available.
 
 = 🔧 Basic Troubleshooting = 
 
@@ -510,7 +534,7 @@ Click to Chat is Compatible with (AMP)[https://wordpress.org/plugins/amp/] plugi
     * Server side cache (some hosting providers adds cache functionality by default)
     * CDN cache (Cache invalidation)
 * Check Display settings
-* (page level settings)[https://holithemes.com/plugins/click-to-chat/change-values-at-page-level/]
+* [page level settings](https://holithemes.com/plugins/click-to-chat/change-values-at-page-level/)
 
 ✍️ For any queries, please contact us.
 
@@ -520,58 +544,69 @@ For any issues with the plugin / suggestions:
 
 * WordPress [new topic](https://wordpress.org/support/plugin/click-to-chat-for-whatsapp/#new-topic-0) 
 
-= ⭐️ Give Support =
+= ⭐️ Leave a Review =
 
-If you like the plugin, support the developers by giving [5 star rating](https://wordpress.org/support/plugin/click-to-chat-for-whatsapp/reviews/#new-post)  
+If Click to Chat is helping your website connect with visitors, we’d really appreciate it if you could take a moment to leave a [5-star rating](https://wordpress.org/support/plugin/click-to-chat-for-whatsapp/reviews/#new-post) on WordPress.org.
 
-Thank you so much in advance from "Click to Chat" Team
+Your feedback helps us improve the plugin and continue building useful features for the community.
 
-== Upgrade Notice ==
+Thank you for your support!
 
-= using FTP or similar =
-* Delete Click-to-Chat folder - your setting will not lost.
-* unzip Click-to-Chat file and 
-* Upload "Click-to-Chat" folder to the "/wp-content/plugins/" directory.
-* Activate the plugin through the "Plugins" menu in WordPress.
-
-= From Dashboard ( WordPress admin ) =
-* When a new version is released - we can see the 'update now' link at wp-admin -> plugins
-* click on 'update now'
-or
-* since WordPress 5.5, If auto update for the plugin is enabled, the plugin will update automatically when a new version is released
-
-After Activating the plugin, add a WhatsApp Number in the plugin settings.
+— The Click to Chat Team, HoliThemes
 
 == Changelog ==
 
-= 4.16 =
-* Added 'Alt' attribute value for greetings header image
-* Fix: Style-7, Style-7 Extend hover effects not working.
 
-= 4.15 = 
-* Fix: Page-level settings not working properly.
-* Fix: Alignment issues at admin setting pages
+= 4.42.1 =
+* Fix: Phone number field in the settings page showing as a plain text field.
 
-= 4.14 =
-* Enhancement: Show or hide the admin demo.
+= 4.42 =
+* New: Click Tracking Compatibility - optionally render the chat and greetings click area as a link or button, so third-party click tracking tools that supports only button or a link can record clicks.
+* Enhancement: Updated the international phone number field library.
+* Enhancement: The phone number field interface is now translated into the admin language.
 
-= 4.13 =
-* Fix: Alignment issues at admin setting pages
+= 4.41 =
+* New: Redesigned Admin UI, switch to it anytime from the plugin settings page.
+* Enhancement: Restructured Analytics parameters for Google Analytics, GTM and Meta Pixel.
+* Fix: Pagelevel settings prefilled message multiple lines issue.
+* Fix: Emoji not displaying correctly in the pre-filled message and call-to-action fields.
 
-= 4.12.1 =
-* Fix: Hover effects for Style-7 Extend
-* Fix: Dual lines issue for Style-8 with large call to action text
+= 4.40 =
+* Enhancement: Admin UI improvements for better user experience.
+* Fix: Minor bug fixes and performance optimizations.
 
-= 4.12 =
-* Fix: Custom CSS Code block not allowing quotes at front end
+= 4.39 =
+* Fix: WooCommerce single product page widget configuration with multilingual plugins.
+* Fix: Homepage settings were incorrectly inherited from other pages when not set as a single page.
 
-= 4.11 =
-* New: Custom CSS Code block.
+= 4.38 =
+* Fix: Style 6 initial color not applied.
+* Fix: Greetings dialog loads fallback values if not found in the database.
 
-= 4.10 =
-* Fix: Page level display settings for WooCommerce single product page
+= 4.37 =
+* Fix: Webhook not working with some integration tools.
 
-= 4.9 =
-* Fix: Display based on device not working as expected on iPad Pro
+= 4.36 =
+* Enhancement: Google Analytics feature.
+
+= 4.35 =
+* Enhancement: Custom CSS feature.
+* Enhancement: Aria hidden attribute settings.
+
+= 4.34 =
+* Enhancement: Added settings to send dataLayer objects to Google Tag Manager.
+* Enhancement: Chat widget now works on WooCommerce shop pages with page-level call to action and pre-filled messages.
+* Enhancement: Added Notification badge feature.
+* Fix: Shortcodes were not working with WooCommerce-specific variables.
 
 [Changelog](https://holithemes.com/plugins/click-to-chat/changelog/)
+
+== Upgrade Notice ==
+
+
+
+= 4.42.1 =
+Fixes the phone number field in the settings page showing as a plain text field after updating to 4.42. Update recommended.
+
+= 4.42 =
+International phone input enhancements, custom click tracking compatibility. Update recommended.

@@ -44,7 +44,7 @@ class ActionScheduler {
 			return;
 		}
 
-		if ( ! apply_filters( 'action_scheduler_enable_recreate_data_store', true ) ) {
+		if ( ! apply_filters( 'action_scheduler_enable_recreate_data_store', true ) ) { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 			return;
 		}
 
@@ -143,6 +143,39 @@ class ActionScheduler {
 			AND `aa`.`group_id` = 0
 			AND `aa`.`status` IN ('complete', 'failed', 'canceled');"
 		);
+
+		if ( ! aioseoBrokenLinkChecker()->core->cache->get( 'blc_action_scheduler_dedup' ) ) {
+			$this->deduplicatePendingActions( $prefix );
+
+			aioseoBrokenLinkChecker()->core->cache->update( 'blc_action_scheduler_dedup', true, DAY_IN_SECONDS );
+		}
+	}
+
+	/**
+	 * Removes duplicate pending actions for the aioseo_blc group, keeping only the earliest per hook+args.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param  string $prefix The database table prefix.
+	 * @return void
+	 */
+	private function deduplicatePendingActions( $prefix ) {
+		aioseoBrokenLinkChecker()->core->db->execute(
+			"DELETE aa FROM {$prefix}actionscheduler_actions AS aa
+			JOIN {$prefix}actionscheduler_groups AS ag ON ag.group_id = aa.group_id
+			WHERE ag.slug = '{$this->actionSchedulerGroup}'
+			AND aa.status = 'pending'
+			AND aa.action_id NOT IN (
+				SELECT action_id FROM (
+					SELECT MIN(aa2.action_id) AS action_id
+					FROM {$prefix}actionscheduler_actions AS aa2
+					JOIN {$prefix}actionscheduler_groups AS ag2 ON ag2.group_id = aa2.group_id
+					WHERE ag2.slug = '{$this->actionSchedulerGroup}'
+					AND aa2.status = 'pending'
+					GROUP BY aa2.hook, aa2.args
+				) AS keepers
+			);"
+		);
 	}
 
 	/**
@@ -159,7 +192,7 @@ class ActionScheduler {
 	public function scheduleSingle( $actionName, $time, $args = [] ) {
 		try {
 			if ( empty( $this->getPendingActions( $actionName, $args ) ) ) {
-				as_schedule_single_action( time() + $time, $actionName, $args, $this->actionSchedulerGroup );
+				\as_schedule_single_action( time() + $time, $actionName, $args, $this->actionSchedulerGroup );
 
 				return true;
 			}
@@ -198,6 +231,10 @@ class ActionScheduler {
 	 * @return array              The actions.
 	 */
 	public function getRunningActions( $actionName, $args = [] ) {
+		if ( ! class_exists( 'ActionScheduler_Store' ) ) {
+			return [];
+		}
+
 		$runningArgs = [
 			'hook'     => $actionName,
 			'status'   => \ActionScheduler_Store::STATUS_RUNNING,
@@ -223,6 +260,10 @@ class ActionScheduler {
 	 * @return array              The actions.
 	 */
 	public function getPendingActions( $actionName, $args = [] ) {
+		if ( ! class_exists( 'ActionScheduler_Store' ) ) {
+			return [];
+		}
+
 		$pendingArgs = [
 			'hook'     => $actionName,
 			'status'   => \ActionScheduler_Store::STATUS_PENDING,

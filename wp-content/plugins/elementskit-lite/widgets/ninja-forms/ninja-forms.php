@@ -35,11 +35,15 @@ class ElementsKit_Widget_Ninja_Forms extends Widget_Base {
         return 'https://wpmet.com/doc/ninja-forms/';
     }
     protected function is_dynamic_content(): bool {
-        return false;
+        return true;
     }
 
     public function is_reload_preview_required() {
         return true;
+    }
+
+    public function get_script_depends() {
+        return [ 'nf-front-end' ];
     }
 
     protected function register_controls() {

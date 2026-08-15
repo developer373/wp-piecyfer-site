@@ -7,7 +7,9 @@ use Elementor\Core\Files\File_Types\Base as File_Type_Base;
 use Elementor\Core\Files\File_Types\Json;
 use Elementor\Core\Files\File_Types\Svg;
 use Elementor\Core\Files\File_Types\Zip;
+use Elementor\Core\Files\Fonts\Google_Font;
 use Elementor\Core\Utils\Exceptions;
+use Elementor\Fonts;
 use Elementor\User;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -25,6 +27,7 @@ class Uploads_Manager extends Base_Object {
 
 	const UNFILTERED_FILE_UPLOADS_KEY = 'elementor_unfiltered_files_upload';
 	const INVALID_FILE_CONTENT = 'Invalid Content In File';
+	const ELEMENTOR_UPLOAD_DIR = 'elementor';
 
 	/**
 	 * @var File_Type_Base[]
@@ -73,7 +76,7 @@ class Uploads_Manager extends Base_Object {
 	 * @access public
 	 *
 	 * @param string $file_path
-	 * @param array $allowed_file_types
+	 * @param array  $allowed_file_types
 	 * @return array|\WP_Error
 	 */
 	public function extract_and_validate_zip( $file_path, $allowed_file_types = null ) {
@@ -136,9 +139,27 @@ class Uploads_Manager extends Base_Object {
 			return $data;
 		}
 
+		if ( ! isset( $data['fileData'] ) ) {
+			if ( empty( $data['tmp_name'] ) ) {
+				return new \WP_Error( 'file_error', esc_html__( 'Invalid temporary file path.', 'elementor' ) );
+			}
+
+			// Path validation only applies to direct calls (e.g. import_template) where
+			// tmp_name originates from user input. When is_elementor_upload is true, this
+			// method is used as a WordPress filter (wp_handle_sideload_prefilter) and
+			// tmp_name is set by WordPress core.
+			if ( ! $this->is_elementor_upload && ! $this->is_path_in_allowed_dir( $data['tmp_name'] ) ) {
+				return new \WP_Error( 'file_error', esc_html__( 'Invalid temporary file path.', 'elementor' ) );
+			}
+		}
+
 		$validation_result = $this->validate_file( $data, $allowed_file_extensions );
 
 		if ( is_wp_error( $validation_result ) ) {
+			if ( ! empty( $data['tmp_name'] ) ) {
+				$this->remove_file_or_dir( dirname( $data['tmp_name'] ) );
+			}
+
 			return $validation_result;
 		}
 
@@ -146,7 +167,7 @@ class Uploads_Manager extends Base_Object {
 	}
 
 	/**
-	 * are Unfiltered Uploads Enabled
+	 * Is Unfiltered Uploads Enabled
 	 *
 	 * @since 3.5.0
 	 * @access public
@@ -154,7 +175,7 @@ class Uploads_Manager extends Base_Object {
 	 * @return bool
 	 */
 	final public static function are_unfiltered_uploads_enabled() {
-		$enabled = ! ! get_option( self::UNFILTERED_FILE_UPLOADS_KEY )
+		$enabled = (bool) get_option( self::UNFILTERED_FILE_UPLOADS_KEY )
 			&& Svg::file_sanitizer_can_run()
 			&& User::is_current_user_can_upload_json();
 
@@ -252,9 +273,56 @@ class Uploads_Manager extends Base_Object {
 	}
 
 	/**
+	 * Check if path is within the allowed Elementor uploads directory.
+	 *
+	 * Prevents path traversal and arbitrary directory deletion by ensuring the path
+	 * resolves under wp-content/uploads/elementor/ or under the configured temp dir
+	 * (elementor/files/temp-dir filter), so that cleanup works when temp dir is customized.
+	 *
+	 * @since 3.35.4
+	 * @access private
+	 *
+	 * @param string $path
+	 * @return bool
+	 */
+	private function is_path_in_allowed_dir( $path ) {
+		if ( ! is_string( $path ) || '' === $path ) {
+			return false;
+		}
+
+		$real_path = realpath( $path );
+
+		if ( false === $real_path ) {
+			$real_path = realpath( dirname( $path ) );
+			if ( false === $real_path ) {
+				return false;
+			}
+		}
+
+		$wp_upload_dir = wp_upload_dir();
+		$elementor_base = realpath( $wp_upload_dir['basedir'] . DIRECTORY_SEPARATOR . self::ELEMENTOR_UPLOAD_DIR );
+
+		if ( false !== $elementor_base ) {
+			$allowed = $real_path === $elementor_base || 0 === strpos( $real_path, $elementor_base . DIRECTORY_SEPARATOR );
+			if ( $allowed ) {
+				return true;
+			}
+		}
+
+		$temp_dir = realpath( $this->get_temp_dir() );
+		if ( false !== $temp_dir ) {
+			$temp_dir = rtrim( $temp_dir, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR;
+			return 0 === strpos( $real_path, $temp_dir );
+		}
+
+		return false;
+	}
+
+	/**
 	 * Remove File Or Directory
 	 *
 	 * Directory is deleted recursively with all of its contents (subdirectories and files).
+	 * Only paths under wp-content/uploads/elementor/ are allowed (security: prevents arbitrary directory deletion).
 	 *
 	 * @since 3.3.0
 	 * @access public
@@ -262,6 +330,10 @@ class Uploads_Manager extends Base_Object {
 	 * @param string $path
 	 */
 	public function remove_file_or_dir( $path ) {
+		if ( ! $this->is_path_in_allowed_dir( $path ) ) {
+			return;
+		}
+
 		if ( is_dir( $path ) ) {
 			$this->remove_directory_with_files( $path );
 		} elseif ( is_file( $path ) ) {
@@ -320,7 +392,7 @@ class Uploads_Manager extends Base_Object {
 		if ( ! $this->temp_dir ) {
 			$wp_upload_dir = wp_upload_dir();
 
-			$temp_dir = implode( DIRECTORY_SEPARATOR, [ $wp_upload_dir['basedir'], 'elementor', 'tmp' ] ) . DIRECTORY_SEPARATOR;
+			$temp_dir = implode( DIRECTORY_SEPARATOR, [ $wp_upload_dir['basedir'], self::ELEMENTOR_UPLOAD_DIR, 'tmp' ] ) . DIRECTORY_SEPARATOR;
 
 			/**
 			 * Temp File Path
@@ -372,6 +444,7 @@ class Uploads_Manager extends Base_Object {
 	 */
 	public function register_ajax_actions( Ajax $ajax ) {
 		$ajax->register_ajax_action( 'enable_unfiltered_files_upload', [ $this, 'enable_unfiltered_files_upload' ] );
+		$ajax->register_ajax_action( 'enqueue_google_fonts', [ $this, 'ajax_enqueue_google_fonts' ] );
 	}
 
 	/**
@@ -386,6 +459,22 @@ class Uploads_Manager extends Base_Object {
 		}
 
 		update_option( self::UNFILTERED_FILE_UPLOADS_KEY, 1 );
+	}
+
+	public function ajax_enqueue_google_fonts( $data ): bool {
+		if ( empty( $data['font_name'] ) ) {
+			return false;
+		}
+
+		$font_type = Fonts::get_font_type( $data['font_name'] );
+
+		if ( Fonts::GOOGLE !== $font_type ) {
+			return false;
+		}
+
+		Google_Font::enqueue( $data['font_name'] );
+
+		return true;
 	}
 
 	/**

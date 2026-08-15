@@ -82,6 +82,15 @@ class Admin {
 	public $connect = null;
 
 	/**
+	 * Pointers class instance.
+	 *
+	 * @since 4.8.3
+	 *
+	 * @var \AIOSEO\Plugin\Common\Admin\Pointers|null
+	 */
+	public $pointers = null;
+
+	/**
 	 * Whether we're editing a post or term.
 	 *
 	 * @since 4.7.7
@@ -96,6 +105,7 @@ class Admin {
 	 * @since 4.0.0
 	 */
 	public function __construct() {
+		new Pointers();
 		new SeoAnalysis();
 		new WritingAssistant();
 
@@ -120,8 +130,6 @@ class Admin {
 		add_action( 'sanitize_comment_cookies', [ $this, 'init' ], 20 );
 
 		add_action( 'admin_menu', [ $this, 'deactivationSurvey' ], 100 );
-
-		add_action( 'in_admin_header', [ $this, 'addActiveMenuTooltips' ] );
 	}
 
 	/**
@@ -182,8 +190,7 @@ class Admin {
 			add_action( 'admin_footer', [ $this, 'addAioseoModalPortal' ] );
 		}
 
-		$this->loadTextDomain();
-
+		add_action( 'init', [ $this, 'loadTextDomain' ], 1 );
 		add_action( 'init', [ $this, 'setPages' ] );
 	}
 
@@ -196,7 +203,10 @@ class Admin {
 	 * @return void
 	 */
 	public function setPages() {
-		// TODO: Remove this after a couple months.
+		if ( ! is_user_logged_in() ) {
+			return;
+		}
+
 		$newIndicator = '<span class="aioseo-menu-new-indicator">&nbsp;NEW!</span>';
 
 		$this->pages = [
@@ -231,6 +241,11 @@ class Admin {
 				'menu_title' => esc_html__( 'Redirects', 'all-in-one-seo-pack' ),
 				'parent'     => $this->pageSlug
 			],
+			'aioseo-ai-insights'       => [
+				'menu_title' => esc_html__( 'AI Suite', 'all-in-one-seo-pack' ) . $newIndicator,
+				'page_title' => esc_html__( 'AI Suite', 'all-in-one-seo-pack' ),
+				'parent'     => $this->pageSlug
+			],
 			'aioseo-local-seo'         => [
 				'menu_title' => esc_html__( 'Local SEO', 'all-in-one-seo-pack' ),
 				'parent'     => $this->pageSlug
@@ -240,8 +255,7 @@ class Admin {
 				'parent'     => $this->pageSlug
 			],
 			'aioseo-search-statistics' => [
-				'menu_title' => esc_html__( 'Search Statistics', 'all-in-one-seo-pack' ) . $newIndicator,
-				'page_title' => esc_html__( 'Search Statistics', 'all-in-one-seo-pack' ),
+				'menu_title' => esc_html__( 'Search Statistics', 'all-in-one-seo-pack' ),
 				'parent'     => $this->pageSlug
 			],
 			'aioseo-tools'             => [
@@ -266,6 +280,11 @@ class Admin {
 			'aioseo-seo-revisions'     => [
 				'menu_title'          => esc_html__( 'SEO Revisions', 'all-in-one-seo-pack' ),
 				'parent'              => 'aioseo-seo-revisions',
+				'hide_admin_bar_menu' => true
+			],
+			'aioseo-ai-bulk-generate'  => [
+				'menu_title'          => esc_html__( 'AI Bulk Generate', 'all-in-one-seo-pack' ),
+				'parent'              => 'aioseo-ai-bulk-generate',
 				'hide_admin_bar_menu' => true
 			],
 		];
@@ -357,7 +376,7 @@ class Admin {
 				'title'          => esc_html__( 'Insert/edit link', 'all-in-one-seo-pack' ),
 				'update'         => esc_html__( 'Update', 'all-in-one-seo-pack' ),
 				'save'           => esc_html__( 'Add Link', 'all-in-one-seo-pack' ),
-				'noTitle'        => esc_html__( '(no title)' ), // phpcs:ignore AIOSEO.Wp.I18n.MissingArgDomain
+				'noTitle'        => esc_html__( '(no title)', 'default' ), // phpcs:ignore AIOSEO.Wp.I18n.TextDomainMismatch, WordPress.WP.I18n.TextDomainMismatch
 				'labelTitle'     => esc_html__( 'Title', 'all-in-one-seo-pack' ),
 				'noMatchesFound' => esc_html__( 'No results found.', 'all-in-one-seo-pack' ),
 				'linkSelected'   => esc_html__( 'Link selected.', 'all-in-one-seo-pack' ),
@@ -407,7 +426,6 @@ class Admin {
 				'wp-element',
 				'wp-plugins',
 				'wp-components',
-				'wp-edit-post',
 				'wp-api',
 				'wp-editor',
 				'wp-hooks',
@@ -552,12 +570,12 @@ class Admin {
 				'href'  => 'https://pagespeed.web.dev/report?url=' . $url
 			],
 			[
-				'id'    => 'aioseo-analyze-page-structureddata',
+				'id'    => 'aioseo-analyze-page-rich-results-test',
 				'title' => esc_html__( 'Google Rich Results Test', 'all-in-one-seo-pack' ),
 				'href'  => 'https://search.google.com/test/rich-results?url=' . $url
 			],
 			[
-				'id'    => 'aioseo-analyze-page-structureddata',
+				'id'    => 'aioseo-analyze-page-schema-org-validator',
 				'title' => esc_html__( 'Schema.org Validator', 'all-in-one-seo-pack' ),
 				'href'  => 'https://validator.schema.org/?url=' . $url
 			],
@@ -715,14 +733,6 @@ class Admin {
 			];
 		}
 
-		if ( current_user_can( $this->getPageRequiredCapability( 'aioseo-search-statistics' ) ) ) {
-			$submenu['index.php'][] = [
-				esc_html__( 'SEO Statistics', 'all-in-one-seo-pack' ),
-				$this->getPageRequiredCapability( 'aioseo-search-statistics' ),
-				admin_url( '/admin.php?page=aioseo-search-statistics' )
-			];
-		}
-
 		if ( current_user_can( $this->getPageRequiredCapability( 'aioseo-search-appearance' ) ) ) {
 			$submenu['users.php'][] = [
 				esc_html__( 'Author SEO', 'all-in-one-seo-pack' ),
@@ -784,6 +794,17 @@ class Admin {
 			return;
 		}
 
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended, HM.Security.NonceVerification.Recommended
+		// Don't hide it if we're on the Scheduled Actions menu page.
+		$page = isset( $_GET['page'] )
+			? sanitize_text_field( wp_unslash( $_GET['page'] ) )
+			: '';
+		// phpcs:enable
+
+		if ( 'action-scheduler' === $page || aioseo()->helpers->isDev() ) {
+			return;
+		}
+
 		foreach ( $submenu['tools.php'] as $index => $props ) {
 			if ( ! empty( $props[2] ) && 'action-scheduler' === $props[2] ) {
 				unset( $submenu['tools.php'][ $index ] );
@@ -833,6 +854,7 @@ class Admin {
 			'sitemaps',
 			'link-assistant',
 			'redirects',
+			'ai-insights',
 			'local-seo',
 			'seo-analysis',
 			'search-statistics',
@@ -840,7 +862,8 @@ class Admin {
 			'feature-manager',
 			'monsterinsights',
 			'about',
-			'seo-revisions'
+			'seo-revisions',
+			'ai-bulk-generate'
 		];
 
 		foreach ( $pages as $page ) {
@@ -973,7 +996,7 @@ class Admin {
 	 */
 	public function addFooterText() {
 		$linkText = esc_html__( 'Give us a 5-star rating!', 'all-in-one-seo-pack' );
-		$href     = 'https://wordpress.org/support/plugin/all-in-one-seo-pack/reviews/?filter=5#new-post';
+		$href     = 'https://aioseo.com/aioseo-wordpress-rating';
 
 		$link1 = sprintf(
 			'<a href="%1$s" target="_blank" title="%2$s">&#9733;&#9733;&#9733;&#9733;&#9733;</a>',
@@ -1081,11 +1104,11 @@ class Admin {
 	 */
 	public function unslashEscapedDataPosts() {
 		$postsToUnslash = apply_filters( 'aioseo_debug_unslash_escaped_posts', 200 );
-		$timeStarted    = gmdate( 'Y-m-d H:i:s', aioseo()->core->cache->get( 'unslash_escaped_data_posts' ) );
+		$timeStarted    = esc_sql( gmdate( 'Y-m-d H:i:s', aioseo()->core->cache->get( 'unslash_escaped_data_posts' ) ) );
 
 		$posts = aioseo()->core->db->start( 'aioseo_posts' )
 			->select( '*' )
-			->whereRaw( "updated < '$timeStarted'" )
+			->where( 'updated <', $timeStarted )
 			->orderBy( 'updated ASC' )
 			->limit( $postsToUnslash )
 			->run()
@@ -1127,6 +1150,9 @@ class Admin {
 			'keywords',
 			'keyphrases',
 			'page_analysis',
+			'truseo',
+			'focus_keyword',
+			'additional_keywords',
 			'canonical_url',
 			'og_title',
 			'og_description',
@@ -1178,15 +1204,23 @@ class Admin {
 	 */
 	public function appendTrashedMessage( $messages ) {
 		// Let advanced users override this.
+
 		if ( apply_filters( 'aioseo_redirects_disable_trashed_posts_suggestions', false ) ) {
 			return $messages;
 		}
 
-		if ( function_exists( 'aioseoRedirects' ) && aioseoRedirects()->options->monitor->trash ) {
+		if ( ! empty( aioseo()->redirects->options ) && aioseo()->redirects->options->monitor->trash ) {
 			return $messages;
 		}
 
-		if ( empty( $_GET['ids'] ) ) { // phpcs:ignore HM.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Recommended  
+		if (
+			! current_user_can( 'aioseo_redirects_manage' ) &&
+			! current_user_can( 'aioseo_page_redirects_manage' )
+		) {
+			return $messages;
+		}
+
+		if ( empty( $_GET['ids'] ) ) { // phpcs:ignore HM.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Recommended
 			return $messages;
 		}
 
@@ -1261,6 +1295,10 @@ class Admin {
 	 * @return void
 	 */
 	public function loadTextDomain() {
+		if ( ! is_user_logged_in() ) {
+			return;
+		}
+
 		aioseo()->helpers->loadTextDomain( 'all-in-one-seo-pack' );
 	}
 
@@ -1288,116 +1326,5 @@ class Admin {
 		echo wp_kses_post( '<div id="aioseo-footer-links"></div>' );
 
 		aioseo()->core->assets->load( 'src/vue/standalone/footer-links/main.js' );
-	}
-
-	/**
-	 * Adds the active menu tooltips.
-	 *
-	 * @since 4.6.9
-	 *
-	 * @return void
-	 */
-	public function addActiveMenuTooltips() {
-		// This pointer slug is set here so we can scale later if we add other pointers.
-		$pointer = 'author-seo';
-
-		// If the user has already dismissed this tooltip, don't show it again.
-		if ( get_user_meta( get_current_user_id(), "_aioseo-$pointer-dismissed", true ) ) {
-			return;
-		}
-
-		// If the Author SEO addon is already loaded, don't show the tooltip.
-		if ( aioseo()->addons->getLoadedAddon( 'eeat' ) ) {
-			return;
-		}
-
-		// If the user cannot access the menu page or activate plugins, bail.
-		if (
-			! current_user_can( 'aioseo_search_appearance_settings' ) ||
-			! current_user_can( 'activate_plugins' )
-		) {
-			return;
-		}
-
-		// If the user is activating the Author SEO addon, dismiss the tooltip.
-		if ( ! empty( $_GET['aioseo-action'] ) && 'activate-author-seo' === sanitize_text_field( wp_unslash( $_GET['aioseo-action'] ) ) ) { // phpcs:ignore HM.Security.ValidatedSanitizedInput.InputNotSanitized, HM.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Recommended, Generic.Files.LineLength.MaxExceeded
-			update_user_meta( get_current_user_id(), "_aioseo-$pointer-dismissed", true );
-
-			return;
-		}
-
-		// If we are already on the search appearance page, don't show the tooltip.
-		if ( 'all-in-one-seo_page_aioseo-search-appearance' === aioseo()->helpers->getCurrentScreen()->id ) {
-			return;
-		}
-
-		// Enqueue the pointer scripts and styles.
-		wp_enqueue_style( 'wp-pointer' );
-		wp_enqueue_script( 'wp-pointer' );
-
-		// Output the pointer script.
-		$nonce    = wp_create_nonce( 'aioseo-dismiss-active-menu-tooltip' );
-		$title    = esc_html__( 'NEW! Author SEO for E-E-A-T', 'all-in-one-seo-pack' );
-		$subtitle = esc_html__( 'Boost your E-E-A-T with our latest Author SEO addon!', 'all-in-one-seo-pack' );
-		$content  = esc_html__( 'Optimize your site for Google\'s E-E-A-T ranking factor by proving your writer\'s expertise through author schema markup and new UI elements.', 'all-in-one-seo-pack' ); // phpcs:ignore Generic.Files.LineLength.MaxExceeded
-		$button   = sprintf(
-			'<p><a class=\"button button-primary\" href=\"%s\">%s</a></p>',
-			admin_url( 'admin.php?aioseo-action=activate-author-seo&page=aioseo-search-appearance#author-seo' ),
-			esc_html__( 'Activate Author SEO', 'all-in-one-seo-pack' )
-		);
-		?>
-		<script>
-			jQuery( document ).ready( function( $ ) {
-				var isClosed = false;
-				var pointer = $( '#toplevel_page_aioseo > a' ).pointer( {
-					content : "<h3><?php echo $title; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><\/h3>" +
-						"<h4><?php echo $subtitle; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><\/h4>" +
-						"<p><?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>" +
-						"<?php echo $button; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>",
-					position : {
-						edge  : <?php echo is_rtl() ? "'right'" : "'left'"; ?>,
-						align : 'center'
-					},
-					pointerWidth : 420,
-					show: function(event, el) {
-						el.pointer.css({'position':'fixed'});
-						el.pointer.addClass('aioseo-wp-pointer');
-					},
-					close : function() {
-						isClosed = true;
-						jQuery.post(
-							ajaxurl,
-							{
-								pointer     : '<?php echo esc_js( $pointer ); ?>',
-								action      : 'aioseo-dismiss-active-menu-tooltip',
-								_ajax_nonce : '<?php echo esc_js( $nonce ); ?>'
-							}
-						);
-					}
-				} ).pointer('open');
-			} );
-		</script>
-		<?php
-	}
-
-	/**
-	 * Dismisses the active menu tooltips.
-	 *
-	 * @since 4.6.9
-	 *
-	 * @return void
-	 */
-	public function dismissActiveMenuTooltips() {
-		// Bail if the request is not an AJAX request or the action is not the one we expect.
-		if ( ! isset( $_POST['action'] ) || 'aioseo-dismiss-active-menu-tooltip' !== $_POST['action'] || empty( $_POST['pointer'] ) ) {
-			return;
-		}
-
-		// Check the nonce.
-		check_ajax_referer( 'aioseo-dismiss-active-menu-tooltip', 'nonce' );
-
-		// Permanently dismiss the tooltip for the current user.
-		$pointer = sanitize_text_field( wp_unslash( $_POST['pointer'] ) );
-		update_user_meta( get_current_user_id(), "_aioseo-$pointer-dismissed", true );
 	}
 }

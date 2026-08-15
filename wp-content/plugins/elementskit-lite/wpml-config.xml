@@ -588,6 +588,21 @@
 				<field type="Pinterest Feed: Board name" editor_type="LINE">pinterest_board_name</field>
 			</fields>
 		</widget>
+		<widget name="elementskit-youtube-feed">
+			<conditions>
+				<condition key="widgetType">elementskit-youtube-feed</condition>
+			</conditions>
+			<fields>
+				<field type="Youtube Feed: Channel Id" editor_type="LINE">ekit_yf_channel_id</field>
+				<field type="Youtube Feed: Playlist ID" editor_type="LINE">ekit_yf_playlist_id</field>
+				<field type="Youtube Feed: Search Value" editor_type="LINE">ekit_yf_video_search</field>
+				<field type="Youtube Feed: See More Text" editor_type="LINE">ekit_yf_video_description_see_more_text</field>
+				<field type="Youtube Feed: Load More Button Text" editor_type="LINE">ekit_yf_load_more_text</field>
+			</fields>
+			<fields-in-item items_of="ekit_yf_statistics">
+				<field type="Youtube Feed: Statistics Label" editor_type="LINE">ekit_yf_statistics_label</field>
+			</fields-in-item>
+		</widget>
 		<widget name="elementskit-popup-modal">
 			<conditions>
 				<condition key="widgetType">elementskit-popup-modal</condition>
@@ -813,5 +828,89 @@
 				<field type="Content Ticker: Link" key_of="ekit_content_ticker_text_url" editor_type="LINE">url</field>
 			</fields-in-item>
 		</widget>
+		<widget name="elementskit-advanced-search">
+			<conditions>
+				<condition key="widgetType">elementskit-advanced-search</condition>
+			</conditions>
+			<fields>
+				<field type="Advanced Search: Placeholder" editor_type="LINE">ekit_adv_section_search_placeholder</field>
+				<field type="Advanced Search: Categories" editor_type="LINE">ekit_adv_section_search_categories</field>
+				<field type="Advanced Search: Tags" editor_type="LINE">ekit_adv_section_search_tags</field>
+				<field type="Advanced Search: Button" editor_type="LINE">ekit_adv_section_search_button</field>
+				<field type="Advanced Search: Load More" editor_type="LINE">ekit_search_load_more_button</field>
+				<field type="Advanced Search: Copyright Url" editor_type="LINE">ekit_search_in_copyright_url>url</field>
+				<field type="Advanced Search: Copyright Name" editor_type="LINE">ekit_search_in_copyright_name</field>
+				<field type="Advanced Search: Keywords Title" editor_type="LINE">ekit_adv_show_popular_keyword_title</field>
+			</fields>
+		</widget>
+		<widget name="elementskit-login-form">
+          <conditions>
+              <condition key="widgetType">elementskit-login-form</condition>
+          </conditions>
+          <fields>
+              <field type="Login Form: Username Label" editor_type="LINE">ekit_login_username_label</field>
+              <field type="Login Form: Password Label" editor_type="LINE">ekit_login_password_label</field>
+              <field type="Login Form: Lost Password Instruction" editor_type="AREA">ekit_lost_password_instruction</field>
+              <field type="Login Form: Lost Password Label" editor_type="LINE">ekit_lost_password_label</field>
+              <field type="Login Form: Username Placeholder" editor_type="LINE">ekit_login_username_placeholder</field>
+              <field type="Login Form: Password Placeholder" editor_type="LINE">ekit_login_password_placeholder</field>
+              <field type="Login Form: Lost Password Placeholder" editor_type="LINE">ekit_lost_password_placeholder</field>
+              <field type="Login Form: Remember Me Text" editor_type="LINE">ekit_login_remember_me_text</field>
+              <field type="Login Form: Button Text" editor_type="LINE">ekit_login_button_text</field>
+              <field type="Login Form: Reset Password" editor_type="LINE">ekit_login_reset_button_text</field>
+              <field type="Login Form: Back to Login" editor_type="LINE">ekit_login_back_button_text</field>
+              <field type="Login Form: Lost Password Text" editor_type="LINE">ekit_login_lost_password_text</field>
+              <field type="Login Form: Register Link Text" editor_type="LINE">ekit_login_register_text</field>
+              <field type="Login Form: Separator Text" editor_type="LINE">ekit_login_separator_text</field>
+              <field type="Login Form: Logged In Message" editor_type="AREA">ekit_login_logged_in_message</field>
+          </fields>
+      </widget>
+		 <widget name="elementskit-register-form">
+          <conditions>
+              <condition key="widgetType">elementskit-register-form</condition>
+          </conditions>
+          <fields>
+              <!-- General Fields -->
+              <field type="Register Form: Button Text" editor_type="LINE">ekit_register_button_text</field>
+              <field type="Register Form: Logged In Message" editor_type="AREA">ekit_register_logged_in_message</field>
+              <field type="Register Form: Redirect URL" key_of="ekit_register_redirect_url" editor_type="LINE">url</field>
+          </fields>
+          <fields-in-item items_of="ekit_register_form_fields">
+              <!-- Repeater Fields -->
+              <field type="Register Form: Field Label" editor_type="LINE">ekit_register_form_field_label</field>
+              <field type="Register Form: Field Placeholder" editor_type="LINE">ekit_register_form_field_placeholder</field>
+          </fields-in-item>
+      </widget>
+	  <widget name="elementskit-event-calendar">
+			<conditions>
+				<condition key="widgetType">elementskit-event-calendar</condition>
+			</conditions>
+			<fields-in-item items_of="ekit_event_calender_manual_event_lists">
+				<field type="Event Calendar: Title" editor_type="LINE">ekit_event_calender_title</field>
+				<field type="Event Calendar: Description" editor_type="VISUAL">ekit_event_calender_description</field>
+				<field type="Event Calendar: Guest / Speaker" editor_type="LINE">ekit_event_calender_speaker</field>
+				<field type="Event Calendar: Location" editor_type="LINE">ekit_event_calender_location</field>
+				<field type="Event Calendar: Host" editor_type="LINE">ekit_event_calender_host</field>
+				<field type="Event Calendar: Event Link" editor_type="LINK">ekit_event_calender_event_link>url</field>
+				<field type="Event Calendar: Start Date" editor_type="LINK">ekit_event_calender_start_date</field>
+				<field type="Event Calendar: End Date" editor_type="LINK">ekit_event_calender_end_date</field>
+			</fields-in-item>
+			<fields-in-item items_of="ekit_event_calender_manual_time_schedules">
+				<field type="Event Calendar: Schedule Title" editor_type="LINE">ekit_event_calender_schedules_title</field>
+				<field type="Event Calendar: Start Time" editor_type="LINE">ekit_event_calender_start_time</field>
+				<field type="Event Calendar: End Time" editor_type="LINE">ekit_event_calender_end_time</field>
+			</fields-in-item>
+		</widget>
+	  	<widget name="elementskit-stacked-cards">
+			<conditions>
+				<condition key="widgetType">elementskit-stacked-cards</condition>
+			</conditions>
+			<fields-in-item items_of="ekit_stacked_card_list">
+				<field type="Stacked Cards: Title" editor_type="LINE">title</field>
+				<field type="Stacked Cards: Description" editor_type="AREA">content</field>
+				<field type="Stacked Cards: Button Text" editor_type="LINE">button_text</field>
+				<field type="Stacked Cards: Button Link" key_of="link" editor_type="LINE">button_link</field>
+			</fields-in-item>
+		</widget>	
 	</elementor-widgets>
 </wpml-config>

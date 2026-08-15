@@ -1,28 +1,48 @@
 <?php
 /**
  * Formatting API - Admin related.
- * 
- * Encode emoji.. 
+ *
+ * Encode emoji..
+ *
+ * @package Click_To_Chat
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
- * Encoding emoji 
- * 
- * To check the charset and run
+ * Encoding emoji.
+ *
+ * To check the charset and run.
+ *
  * @uses wp_encode_emoji
- * 		 on this page other functions. (so keep this function at the top)
- * 
+ *       On this page other functions. (so keep this function at the top)
+ *
  * @since 3.3.5
- * @param string $value		input value to convert emojis to html entity
+ * @param string $value Input value to convert emojis to html entity.
+ * @return string Encoded value.
  */
-if ( ! function_exists('ht_ctc_wp_encode_emoji') ) {
-	function ht_ctc_wp_encode_emoji($value = '') {
-		
-		if ( defined('DB_CHARSET') && 'utf8' == DB_CHARSET ) {
+/**
+ * Encode emoji for database storage.
+ *
+ * @param string $value Value to encode.
+ * @return string Encoded value.
+ */
+if ( ! function_exists( 'ht_ctc_wp_encode_emoji' ) ) {
+	/**
+	 * Encode emoji for database storage.
+	 *
+	 * REST API / admin2 equivalent: HT_CTC_Sanitizer::encode_emoji() (private).
+	 *
+	 * @param string $value Value to encode.
+	 * @return string Encoded value.
+	 */
+	function ht_ctc_wp_encode_emoji( $value = '' ) {
 
-			if (function_exists('wp_encode_emoji')) {
+		if ( defined( 'DB_CHARSET' ) && 'utf8' === DB_CHARSET ) {
+
+			if ( function_exists( 'wp_encode_emoji' ) ) {
 				$value = wp_encode_emoji( $value );
 			}
 		}
@@ -33,21 +53,27 @@ if ( ! function_exists('ht_ctc_wp_encode_emoji') ) {
 
 
 /**
- * sanitize text field - basic sanitize
- * 
- * @uses 
+ * Sanitize text field - basic sanitize.
+ *
  * @since 4.11
- * @param 
+ * @param string $value Value to sanitize.
+ * @return string Sanitized value.
  */
-if ( ! function_exists('ht_ctc_sanitize_input_fields') ) {
-	function ht_ctc_sanitize_input_fields($value = '') {
+if ( ! function_exists( 'ht_ctc_sanitize_input_fields' ) ) {
+	/**
+	 * Sanitize input fields.
+	 *
+	 * @param string $value Value to sanitize.
+	 * @return string Sanitized value.
+	 */
+	function ht_ctc_sanitize_input_fields( $value = '' ) {
 
-		if ( function_exists('sanitize_textarea_field') ) {
+		if ( function_exists( 'sanitize_textarea_field' ) ) {
 			$value = sanitize_textarea_field( $value );
 		} else {
 			$value = sanitize_text_field( $value );
 		}
-		
+
 		return $value;
 	}
 }
@@ -55,72 +81,96 @@ if ( ! function_exists('ht_ctc_sanitize_input_fields') ) {
 
 
 /**
- * sanitize text editor
- * 
- * @uses 
+ * Sanitize text editor.
+ *
  * @since 3.9.3
- * @param 
+ * @param string $value Value to sanitize.
+ * @return string Sanitized value.
  */
-if ( ! function_exists('ht_ctc_wp_sanitize_text_editor') ) {
-	function ht_ctc_wp_sanitize_text_editor($value = '') {
+if ( ! function_exists( 'ht_ctc_wp_sanitize_text_editor' ) ) {
+	/**
+	 * Sanitize text editor content.
+	 *
+	 * REST API / admin2 equivalent: HT_CTC_Sanitizer::ctc_sanitize_text_editor().
+	 *
+	 * @param string $value Value to sanitize.
+	 * @return string Sanitized value.
+	 */
+	function ht_ctc_wp_sanitize_text_editor( $value = '' ) {
 
-		if ( !empty( $value) && '' !== $value ) {
+		$new_value = $value;
 
-			if ( function_exists('ht_ctc_wp_encode_emoji') ) {
+		if ( ! empty( $value ) && '' !== $value ) {
+
+			// Decode first to neutralize any previous encoding
+			$value = html_entity_decode( $value );
+
+			if ( function_exists( 'ht_ctc_wp_encode_emoji' ) ) {
 				$value = ht_ctc_wp_encode_emoji( $value );
 			}
 
 			$allowed_html = wp_kses_allowed_html( 'post' );
 
 			// $allowed_html['iframe'] = array(
-			//     'src'             => true,
-			//     'height'          => true,
-			//     'width'           => true,
-			//     'frameborder'     => true,
-			//     'allowfullscreen' => true,
-			//     'title' => true,
-			//     'allow' => true,
-			//     'autoplay' => true,
-			//     'clipboard-write' => true,
-			//     'encrypted-media' => true,
-			//     'gyroscope' => true,
-			//     'picture-in-picture' => true,
+			// 'src'             => true,
+			// 'height'          => true,
+			// 'width'           => true,
+			// 'frameborder'     => true,
+			// 'allowfullscreen' => true,
+			// 'title' => true,
+			// 'allow' => true,
+			// 'autoplay' => true,
+			// 'clipboard-write' => true,
+			// 'encrypted-media' => true,
+			// 'gyroscope' => true,
+			// 'picture-in-picture' => true,
 			// );
 
-			$new_value = wp_kses($value, $allowed_html);
+			$new_value = wp_kses( $value, $allowed_html );
 			// htmlentities this $new_value (double security ..)
+
 			$new_value = htmlentities( $new_value );
-			
-			// (may not needed - but extra security)
-			if ( function_exists('sanitize_textarea_field') ) {
+			// or
+			// $new_value = htmlentities($new_value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+			// (may not needed - but extra security - encoding and sanitizing)
+			if ( function_exists( 'sanitize_textarea_field' ) ) {
 				$new_value = sanitize_textarea_field( $new_value );
 			} else {
 				$new_value = sanitize_text_field( $new_value );
 			}
 		}
-		
+
 		return $new_value;
 	}
 }
 
 
 /**
- * ht_ctc_sanitize_custom_css_code - santize custom css code
- * 
- * @uses 
- * 	admin other settings - options_sanitize - custom css code
+ * Sanitize custom CSS code.
+ *
+ * @uses Admin other settings - options_sanitize - custom css code.
  * @since 4.11
+ * @param string $value CSS code to sanitize.
+ * @return string Sanitized CSS code.
  */
-if ( ! function_exists('ht_ctc_sanitize_custom_css_code') ) {
-	function ht_ctc_sanitize_custom_css_code($value = '') {
+if ( ! function_exists( 'ht_ctc_sanitize_custom_css_code' ) ) {
+	/**
+	 * Sanitize custom CSS code.
+	 *
+	 * REST API / admin2 equivalent: HT_CTC_Sanitizer::ctc_sanitize_custom_css().
+	 *
+	 * @param string $value CSS code to sanitize.
+	 * @return string Sanitized CSS code.
+	 */
+	function ht_ctc_sanitize_custom_css_code( $value = '' ) {
 
-
-		if ( !empty( $value) ) {
+		if ( ! empty( $value ) ) {
 			$allowed_html = wp_kses_allowed_html( 'post' );
-			$value = wp_kses($value, $allowed_html);
+			$value        = wp_kses( $value, $allowed_html );
 		}
 
-		if ( function_exists('sanitize_textarea_field') ) {
+		if ( function_exists( 'sanitize_textarea_field' ) ) {
 			$value = sanitize_textarea_field( $value );
 		} else {
 			$value = sanitize_text_field( $value );

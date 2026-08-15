@@ -30,7 +30,7 @@ class LinkStatus extends Model {
 	 *
 	 * @var array
 	 */
-	protected $integerFields = [ 'id', 'broken', 'dismissed', 'scan_count', 'redirect_count', 'http_status_code' ];
+	protected $integerFields = [ 'id', 'broken', 'dismissed', 'needs_additional_scan', 'client_confirmed_broken', 'scan_count', 'local_scan_count', 'redirect_count', 'http_status_code' ];
 
 	/**
 	 * Fields that are nullable.
@@ -50,7 +50,9 @@ class LinkStatus extends Model {
 	 */
 	protected $booleanFields = [
 		'broken',
-		'dismissed'
+		'dismissed',
+		'needs_additional_scan',
+		'client_confirmed_broken'
 	];
 
 	/**
@@ -93,6 +95,35 @@ class LinkStatus extends Model {
 	}
 
 	/**
+	 * Deletes the given link-status rows that are no longer referenced by any link.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param  int[] $linkStatusIds The candidate link-status IDs to prune.
+	 * @return void
+	 */
+	public static function deleteOrphaned( $linkStatusIds ) {
+		$linkStatusIds = array_filter( array_map( 'intval', (array) $linkStatusIds ) );
+		if ( empty( $linkStatusIds ) ) {
+			return;
+		}
+
+		$prefix      = aioseoBrokenLinkChecker()->core->db->prefix;
+		$statusTable = $prefix . 'aioseo_blc_link_status';
+		$linksTable  = $prefix . 'aioseo_blc_links';
+		$idList      = implode( ',', $linkStatusIds );
+
+		aioseoBrokenLinkChecker()->core->db->execute(
+			"DELETE FROM $statusTable
+			WHERE id IN ($idList)
+				AND NOT EXISTS (
+					SELECT 1 FROM $linksTable
+					WHERE $linksTable.blc_link_status_id = $statusTable.id
+				)"
+		);
+	}
+
+	/**
 	 * Returns the Link Status with the given URL.
 	 *
 	 * @since 1.0.0
@@ -108,13 +139,39 @@ class LinkStatus extends Model {
 			->run()
 			->model( 'AIOSEO\\BrokenLinkChecker\\Models\\LinkStatus' );
 
+		if ( ! $linkStatus->exists() ) {
+			// Updates to the plugin can cause hash mismatches. Let's do another attempt using the URL.
+			// We do a join to improve performance since the URL isn't indexed.
+			$hostname = wp_parse_url( $url, PHP_URL_HOST );
+			$result   = aioseoBrokenLinkChecker()->core->db->start( 'aioseo_blc_link_status as abls' )
+				->select( 'abls.id' )
+				->join( 'aioseo_blc_links as abl', 'abls.id = abl.blc_link_status_id' )
+				->where( 'abl.hostname', $hostname )
+				->where( 'abls.url', $url )
+				->groupBy( 'abls.id' )
+				->limit( 1 )
+				->run()
+				->result();
+
+			if ( ! empty( $result[0]->id ) ) {
+				$linkStatus = self::getById( $result[0]->id );
+
+				if ( $linkStatus->exists() ) {
+					// Reset the URL hash to prevent future mismatches.
+					$linkStatus->url_hash = $hash;
+					$linkStatus->save();
+				}
+			}
+		}
+
 		return $linkStatus;
 	}
 
 	/**
 	 * Returns all broken links for a given post ID.
 	 *
-	 * @since 1.2.0
+	 * @since   1.2.0
+	 * @version 1.3.0 Exclude links pending local-scan confirmation.
 	 *
 	 * @param int    $postId The post ID.
 	 * @return array         The list of broken links.
@@ -124,10 +181,30 @@ class LinkStatus extends Model {
 			->join( 'aioseo_blc_links as al', 'als.id = al.blc_link_status_id' )
 			->where( 'al.post_id', $postId )
 			->where( 'als.broken', true )
+			->where( 'als.needs_additional_scan', false )
 			->where( 'als.dismissed', false );
 
 		return $query->run()
 			->result();
+	}
+
+	/**
+	 * Returns the count of broken links for a given post ID.
+	 *
+	 * @since   1.2.7
+	 * @version 1.3.0 Exclude links pending local-scan confirmation.
+	 *
+	 * @param int    $postId The post ID.
+	 * @return int           The count of broken links.
+	 */
+	public static function getBrokenCountByPostId( $postId ) {
+		return aioseoBrokenLinkChecker()->core->db->start( 'aioseo_blc_link_status as als' )
+			->join( 'aioseo_blc_links as al', 'als.id = al.blc_link_status_id' )
+			->where( 'al.post_id', $postId )
+			->where( 'als.broken', true )
+			->where( 'als.needs_additional_scan', false )
+			->where( 'als.dismissed', false )
+			->count();
 	}
 
 	/**
@@ -147,7 +224,7 @@ class LinkStatus extends Model {
 	 */
 	public static function rowQuery( $filter = 'all', $limit = 20, $offset = 0, $whereClause = '', $orderBy = '', $orderDir = 'DESC' ) {
 		$query = self::baseQuery( $filter, $whereClause )
-			->select( 'als.*' )
+			->select( 'als.*, al.external, al.is_video' )
 			->limit( $limit, $offset );
 
 		if ( $orderBy && $orderDir ) {
@@ -165,7 +242,9 @@ class LinkStatus extends Model {
 
 		$rowsWithData = [];
 		foreach ( $linkStatusRows as $linkStatusRow ) {
-			$linkStatusRow->totalLinks = Link::rowQueryCount( $linkStatusRow->id );
+			$counts                       = Link::rowQueryCounts( $linkStatusRow->id );
+			$linkStatusRow->totalLinks    = $counts['total'];
+			$linkStatusRow->distinctPosts = $counts['distinctPosts'];
 			if ( $linkStatusRow->totalLinks > 1 ) {
 				$rowsWithData[] = $linkStatusRow;
 				continue;
@@ -203,6 +282,7 @@ class LinkStatus extends Model {
 	 *
 	 * @since   1.0.0
 	 * @version 1.1.0 Moved from Links model to Link Status model.
+	 * @version 1.3.0 Exclude needs_additional_scan rows from broken and redirects filters.
 	 *
 	 * @param  string   $filter      The active filter.
 	 * @param  string   $whereClause The WHERE clause.
@@ -241,12 +321,20 @@ class LinkStatus extends Model {
 
 		if ( ! empty( $filter ) ) {
 			switch ( $filter ) {
+				case 'good':
+					$query->where( 'als.broken', false );
+					$query->where( 'als.redirect_count', 0 );
+					$query->where( 'als.dismissed', false );
+					$query->where( 'als.last_scan_date IS NOT', null );
+					break;
 				case 'broken':
 					$query->where( 'als.broken', true );
+					$query->where( 'als.needs_additional_scan', false );
 					$query->where( 'als.dismissed', false );
 					break;
 				case 'redirects':
 					$query->where( 'als.redirect_count >', 0 );
+					$query->where( 'als.needs_additional_scan', false );
 					$query->where( 'als.dismissed', false );
 					break;
 				case 'dismissed':
@@ -263,5 +351,23 @@ class LinkStatus extends Model {
 		}
 
 		return $query;
+	}
+
+	/**
+	 * Apply filter before saving.
+	 *
+	 * @since 1.2.6
+	 *
+	 * @return void
+	 */
+	public function save() {
+		$fields = $this->transform( $this->filter( (array) get_object_vars( $this ) ) );
+
+		$fields['url']      = apply_filters( 'aioseo_blc_link_url_before_save', $fields['url'] );
+		$fields['url_hash'] = sha1( $fields['url'] );
+
+		$this->applyKeys( $this->transform( $this->filter( $fields ) ) );
+
+		parent::save();
 	}
 }

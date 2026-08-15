@@ -1,6 +1,6 @@
 <?php
 /**
-* three function -  while actiavte , deactivate , uninstall( while deleting ) 
+* Three function -  while actiavte , deactivate , uninstall( while deleting ) 
 * as plan to preserve the database options which usefull when reinstall plugin/ update 
 *       so that setting wont last
 *     and as no custom post types or so.. to flush rewrite rules

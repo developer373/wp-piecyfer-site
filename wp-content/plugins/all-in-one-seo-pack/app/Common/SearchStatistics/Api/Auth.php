@@ -57,7 +57,10 @@ class Auth {
 			return $this->profile;
 		}
 
-		$this->profile = aioseo()->internalOptions->internal->searchStatistics->profile;
+		$this->profile = [
+			'siteurl'    => aioseo()->internalOptions->internal->searchStatistics->profile->siteurl,
+			'authedsite' => aioseo()->internalOptions->internal->searchStatistics->profile->authedsite
+		];
 
 		return $this->profile;
 	}
@@ -70,7 +73,7 @@ class Auth {
 	 * @return string The profile key.
 	 */
 	public function getKey() {
-		return ! empty( $this->profile['key'] ) ? $this->profile['key'] : '';
+		return aioseo()->sensitiveOptions->get( 'searchStatisticsProfileKey' );
 	}
 
 	/**
@@ -81,7 +84,7 @@ class Auth {
 	 * @return string The profile token.
 	 */
 	public function getToken() {
-		return ! empty( $this->profile['token'] ) ? $this->profile['token'] : '';
+		return aioseo()->sensitiveOptions->get( 'searchStatisticsProfileToken' );
 	}
 
 	/**
@@ -103,9 +106,24 @@ class Auth {
 	 * @return void
 	 */
 	public function setProfile( $data = [] ) {
-		$this->profile = $data;
+		// Save sensitive data separately.
+		if ( ! empty( $data['key'] ) ) {
+			aioseo()->sensitiveOptions->set( 'searchStatisticsProfileKey', $data['key'] );
+		}
+		if ( ! empty( $data['token'] ) ) {
+			aioseo()->sensitiveOptions->set( 'searchStatisticsProfileToken', $data['token'] );
+		}
 
-		aioseo()->internalOptions->internal->searchStatistics->profile = $this->profile;
+		$siteurl    = ! empty( $data['siteurl'] ) ? (string) $data['siteurl'] : '';
+		$authedsite = ! empty( $data['authedsite'] ) ? (string) $data['authedsite'] : '';
+
+		aioseo()->internalOptions->internal->searchStatistics->profile->siteurl    = $siteurl;
+		aioseo()->internalOptions->internal->searchStatistics->profile->authedsite = $authedsite;
+
+		$this->profile = [
+			'siteurl'    => $siteurl,
+			'authedsite' => $authedsite
+		];
 	}
 
 	/**
@@ -117,6 +135,10 @@ class Auth {
 	 */
 	public function deleteProfile() {
 		$this->setProfile( [] );
+
+		// Clear sensitive data.
+		aioseo()->sensitiveOptions->delete( 'searchStatisticsProfileKey' );
+		aioseo()->sensitiveOptions->delete( 'searchStatisticsProfileToken' );
 	}
 
 	/**
@@ -127,7 +149,7 @@ class Auth {
 	 * @return bool Whether we are connected or not.
 	 */
 	public function isConnected() {
-		return ! empty( $this->profile['key'] );
+		return aioseo()->sensitiveOptions->hasValue( 'searchStatisticsProfileKey' );
 	}
 
 	/**
@@ -138,16 +160,22 @@ class Auth {
 	 * @return bool Whether the data is valid or not.
 	 */
 	public function verify( $credentials = [] ) {
-		$creds = ! empty( $credentials ) ? $credentials : aioseo()->internalOptions->internal->searchStatistics->profile;
+		if ( ! empty( $credentials ) ) {
+			$key   = $credentials['key'];
+			$token = $credentials['token'];
+		} else {
+			$key   = aioseo()->sensitiveOptions->get( 'searchStatisticsProfileKey' );
+			$token = aioseo()->sensitiveOptions->get( 'searchStatisticsProfileToken' );
+		}
 
-		if ( empty( $creds['key'] ) ) {
+		if ( empty( $key ) ) {
 			return new \WP_Error( 'validation-error', 'Authentication key is missing.' );
 		}
 
 		$request = new Request( "auth/verify/{$this->type}/", [
 			'tt'      => aioseo()->searchStatistics->api->trustToken->get(),
-			'key'     => $creds['key'],
-			'token'   => $creds['token'],
+			'key'     => $key,
+			'token'   => $token,
 			'testurl' => 'https://' . aioseo()->searchStatistics->api->getApiUrl() . '/v1/test/',
 		] );
 		$response = $request->request();
@@ -162,33 +190,27 @@ class Auth {
 	 *
 	 * @since 4.3.0
 	 *
-	 * @param  bool $force Whether we should force the deletion in case of errors.
-	 * @return bool        Whether the authentication data was deleted or not.
+	 * @return bool Whether the authentication data was deleted or not.
 	 */
-	public function delete( $force = false ) {
+	public function delete() {
 		if ( ! $this->isConnected() ) {
 			return false;
 		}
 
-		$creds = aioseo()->searchStatistics->api->auth->getProfile( true );
-		if ( empty( $creds['key'] ) ) {
+		$key   = aioseo()->sensitiveOptions->get( 'searchStatisticsProfileKey' );
+		$token = aioseo()->sensitiveOptions->get( 'searchStatisticsProfileToken' );
+		if ( empty( $key ) ) {
 			return false;
 		}
 
-		$request = new Request( "auth/delete/{$this->type}/", [
+		( new Request( "auth/delete/{$this->type}/", [
 			'tt'      => aioseo()->searchStatistics->api->trustToken->get(),
-			'key'     => $creds['key'],
-			'token'   => $creds['token'],
+			'key'     => $key,
+			'token'   => $token,
 			'testurl' => 'https://' . aioseo()->searchStatistics->api->getApiUrl() . '/v1/test/',
-		] );
-		$response = $request->request();
+		] ) )->request();
 
 		aioseo()->searchStatistics->api->trustToken->rotate();
-
-		if ( is_wp_error( $response ) && ! $force ) {
-			return false;
-		}
-
 		aioseo()->searchStatistics->api->auth->deleteProfile();
 		aioseo()->searchStatistics->reset();
 

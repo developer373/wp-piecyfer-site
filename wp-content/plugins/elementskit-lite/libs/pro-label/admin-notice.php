@@ -17,7 +17,7 @@ trait Admin_Notice {
 		->set_html(
 			'
             <div class="ekit-go-pro-notice">
-                <strong>Thank you for using ElementsKit Lite.</strong> To get more amazing features and the outstanding pro ready-made layouts, please get the <a style="color: #FCB214;" target="_blank" href="https://wpmet.com/elementskit-pricing">Premium Version</a>.
+                <strong>' . esc_html__( 'Thank you for using ElementsKit Lite.', 'elementskit-lite' ) . '</strong> ' . esc_html__( 'To get more amazing features and the outstanding pro ready-made layouts, please get the', 'elementskit-lite' ) . ' <a style="color: #FCB214;" target="_blank" href="https://wpmet.com/elementskit-pricing"> ' . esc_html__( 'Premium Version', 'elementskit-lite' ) . ' </a>.
             </div>
         '
 		)

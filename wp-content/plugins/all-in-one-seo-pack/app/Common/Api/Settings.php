@@ -25,17 +25,49 @@ class Settings {
 	public static $importFile = [];
 
 	/**
-	 * Update the settings.
+	 * The `advanced` option keys that are surfaced under their own Content Optimization settings tab.
+	 *
+	 * @since 5.0.0
+	 *
+	 * @var array
+	 */
+	const CONTENT_OPTIMIZATION_OPTIONS = [ 'truSeo', 'headlineAnalyzer', 'seoAnalysis', 'spellChecker', 'highlighter', 'highlighterStyle' ];
+
+	/**
+	 * Retrieves the plugin options.
 	 *
 	 * @since 4.0.0
 	 *
-	 * @return \WP_REST_Response The response.
+	 * @param  \WP_REST_Request  $request The REST Request.
+	 * @return \WP_REST_Response          The response containing all plugin options.
 	 */
-	public static function getOptions() {
-		return new \WP_REST_Response( [
-			'options'  => aioseo()->options->all(),
-			'settings' => aioseo()->settings->all()
-		], 200 );
+	public static function getOptions( $request ) {
+		$siteId = (int) $request->get_param( 'siteId' );
+		if ( $siteId ) {
+			// Ensure the user has access to the target site.
+			if (
+				is_multisite() &&
+				(
+					! is_user_member_of_blog( get_current_user_id(), $siteId ) &&
+					! is_super_admin()
+				)
+			) {
+				return new \WP_REST_Response( [
+					'success' => false,
+					'message' => 'You do not have permission to access this site.'
+				], 403 );
+			}
+
+			aioseo()->helpers->switchToBlog( $siteId );
+
+			// Re-initialize the options for this site.
+			aioseo()->options->init();
+		}
+
+		return new \WP_REST_Response([
+			'success' => true,
+			'options' => aioseo()->options->all()
+		], 200);
 	}
 
 	/**
@@ -49,8 +81,8 @@ class Settings {
 	public static function toggleCard( $request ) {
 		$body  = $request->get_json_params();
 		$card  = ! empty( $body['card'] ) ? sanitize_text_field( $body['card'] ) : null;
-		$cards = aioseo()->settings->toggledCards;
-		if ( array_key_exists( $card, $cards ) ) {
+		$cards = aioseo()->settings->toggledCards ?? [];
+		if ( $card && array_key_exists( $card, $cards ) ) {
 			$cards[ $card ] = ! $cards[ $card ];
 			aioseo()->settings->toggledCards = $cards;
 		}
@@ -72,8 +104,8 @@ class Settings {
 		$body   = $request->get_json_params();
 		$radio  = ! empty( $body['radio'] ) ? sanitize_text_field( $body['radio'] ) : null;
 		$value  = ! empty( $body['value'] ) ? sanitize_text_field( $body['value'] ) : null;
-		$radios = aioseo()->settings->toggledRadio;
-		if ( array_key_exists( $radio, $radios ) ) {
+		$radios = aioseo()->settings->toggledRadio ?? [];
+		if ( $radio && array_key_exists( $radio, $radios ) ) {
 			$radios[ $radio ] = $value;
 			aioseo()->settings->toggledRadio = $radios;
 		}
@@ -94,8 +126,8 @@ class Settings {
 	public static function dismissAlert( $request ) {
 		$body   = $request->get_json_params();
 		$alert  = ! empty( $body['alert'] ) ? sanitize_text_field( $body['alert'] ) : null;
-		$alerts = aioseo()->settings->dismissedAlerts;
-		if ( array_key_exists( $alert, $alerts ) ) {
+		$alerts = aioseo()->settings->dismissedAlerts ?? [];
+		if ( $alert && array_key_exists( $alert, $alerts ) ) {
 			$alerts[ $alert ] = true;
 			aioseo()->settings->dismissedAlerts = $alerts;
 		}
@@ -161,24 +193,49 @@ class Settings {
 	/**
 	 * Save options from the front end.
 	 *
-	 * @since 4.0.0
+	 * @since   4.0.0
+	 * @version 4.9.10 Strip option groups the caller cannot manage and gate the network-wide write.
 	 *
 	 * @param  \WP_REST_Request  $request The REST Request
 	 * @return \WP_REST_Response          The response.
 	 */
 	public static function saveChanges( $request ) {
-		$body           = $request->get_json_params();
-		$options        = ! empty( $body['options'] ) ? $body['options'] : [];
-		$dynamicOptions = ! empty( $body['dynamicOptions'] ) ? $body['dynamicOptions'] : [];
-		$network        = ! empty( $body['network'] ) ? (bool) $body['network'] : false;
-		$networkOptions = ! empty( $body['networkOptions'] ) ? $body['networkOptions'] : [];
+		$body            = $request->get_json_params();
+		$options         = ! empty( $body['options'] ) ? $body['options'] : [];
+		$dynamicOptions  = ! empty( $body['dynamicOptions'] ) ? $body['dynamicOptions'] : [];
+		$network         = ! empty( $body['network'] ) ? (bool) $body['network'] : false;
+		$networkOptions  = ! empty( $body['networkOptions'] ) ? $body['networkOptions'] : [];
+		$redirectOptions = ! empty( $body['redirectOptions'] ) ? $body['redirectOptions'] : [];
+
+		// Strip the option groups the caller is not allowed to manage (mirrors resetSettings()), so a
+		// non-administrator cannot write privileged groups - e.g. the access-control matrix or the
+		// redirect engine - through this generic save route. Returns [] for admins and on Lite.
+		$notAllowedOptions = aioseo()->access->getNotAllowedOptions();
+		foreach ( $notAllowedOptions as $group ) {
+			unset( $options[ $group ], $dynamicOptions[ $group ] );
+		}
+
+		if ( in_array( 'redirects', $notAllowedOptions, true ) ) {
+			$redirectOptions = [];
+		}
 
 		// If this is the network admin, reset the options.
 		if ( $network ) {
+			// Network-wide options are merged into every site, so require the network-settings capability.
+			if ( ! is_multisite() || ! current_user_can( 'manage_network_options' ) ) {
+				return new \WP_REST_Response( [
+					'success' => false
+				], 403 );
+			}
+
 			aioseo()->networkOptions->sanitizeAndSave( $networkOptions );
 		} else {
 			aioseo()->options->sanitizeAndSave( $options );
 			aioseo()->dynamicOptions->sanitizeAndSave( $dynamicOptions );
+
+			if ( ! empty( aioseo()->redirects ) ) {
+				aioseo()->redirects->options->sanitizeAndSave( $redirectOptions );
+			}
 		}
 
 		// Re-initialize notices.
@@ -205,7 +262,13 @@ class Settings {
 		$notAllowedOptions = aioseo()->access->getNotAllowedOptions();
 
 		foreach ( $settings as $setting ) {
-			$optionAccess = in_array( $setting, [ 'robots', 'blocker' ], true ) ? 'tools' : $setting;
+			$optionAccess = $setting;
+			if ( in_array( $setting, [ 'robots', 'blocker' ], true ) ) {
+				$optionAccess = 'tools';
+			} elseif ( 'contentOptimization' === $setting ) {
+				// Content Optimization is its own tab, but its options are stored inside the `advanced` group.
+				$optionAccess = 'advanced';
+			}
 
 			if ( in_array( $optionAccess, $notAllowedOptions, true ) ) {
 				continue;
@@ -214,11 +277,33 @@ class Settings {
 			switch ( $setting ) {
 				case 'robots':
 					aioseo()->options->tools->robots->reset();
+					aioseo()->options->searchAppearance->advanced->unwantedBots->reset();
+					aioseo()->options->searchAppearance->advanced->searchCleanup->settings->preventCrawling = false;
 					break;
-				case 'blocker':
-					aioseo()->options->deprecated->tools->blocker->reset();
+				case 'advanced':
+					// The Content Optimization tab surfaces some of the `advanced` options as its own settings screen,
+					// so we reset everything else in the group to keep this scoped to what the Advanced tab shows.
+					$advancedKeys = array_values( array_diff( array_keys( aioseo()->options->advanced->all() ), self::CONTENT_OPTIMIZATION_OPTIONS ) );
+					if ( ! empty( $advancedKeys ) ) {
+						aioseo()->options->advanced->reset( $advancedKeys );
+					}
+					break;
+				case 'contentOptimization':
+					aioseo()->options->advanced->reset( self::CONTENT_OPTIMIZATION_OPTIONS );
+					if ( aioseo()->options->has( 'writingAssistant' ) ) {
+						aioseo()->options->writingAssistant->reset();
+					}
+					break;
+				case 'redirects':
+					if ( ! empty( aioseo()->redirects ) ) {
+						aioseo()->redirects->options->reset();
+					}
 					break;
 				default:
+					if ( 'searchAppearance' === $setting ) {
+						aioseo()->robotsTxt->resetSearchAppearanceRules();
+					}
+
 					if ( aioseo()->options->has( $setting ) ) {
 						aioseo()->options->$setting->reset();
 					}
@@ -354,6 +439,10 @@ class Settings {
 			unset( $settings['dynamic'] );
 		}
 
+		if ( ! empty( $settings['tools']['robots']['rules'] ) ) {
+			$settings['tools']['robots']['rules'] = array_merge( aioseo()->robotsTxt->extractSearchAppearanceRules(), $settings['tools']['robots']['rules'] );
+		}
+
 		aioseo()->options->sanitizeAndSave( $settings );
 	}
 
@@ -435,10 +524,10 @@ class Settings {
 			'postOptions' => null
 		];
 
-		$rows = str_getcsv( $fileContent, "\n" );
+		$rows = str_getcsv( $fileContent, "\n", '"', '\\' );
 
 		// Get the first row to check if the file has post_id or term_id.
-		$header = str_getcsv( $rows[0], ',' );
+		$header = str_getcsv( $rows[0], ',', '"', '\\' );
 		$header = aioseo()->helpers->sanitizeOption( $header );
 
 		// Check if the file has post_id or term_id.
@@ -453,6 +542,7 @@ class Settings {
 		unset( $rows[0] );
 
 		$jsonFields = [
+			'ai',
 			'keywords',
 			'keyphrases',
 			'page_analysis',
@@ -460,13 +550,12 @@ class Settings {
 			'og_article_tags',
 			'schema',
 			'options',
-			'open_ai',
 			'videos'
 		];
 
 		foreach ( $rows as $row ) {
 			$row = str_replace( '\\""', '\\"', $row );
-			$row = str_getcsv( $row, ',' );
+			$row = str_getcsv( $row, ',', '"', '\\' );
 
 			foreach ( $row as $key => $value ) {
 				$key = aioseo()->helpers->sanitizeOption( $key );
@@ -519,6 +608,17 @@ class Settings {
 			switch ( $setting ) {
 				case 'robots':
 					$allSettings['settings']['tools']['robots'] = $options->tools->robots->all();
+					// Search Appearance settings that are also found in the robots settings.
+					if ( empty( $allSettings['settings']['searchAppearance']['advanced'] ) ) {
+						$allSettings['settings']['searchAppearance']['advanced'] = [
+							'unwantedBots'  => $options->searchAppearance->advanced->unwantedBots->all(),
+							'searchCleanup' => [
+								'settings' => [
+									'preventCrawling' => $options->searchAppearance->advanced->searchCleanup->settings->preventCrawling
+								]
+							]
+						];
+					}
 					break;
 				default:
 					if ( $options->has( $setting ) ) {
@@ -560,6 +660,20 @@ class Settings {
 		$contentPostType = null;
 		$return          = true;
 
+		// Ensure the user has access to the target site.
+		if (
+			is_multisite() &&
+			(
+				! is_user_member_of_blog( get_current_user_id(), $siteId ) &&
+				! is_super_admin()
+			)
+		) {
+			return new \WP_REST_Response( [
+				'success' => false,
+				'message' => 'You do not have permission to export data for this site.'
+			], 403 );
+		}
+
 		try {
 			aioseo()->helpers->switchToBlog( $siteId );
 
@@ -578,7 +692,7 @@ class Settings {
 					'link_suggestions_scan_date' => '',
 					'local_seo'                  => '',
 					'options'                    => '',
-					'open_ai'                    => ''
+					'ai'                         => ''
 				];
 
 				$notAllowed = array_merge( aioseo()->access->getNotAllowedPageFields(), $fieldsToExclude );
@@ -586,12 +700,28 @@ class Settings {
 
 				// Generate content to CSV or JSON.
 				if ( ! empty( $posts ) ) {
+					// Change the order of keys so the post_title shows up at the beginning.
+					$data = [];
+					foreach ( $posts as $p ) {
+						$item = [
+							'id'         => '',
+							'post_id'    => '',
+							'post_title' => '',
+							'title'      => ''
+						];
+
+						$p['title']      = aioseo()->helpers->decodeHtmlEntities( $p['title'] );
+						$p['post_title'] = aioseo()->helpers->decodeHtmlEntities( $p['post_title'] );
+
+						$data[] = array_merge( $item, $p );
+					}
+
 					if ( 'csv' === $typeFile ) {
-						$contentPostType = self::dataToCsv( $posts );
+						$contentPostType = self::dataToCsv( $data );
 					}
 
 					if ( 'json' === $typeFile ) {
-						$contentPostType['postOptions']['content']['posts'] = $posts;
+						$contentPostType['postOptions']['content']['posts'] = $data;
 					}
 				}
 			}
@@ -616,7 +746,7 @@ class Settings {
 	 */
 	private static function getPostTypesData( $postOptions, $notAllowedFields = [] ) {
 		$posts = aioseo()->core->db->start( 'aioseo_posts as ap' )
-			->select( 'ap.*' )
+			->select( 'ap.*, p.post_title' )
 			->join( 'posts as p', 'ap.post_id = p.ID' )
 			->whereIn( 'p.post_type', $postOptions )
 			->orderBy( 'ap.id' )
@@ -701,6 +831,20 @@ class Settings {
 		$siteId        = ! empty( $body['siteId'] ) ? intval( $body['siteId'] ) : false;
 		$siteOrNetwork = empty( $siteId ) ? aioseo()->helpers->getNetworkId() : $siteId; // If we don't have a siteId, we will use the networkId.
 
+		// Ensure the user has access to the target site.
+		if (
+			$siteId &&
+			is_multisite() &&
+			(
+				! is_user_member_of_blog( get_current_user_id(), $siteId ) &&
+				! is_super_admin()
+		) ) {
+			return new \WP_REST_Response( [
+				'success' => false,
+				'message' => 'You do not have permission to access this site.'
+			], 403 );
+		}
+
 		// When on network admin page and no siteId, it is supposed to perform on network level.
 		if ( $network && 'clear-cache' === $action && empty( $siteId ) ) {
 			aioseo()->core->networkCache->clear();
@@ -725,8 +869,8 @@ class Settings {
 				aioseo()->access->addCapabilities();
 				break;
 			case 'reset-data':
-				aioseo()->core->uninstallDb( true );
-				aioseo()->internalOptions->database->installedTables = '';
+				aioseo()->uninstall->dropData( true );
+				aioseo()->core->cache->delete( 'db_schema' );
 				aioseo()->internalOptions->internal->lastActiveVersion = '4.0.0';
 				aioseo()->internalOptions->save( true );
 				aioseo()->updates->addInitialCustomTablesForV4();
@@ -737,9 +881,22 @@ class Settings {
 				break;
 			// Migrations
 			case 'rerun-migrations':
-				aioseo()->internalOptions->database->installedTables   = '';
+				aioseo()->core->cache->delete( 'db_schema' );
 				aioseo()->internalOptions->internal->lastActiveVersion = '4.0.0';
 				aioseo()->internalOptions->save( true );
+				break;
+			case 'rerun-addon-migrations':
+				aioseo()->core->cache->delete( 'db_schema' );
+
+				foreach ( $data as $sku ) {
+					$convertedSku = aioseo()->helpers->dashesToCamelCase( $sku );
+					if (
+						function_exists( $convertedSku ) &&
+						isset( $convertedSku()->internalOptions )
+					) {
+						$convertedSku()->internalOptions->internal->lastActiveVersion = '0.0';
+					}
+				}
 				break;
 			case 'restart-v3-migration':
 				Migration\Helpers::redoMigration();

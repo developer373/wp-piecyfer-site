@@ -78,6 +78,10 @@ class Widget_Html extends Widget_Base {
 		return User::is_current_user_can_use_custom_html();
 	}
 
+	public function has_widget_inner_wrapper(): bool {
+		return ! Plugin::$instance->experiments->is_feature_active( 'e_optimized_markup' );
+	}
+
 	/**
 	 * Register HTML widget controls.
 	 *
@@ -135,5 +139,14 @@ class Widget_Html extends Widget_Base {
 		?>
 		{{{ settings.html }}}
 		<?php
+	}
+
+	public function render_markdown(): string {
+		$settings = $this->get_settings_for_display();
+		$html = $settings['html'] ?? '';
+		if ( empty( $html ) ) {
+			return '';
+		}
+		return \Elementor\Modules\MarkdownRender\Html_To_Markdown::convert( $html );
 	}
 }

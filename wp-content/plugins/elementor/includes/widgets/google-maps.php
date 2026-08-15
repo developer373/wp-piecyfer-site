@@ -106,6 +106,10 @@ class Widget_Google_Maps extends Widget_Base {
 		return [ 'widget-google_maps' ];
 	}
 
+	public function has_widget_inner_wrapper(): bool {
+		return ! Plugin::$instance->experiments->is_feature_active( 'e_optimized_markup' );
+	}
+
 	/**
 	 * Register google maps widget controls.
 	 *
@@ -321,4 +325,13 @@ class Widget_Google_Maps extends Widget_Base {
 	 * @access protected
 	 */
 	protected function content_template() {}
+
+	public function render_markdown(): string {
+		$settings = $this->get_settings_for_display();
+		$address = Utils::html_to_plain_text( $settings['address'] ?? '' );
+		if ( empty( $address ) ) {
+			return '';
+		}
+		return '[Map: ' . $address . '](https://maps.google.com/maps?q=' . rawurlencode( $address ) . ')';
+	}
 }

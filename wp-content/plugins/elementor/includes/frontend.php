@@ -3,6 +3,7 @@ namespace Elementor;
 
 use Elementor\Core\Base\App;
 use Elementor\Core\Base\Elements_Iteration_Actions\Assets;
+use Elementor\Core\Files\Fonts\Google_Font;
 use Elementor\Core\Frontend\Render_Mode_Manager;
 use Elementor\Core\Responsive\Files\Frontend as FrontendFile;
 use Elementor\Core\Files\CSS\Post as Post_CSS;
@@ -146,18 +147,6 @@ class Frontend extends App {
 		'elementor-default',
 	];
 
-	private $google_fonts_index = 0;
-
-	/**
-	 * @var string
-	 */
-	private $e_swiper_asset_path;
-
-	/**
-	 * @var string
-	 */
-	private $e_swiper_version;
-
 	/**
 	 * Front End constructor.
 	 *
@@ -179,11 +168,14 @@ class Frontend extends App {
 		add_action( 'wp_enqueue_scripts', [ $this, 'register_styles' ], 5 );
 
 		$this->add_content_filter();
-		$this->init_swiper_settings();
 
 		// Hack to avoid enqueue post CSS while it's a `the_excerpt` call.
 		add_filter( 'get_the_excerpt', [ $this, 'start_excerpt_flag' ], 1 );
 		add_filter( 'get_the_excerpt', [ $this, 'end_excerpt_flag' ], 20 );
+
+		if ( version_compare( get_bloginfo( 'version' ), '6.9', '>=' ) ) {
+			add_filter( 'wp_should_output_buffer_template_for_enhancement', '__return_false', 1 );
+		}
 	}
 
 	/**
@@ -247,29 +239,20 @@ class Frontend extends App {
 
 		// Priority 7 to allow google fonts in header template to load in <head> tag
 		add_action( 'wp_head', [ $this, 'print_fonts_links' ], 7 );
-		add_action( 'wp_head', [ $this, 'print_google_fonts_preconnect_tag' ], 8 );
 		add_action( 'wp_head', [ $this, 'add_theme_color_meta_tag' ] );
 		add_action( 'wp_footer', [ $this, 'wp_footer' ] );
-	}
-
-	public function print_google_fonts_preconnect_tag() {
-		if ( 0 >= $this->google_fonts_index ) {
-			return;
-		}
-
-		echo '<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>';
 	}
 
 	/**
 	 * @since 2.0.12
 	 * @access public
-	 * @param string|array $class
+	 * @param string|array $class_name
 	 */
-	public function add_body_class( $class ) {
-		if ( is_array( $class ) ) {
-			$this->body_classes = array_merge( $this->body_classes, $class );
+	public function add_body_class( $class_name ) {
+		if ( is_array( $class_name ) ) {
+			$this->body_classes = array_merge( $this->body_classes, $class_name );
 		} else {
-			$this->body_classes[] = $class;
+			$this->body_classes[] = $class_name;
 		}
 	}
 
@@ -341,12 +324,6 @@ class Frontend extends App {
 		add_filter( 'the_content', [ $this, 'apply_builder_in_content' ], self::THE_CONTENT_FILTER_PRIORITY );
 	}
 
-	public function init_swiper_settings() {
-		$e_swiper_latest = Plugin::$instance->experiments->is_feature_active( 'e_swiper_latest' );
-		$this->e_swiper_asset_path = $e_swiper_latest ? 'assets/lib/swiper/v8/' : 'assets/lib/swiper/';
-		$this->e_swiper_version = $e_swiper_latest ? '8.4.5' : '5.3.6';
-	}
-
 	/**
 	 * Remove content filter.
 	 *
@@ -400,12 +377,20 @@ class Frontend extends App {
 		);
 
 		wp_register_script(
+			'swiper',
+			$this->get_js_assets_url( 'swiper', 'assets/lib/swiper/v8/' ),
+			[],
+			'8.4.5',
+			true
+		);
+
+		wp_register_script(
 			'flatpickr',
 			$this->get_js_assets_url( 'flatpickr', 'assets/lib/flatpickr/' ),
 			[
 				'jquery',
 			],
-			'4.1.4',
+			'4.6.13',
 			true
 		);
 
@@ -435,7 +420,7 @@ class Frontend extends App {
 			[
 				'jquery-ui-position',
 			],
-			'4.9.3',
+			'4.9.4',
 			true
 		);
 
@@ -469,6 +454,8 @@ class Frontend extends App {
 			ELEMENTOR_VERSION,
 			true
 		);
+
+		$this->register_frontend_handlers();
 
 		/**
 		 * After frontend register scripts.
@@ -522,7 +509,7 @@ class Frontend extends App {
 			'flatpickr',
 			$this->get_css_assets_url( 'flatpickr', 'assets/lib/flatpickr/' ),
 			[],
-			'4.1.4'
+			'4.6.13'
 		);
 
 		wp_register_style(
@@ -548,9 +535,9 @@ class Frontend extends App {
 
 		wp_register_style(
 			'swiper',
-			$this->get_css_assets_url( 'swiper', $this->e_swiper_asset_path . 'css/' ),
+			$this->get_css_assets_url( 'swiper', 'assets/lib/swiper/v8/css/' ),
 			[],
-			$this->e_swiper_version
+			'8.4.5'
 		);
 
 		wp_register_style(
@@ -569,7 +556,7 @@ class Frontend extends App {
 
 		wp_register_style(
 			'elementor-frontend',
-			$this->get_frontend_file_url( "frontend{$direction_suffix}{$min_suffix}.css", $has_custom_breakpoints ),
+			$this->get_frontend_file_url( "frontend{$min_suffix}.css", $has_custom_breakpoints ),
 			[],
 			$has_custom_breakpoints ? null : ELEMENTOR_VERSION
 		);
@@ -605,6 +592,21 @@ class Frontend extends App {
 	}
 
 	/**
+	 * Register frontend handlers.
+	 *
+	 * Registers all the frontend handlers for widgets and elements.
+	 *
+	 * Fired by `wp_enqueue_scripts` action.
+	 *
+	 * @since 3.25.0
+	 * @access public
+	 */
+	public function register_frontend_handlers() {
+		Plugin::$instance->widgets_manager->register_frontend_handlers();
+		Plugin::$instance->elements_manager->register_frontend_handlers();
+	}
+
+	/**
 	 * Enqueue scripts.
 	 *
 	 * Enqueue all the frontend scripts.
@@ -621,8 +623,6 @@ class Frontend extends App {
 		 * @since 1.0.0
 		 */
 		do_action( 'elementor/frontend/before_enqueue_scripts' );
-
-		wp_enqueue_script( 'elementor-frontend' );
 
 		$this->print_config();
 
@@ -670,11 +670,6 @@ class Frontend extends App {
 
 			wp_enqueue_style( 'elementor-frontend' );
 
-			// TODO: Update in version 3.26.0 [ED-15471]
-			if ( ! Plugin::$instance->experiments->is_feature_active( 'e_swiper_css_conditional_loading' ) ) {
-				wp_enqueue_style( 'e-swiper' );
-			}
-
 			if ( is_admin_bar_showing() ) {
 				wp_enqueue_style( 'elementor-wp-admin-bar' );
 			}
@@ -692,16 +687,37 @@ class Frontend extends App {
 				$post_id = get_the_ID();
 				// Check $post_id for virtual pages. check is singular because the $post_id is set to the first post on archive pages.
 				if ( $post_id && is_singular() ) {
-					$page_assets = get_post_meta( $post_id, Assets::ASSETS_META_KEY, true );
-					if ( ! empty( $page_assets ) ) {
-						Plugin::$instance->assets_loader->enable_assets( $page_assets );
-					}
+					do_action( 'elementor/post/render', $post_id );
+					$this->handle_page_assets( $post_id );
 
 					$css_file = Post_CSS::create( get_the_ID() );
 					$css_file->enqueue();
 				}
+			} else {
+				$post_id = Plugin::$instance->preview->get_post_id();
+				if ( $post_id ) {
+					do_action( 'elementor/post/render', $post_id );
+				}
 			}
+
+			do_action( 'elementor/frontend/after_enqueue_post_styles' );
 		}
+	}
+
+	private function handle_page_assets( $post_id ): void {
+		$page_assets = get_post_meta( $post_id, Assets::ASSETS_META_KEY, true );
+		if ( ! empty( $page_assets ) ) {
+			Plugin::$instance->assets_loader->enable_assets( $page_assets );
+			return;
+		}
+
+		$document = Plugin::$instance->documents->get( $post_id );
+
+		if ( ! $document ) {
+			return;
+		}
+
+		$document->update_runtime_elements();
 	}
 
 	/**
@@ -714,7 +730,7 @@ class Frontend extends App {
 	 *
 	 * @access public
 	 *
-	 * @param string $frontend_file_name
+	 * @param string  $frontend_file_name
 	 * @param boolean $custom_file
 	 *
 	 * @return string frontend file URL
@@ -740,7 +756,7 @@ class Frontend extends App {
 	 * @since 3.5.0
 	 * @access public
 	 *
-	 * @param string $frontend_file_name
+	 * @param string  $frontend_file_name
 	 * @param boolean $custom_file
 	 *
 	 * @return string frontend file path
@@ -885,6 +901,18 @@ class Frontend extends App {
 	 * @access public
 	 */
 	public function print_fonts_links() {
+		/**
+		 * Register font styles.
+		 *
+		 * Fires before fonts are processed, allowing add-ons to register
+		 * proper stylesheets for their custom font types via the WordPress API.
+		 *
+		 * @since 3.29.0
+		 *
+		 * @param string[] $fonts_to_enqueue List of font families to be enqueued.
+		 */
+		do_action( 'elementor/fonts/register_styles', $this->fonts_to_enqueue );
+
 		$google_fonts = $this->get_list_of_google_fonts_by_type();
 
 		$this->enqueue_google_fonts( $google_fonts );
@@ -917,7 +945,7 @@ class Frontend extends App {
 			$this->enqueued_icon_fonts[] = $css_url;
 		}
 
-		//clear enqueued icons
+		// Clear enqueued icons.
 		$this->icon_fonts_to_enqueue = [];
 	}
 
@@ -1017,27 +1045,19 @@ class Frontend extends App {
 			return;
 		}
 
-		// Print used fonts
+		$force_enqueue_from_cdn = Plugin::$instance->preview->is_preview_mode();
+
 		if ( ! empty( $google_fonts['google'] ) ) {
-			$this->google_fonts_index++;
-
-			$fonts_url = $this->get_stable_google_fonts_url( $google_fonts['google'] );
-
-			wp_enqueue_style( 'google-fonts-' . $this->google_fonts_index, $fonts_url ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
-		}
-
-		if ( ! empty( $google_fonts['early'] ) ) {
-			$early_access_font_urls = $this->get_early_access_google_font_urls( $google_fonts['early'] );
-
-			foreach ( $early_access_font_urls as $ea_font_url ) {
-				$this->google_fonts_index++;
-
-				//printf( '<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/earlyaccess/%s.css">', strtolower( str_replace( ' ', '', $current_font ) ) );
-
-				wp_enqueue_style( 'google-earlyaccess-' . $this->google_fonts_index, $ea_font_url ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+			foreach ( $google_fonts['google'] as $current_font ) {
+				Google_Font::enqueue( $current_font, Google_Font::TYPE_DEFAULT, $force_enqueue_from_cdn );
 			}
 		}
 
+		if ( ! empty( $google_fonts['early'] ) ) {
+			foreach ( $google_fonts['early'] as $current_font ) {
+				Google_Font::enqueue( $current_font, Google_Font::TYPE_EARLYACCESS, $force_enqueue_from_cdn );
+			}
+		}
 	}
 
 	/**
@@ -1126,6 +1146,19 @@ class Frontend extends App {
 		Plugin::$instance->documents->switch_to_document( $document );
 
 		$data = $document->get_elements_data();
+
+		/**
+		 * Filters document elements data after loading.
+		 *
+		 * Allows modification of elements data when loading (not saving).
+		 * Useful for migrations, transformations, or data enrichment.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param array                         $data      The elements data array.
+		 * @param \Elementor\Core\Base\Document $document  The document instance.
+		 */
+		$data = apply_filters( 'elementor/document/load/data', $data, $document );
 
 		/**
 		 * Frontend builder content data.
@@ -1225,7 +1258,7 @@ class Frontend extends App {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param int $post_id The post ID.
+	 * @param int  $post_id The post ID.
 	 *
 	 * @param bool $with_css Optional. Whether to retrieve the content with CSS
 	 *                       or not. Default is false.
@@ -1393,7 +1426,7 @@ class Frontend extends App {
 			],
 			'i18n' => [
 				'shareOnFacebook' => esc_html__( 'Share on Facebook', 'elementor' ),
-				'shareOnTwitter' => esc_html__( 'Share on Twitter', 'elementor' ),
+				'shareOnX' => esc_html__( 'Share on X', 'elementor' ),
 				'pinIt' => esc_html__( 'Pin it', 'elementor' ),
 				'download' => esc_html__( 'Download', 'elementor' ),
 				'downloadImage' => esc_html__( 'Download image', 'elementor' ),
@@ -1404,7 +1437,6 @@ class Frontend extends App {
 				'previous' => esc_html__( 'Previous', 'elementor' ),
 				'next' => esc_html__( 'Next', 'elementor' ),
 				'close' => esc_html__( 'Close', 'elementor' ),
-				'a11yCarouselWrapperAriaLabel' => __( 'Carousel | Horizontal scrolling: Arrow Left & Right', 'elementor' ),
 				'a11yCarouselPrevSlideMessage' => __( 'Previous slide', 'elementor' ),
 				'a11yCarouselNextSlideMessage' => __( 'Next slide', 'elementor' ),
 				'a11yCarouselFirstSlideMessage' => __( 'This is the first slide', 'elementor' ),
@@ -1429,8 +1461,9 @@ class Frontend extends App {
 			],
 			'nonces' => [
 				'floatingButtonsClickTracking' => wp_create_nonce( Module::CLICK_TRACKING_NONCE ),
+				'atomicFormsSendForm' => wp_create_nonce( 'elementor_pro_atomic_forms_send_form' ),
 			],
-			'swiperClass' => Plugin::$instance->experiments->is_feature_active( 'e_swiper_latest' ) ? 'swiper' : 'swiper-container',
+			'swiperClass' => 'swiper',
 		];
 
 		$settings['settings'] = SettingsManager::get_settings_frontend_config();
@@ -1514,7 +1547,7 @@ class Frontend extends App {
 	 * @access private
 	 * @since 2.0.4
 	 *
-	 * @param $content
+	 * @param string $content
 	 *
 	 * @return string
 	 */

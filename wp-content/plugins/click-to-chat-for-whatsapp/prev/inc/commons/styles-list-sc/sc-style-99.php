@@ -6,14 +6,17 @@ $s_99_img_height_desktop = esc_attr($a['s99_img_height_desktop']);
 $s_99_img_width_desktop = esc_attr($a['s99_img_width_desktop']);
 $s_99_img_height_mobile = esc_attr($a['s99_img_height_mobile']);
 $s_99_img_width_mobile = esc_attr($a['s99_img_width_mobile']);
-$s_99_desktop_img = esc_attr($a['s99_desktop_img']);
-$s_99_mobile_img = esc_attr($a['s99_mobile_img']);
+// URL fields: esc_url() validates scheme (rejects javascript:/data:) instead of
+// just HTML-encoding chars like esc_attr would.
+$s_99_desktop_img = esc_url( $a['s99_desktop_img'] );
+$s_99_mobile_img  = esc_url( $a['s99_mobile_img'] );
 
 // img url
 // image - width, height based on device
 $img_css = "";
 
-if( 1 == $is_mobile ) {
+// output : is in string ony '1'
+if( '1' === $is_mobile ) {
     $own_image = $s_99_mobile_img;
 
     if ( '' !== $s_99_img_height_mobile ) {
@@ -34,7 +37,7 @@ if( 1 == $is_mobile ) {
     }
 }
 
-if ( '' == $own_image ) {
+if ( '' === $own_image ) {
     $own_image = plugins_url( './new/inc/assets/img/whatsapp-logo.svg', HT_CTC_PLUGIN_FILE );
 }
 

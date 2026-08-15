@@ -26,13 +26,16 @@ class Frontend {
 	/**
 	 * Gets the current page's breadcrumbs.
 	 *
-	 * @since 4.1.1
+	 * @since   4.1.1
+	 * @version 4.9.10 Strip non-array entries from the filtered trail so downstream loops cannot fatal on PHP 8.
 	 *
 	 * @return array
 	 */
 	public function getBreadcrumbs() {
 		if ( ! empty( $this->breadcrumbs ) ) {
-			return apply_filters( 'aioseo_breadcrumbs_trail', $this->breadcrumbs );
+			$trail = apply_filters( 'aioseo_breadcrumbs_trail', $this->breadcrumbs );
+
+			return is_array( $trail ) ? array_values( array_filter( $trail, 'is_array' ) ) : [];
 		}
 
 		$reference = get_queried_object();
@@ -98,11 +101,19 @@ class Frontend {
 
 			if ( is_search() ) {
 				$type      = 'search';
-				$reference = htmlspecialchars( sanitize_text_field( get_search_query() ) );
+				$reference = htmlspecialchars( sanitize_text_field( get_search_query() ), ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 );
 			}
 
 			if ( is_404() ) {
 				$type = 'notFound';
+			}
+		}
+
+		if ( ! $type ) {
+			$type = aioseo()->helpers->getBreadcrumbTypeFromPost();
+			if ( $type ) {
+				global $post;
+				$reference = $post;
 			}
 		}
 
@@ -115,7 +126,9 @@ class Frontend {
 			];
 		}
 
-		return apply_filters( 'aioseo_breadcrumbs_trail', aioseo()->breadcrumbs->buildBreadcrumbs( $type, $reference, $paged ) );
+		$trail = apply_filters( 'aioseo_breadcrumbs_trail', aioseo()->breadcrumbs->buildBreadcrumbs( $type, $reference, $paged ) );
+
+		return is_array( $trail ) ? array_values( array_filter( $trail, 'is_array' ) ) : [];
 	}
 
 	/**
@@ -161,7 +174,8 @@ class Frontend {
 	/**
 	 * Display the breadcrumb in the frontend.
 	 *
-	 * @since 4.1.1
+	 * @since   4.1.1
+	 * @version 4.9.9 Return early when the Tags class isn't initialized yet.
 	 *
 	 * @param  bool        $echo Print out the breadcrumb.
 	 * @return string|void       A html breadcrumb.
@@ -180,6 +194,12 @@ class Frontend {
 
 		// We can only run after this action because we need all post types loaded.
 		if ( ! did_action( 'init' ) ) {
+			return;
+		}
+
+		// `tags` is initialized on `init`:50; bail if breadcrumbs render earlier (e.g. during
+		// another plugin's content scan) so breadcrumbToDisplay() can't call replaceTags() on null.
+		if ( ! aioseo()->breadcrumbs->tags ) {
 			return;
 		}
 
@@ -245,7 +265,7 @@ class Frontend {
 			function ( $matches ) {
 				return '>' . $matches[1] . '>';
 			},
-			htmlentities( $templateItem['template'] )
+			htmlentities( $templateItem['template'], ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 )
 		);
 
 		// Restore html.
@@ -299,11 +319,9 @@ class Frontend {
 	 * @return string            The default crumb template.
 	 */
 	public function getDefaultTemplate( $type = '', $reference = '' ) { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-		return <<<TEMPLATE
-<span class="aioseo-breadcrumb">
-	<a href="#breadcrumb_link" title="#breadcrumb_label">#breadcrumb_label</a>
-</span>
-TEMPLATE;
+		return '<span class="aioseo-breadcrumb">
+			<a href="#breadcrumb_link" title="#breadcrumb_label">#breadcrumb_label</a>
+		</span>';
 	}
 
 	/**
@@ -326,7 +344,14 @@ TEMPLATE;
 	 * @return string The separator html.
 	 */
 	public function getSeparator() {
-		$separator = apply_filters( 'aioseo_breadcrumbs_separator_symbol', aioseo()->options->breadcrumbs->separator );
+		$separator = aioseo()->options->breadcrumbs->separator;
+
+		$separatorToOverride = aioseo()->breadcrumbs->getOverride( 'separator' );
+		if ( ! empty( $separatorToOverride ) ) {
+			$separator = $separatorToOverride;
+		}
+
+		$separator = apply_filters( 'aioseo_breadcrumbs_separator_symbol', $separator );
 
 		return apply_filters( 'aioseo_breadcrumbs_separator', '<span class="aioseo-breadcrumb-separator">' . esc_html( $separator ) . '</span>' );
 	}

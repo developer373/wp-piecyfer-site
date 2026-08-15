@@ -5,7 +5,7 @@
  * Description: SEO for WordPress. Features like XML Sitemaps, SEO for custom post types, SEO for blogs, business sites, ecommerce sites, and much more. More than 100 million downloads since 2007.
  * Author:      All in One SEO Team
  * Author URI:  https://aioseo.com/
- * Version:     4.7.8
+ * Version:     5.0.0.1
  * Text Domain: all-in-one-seo-pack
  * Domain Path: /languages
  * License:     GPL-3.0+
@@ -27,7 +27,7 @@
  * @author    All in One SEO Team
  * @package   AIOSEO\Plugin
  * @license   GPL-3.0+
- * @copyright Copyright © 2024, All in One SEO
+ * @copyright Copyright © 2025, All in One SEO
  */
 
 // Exit if accessed directly.
@@ -49,18 +49,17 @@ if ( ! defined( 'AIOSEO_PHP_VERSION_DIR' ) ) {
 require_once dirname( __FILE__ ) . '/app/init/notices.php';
 require_once dirname( __FILE__ ) . '/app/init/activation.php';
 
-// We require PHP 7.0 or higher for the whole plugin to work.
-if ( version_compare( PHP_VERSION, '7.0', '<' ) ) {
+// We require PHP 7.1 or higher for the whole plugin to work.
+if ( version_compare( PHP_VERSION, '7.1', '<' ) ) {
 	add_action( 'admin_notices', 'aioseo_php_notice' );
 
 	// Do not process the plugin code further.
 	return;
 }
 
-// We require WordPress 5.3+ for the whole plugin to work.
-// Support for 5.3 is scheduled to be dropped in April 2025. 5.4, 5.5 and 5.6 will be dropped at the end of 2025.
+// We require WordPress 5.7 or higher for the whole plugin to work.
 global $wp_version; // phpcs:ignore Squiz.NamingConventions.ValidVariableName
-if ( version_compare( $wp_version, '5.3', '<' ) ) { // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+if ( version_compare( $wp_version, '5.7', '<' ) ) { // phpcs:ignore Squiz.NamingConventions.ValidVariableName
 	add_action( 'admin_notices', 'aioseo_wordpress_notice' );
 
 	// Do not process the plugin code further.
@@ -85,12 +84,12 @@ if ( function_exists( 'aioseo' ) ) {
 	return;
 }
 
-// We will be deprecating these versions of PHP in the future, so let's let the user know.
+// We will be deprecating these versions of PHP in the future, so we'll let the user know.
+// We flag deprecated WP versions in the DeprecatedWordPress class.
 if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
 	add_action( 'admin_notices', 'aioseo_php_notice_deprecated' );
 }
 
-// Define the class and the function.
 // The AIOSEOAbstract class is required here because it can't be autoloaded.
 require_once dirname( __FILE__ ) . '/app/AIOSEOAbstract.php';
 require_once dirname( __FILE__ ) . '/app/AIOSEO.php';

@@ -233,12 +233,15 @@
   color: #ffffff !important;
 }
 
+/* Elementor SVG Icon & Carousel Button Sizing Fix */
+.e-font-icon-svg {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+}
 
-
-
-
-
-
-
-
-
+.elementor-swiper-button svg,
+.elementor-widget-testimonial-carousel .elementor-swiper-button svg {
+  width: 1em;
+  height: 1em;
+}

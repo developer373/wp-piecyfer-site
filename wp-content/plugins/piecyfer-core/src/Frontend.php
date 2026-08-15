@@ -174,6 +174,22 @@ final class Frontend {
 			)
 		);
 
+		wp_register_script(
+			'elementor-recaptcha_v3-api',
+			'https://www.google.com/recaptcha/api.js?render=explicit',
+			array(),
+			null,
+			true
+		);
+
+		wp_register_script(
+			'elementor-recaptcha-api',
+			'https://www.google.com/recaptcha/api.js?render=explicit',
+			array(),
+			null,
+			true
+		);
+
 		foreach ( self::HANDLERS as $handle => $file ) {
 			self::register_script(
 				$handle,

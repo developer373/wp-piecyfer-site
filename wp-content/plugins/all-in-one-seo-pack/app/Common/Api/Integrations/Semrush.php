@@ -23,12 +23,28 @@ class Semrush {
 	 * @return \WP_REST_Response          The response.
 	 */
 	public static function semrushGetKeyphrases( $request ) {
-		$body       = $request->get_json_params();
-		$keyphrases = SemrushIntegration::getKeyphrases( $body['keyphrase'], $body['database'] );
-		if ( false === $keyphrases ) {
+		$body      = $request->get_json_params();
+		$keyphrase = sanitize_text_field( $body['keyphrase'] );
+		$database  = sanitize_text_field( $body['database'] );
+		if ( empty( $keyphrase ) || empty( $database ) ) {
 			return new \WP_REST_Response( [
 				'success' => false,
-				'message' => 'Tokens expired and could not be refreshed.'
+				'message' => 'Invalid keyword.'
+			], 400 );
+		}
+
+		$keyphrases = SemrushIntegration::getKeyphrases( $keyphrase, $database );
+		if ( is_bool( $keyphrases ) && false === $keyphrases ) {
+			return new \WP_REST_Response( [
+				'success' => false,
+				'message' => 'You may have sent too many requests to Semrush. Please wait a few minutes and try again.'
+			], 400 );
+		}
+
+		if ( is_array( $keyphrases ) && isset( $keyphrases['success'] ) && false === $keyphrases['success'] ) {
+			return new \WP_REST_Response( [
+				'success' => false,
+				'message' => $keyphrases['message']
 			], 400 );
 		}
 

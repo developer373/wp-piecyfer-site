@@ -88,6 +88,10 @@ class Widget_Social_Icons extends Widget_Base {
 		return [ 'widget-social-icons', 'e-apple-webkit' ];
 	}
 
+	public function has_widget_inner_wrapper(): bool {
+		return ! Plugin::$instance->experiments->is_feature_active( 'e_optimized_markup' );
+	}
+
 	/**
 	 * Register social icons widget controls.
 	 *
@@ -255,7 +259,7 @@ class Widget_Social_Icons extends Widget_Base {
 					],
 					[
 						'social_icon' => [
-							'value' => 'fab fa-twitter',
+							'value' => 'fab fa-x-twitter',
 							'library' => 'fa-brands',
 						],
 					],
@@ -307,8 +311,9 @@ class Widget_Social_Icons extends Widget_Base {
 			]
 		);
 
-		$start = is_rtl() ? 'end' : 'start';
-		$end = is_rtl() ? 'start' : 'end';
+		$align_selector = Plugin::$instance->experiments->is_feature_active( 'e_optimized_markup' ) && ! $this->has_widget_inner_wrapper()
+			? '{{WRAPPER}}'
+			: '{{WRAPPER}} .elementor-widget-container';
 
 		$this->add_responsive_control(
 			'align',
@@ -332,7 +337,7 @@ class Widget_Social_Icons extends Widget_Base {
 				'prefix_class' => 'e-grid-align%s-',
 				'default' => 'center',
 				'selectors' => [
-					'{{WRAPPER}} .elementor-widget-container' => 'text-align: {{VALUE}}',
+					$align_selector => 'text-align: {{VALUE}}',
 				],
 			]
 		);
@@ -572,7 +577,6 @@ class Widget_Social_Icons extends Widget_Base {
 		);
 
 		$this->end_controls_section();
-
 	}
 
 	/**
@@ -585,9 +589,18 @@ class Widget_Social_Icons extends Widget_Base {
 	 */
 	protected function render() {
 		$settings = $this->get_settings_for_display();
+
+		$this->add_render_attribute( 'wrapper', 'class', [ 'elementor-social-icons-wrapper', 'elementor-grid' ] );
+		$this->add_render_attribute( 'item_wrapper', 'class', 'elementor-grid-item' );
+
+		if ( count( $settings['social_icon_list'] ) > 1 ) {
+			$this->add_render_attribute( 'wrapper', 'role', 'list' );
+			$this->add_render_attribute( 'item_wrapper', 'role', 'listitem' );
+		}
+
 		$fallback_defaults = [
 			'fa fa-facebook',
-			'fa fa-twitter',
+			'fa fa-x-twitter',
 			'fa fa-google-plus',
 		];
 
@@ -600,7 +613,7 @@ class Widget_Social_Icons extends Widget_Base {
 		$migration_allowed = Icons_Manager::is_migration_allowed();
 
 		?>
-		<div class="elementor-social-icons-wrapper elementor-grid">
+		<div <?php $this->print_render_attribute_string( 'wrapper' ); ?>>
 			<?php
 			foreach ( $settings['social_icon_list'] as $index => $item ) {
 				$migrated = isset( $item['__fa4_migrated']['social_icon'] );
@@ -640,14 +653,14 @@ class Widget_Social_Icons extends Widget_Base {
 				$this->add_link_attributes( $link_key, $item['link'] );
 
 				?>
-				<span class="elementor-grid-item">
+				<span <?php $this->print_render_attribute_string( 'item_wrapper' ); ?>>
 					<a <?php $this->print_render_attribute_string( $link_key ); ?>>
 						<span class="elementor-screen-only"><?php echo esc_html( ucwords( $social ) ); ?></span>
 						<?php
 						if ( $is_new || $migrated ) {
-							Icons_Manager::render_icon( $item['social_icon'] );
+							Icons_Manager::render_icon( $item['social_icon'], [ 'aria-hidden' => 'true' ] );
 						} else { ?>
-							<i class="<?php echo esc_attr( $item['social'] ); ?>"></i>
+							<i class="<?php echo esc_attr( $item['social'] ); ?>" aria-hidden="true"></i>
 						<?php } ?>
 					</a>
 				</span>
@@ -666,14 +679,24 @@ class Widget_Social_Icons extends Widget_Base {
 	 */
 	protected function content_template() {
 		?>
-		<# var iconsHTML = {}; #>
-		<div class="elementor-social-icons-wrapper elementor-grid">
+		<#
+		view.addRenderAttribute( 'wrapper', 'class', [ 'elementor-social-icons-wrapper', 'elementor-grid' ] );
+		view.addRenderAttribute( 'item_wrapper', 'class', 'elementor-grid-item' );
+
+		if ( settings.social_icon_list.length > 1 ) {
+			view.addRenderAttribute( 'wrapper', 'role', 'list' );
+			view.addRenderAttribute( 'item_wrapper', 'role', 'listitem' );
+		}
+
+		var iconsHTML = {};
+		#>
+		<div {{{ view.getRenderAttributeString( 'wrapper' ) }}}>
 			<# _.each( settings.social_icon_list, function( item, index ) {
 				var link = item.link ? item.link.url : '',
 					migrated = elementor.helpers.isIconMigrated( item, 'social_icon' );
 					social = elementor.helpers.getSocialNetworkNameFromIcon( item.social_icon, item.social, false, migrated );
 				#>
-				<span class="elementor-grid-item">
+				<span {{{ view.getRenderAttributeString( 'item_wrapper' ) }}}>
 					<a class="elementor-icon elementor-social-icon elementor-social-icon-{{ social }} elementor-animation-{{ settings.hover_animation }} elementor-repeater-item-{{item._id}}" href="{{ elementor.helpers.sanitizeUrl( link ) }}">
 						<span class="elementor-screen-only">{{{ social }}}</span>
 						<#
@@ -689,5 +712,48 @@ class Widget_Social_Icons extends Widget_Base {
 			<# } ); #>
 		</div>
 		<?php
+	}
+
+	public function render_markdown(): string {
+		$settings = $this->get_settings_for_display();
+		if ( empty( $settings['social_icon_list'] ) ) {
+			return '';
+		}
+
+		$migration_allowed = Icons_Manager::is_migration_allowed();
+		$links = [];
+
+		foreach ( $settings['social_icon_list'] as $item ) {
+			$url = $item['link']['url'] ?? '';
+			if ( empty( $url ) ) {
+				continue;
+			}
+
+			$migrated = isset( $item['__fa4_migrated']['social_icon'] );
+			$is_new = empty( $item['social'] ) && $migration_allowed;
+			$social = '';
+
+			if ( ! empty( $item['social'] ) ) {
+				$social = str_replace( 'fa fa-', '', $item['social'] );
+			}
+
+			if ( ( $is_new || $migrated ) && 'svg' !== ( $item['social_icon']['library'] ?? '' ) ) {
+				$parts = explode( ' ', $item['social_icon']['value'] ?? '', 2 );
+				$social = ! empty( $parts[1] ) ? str_replace( 'fa-', '', $parts[1] ) : '';
+			}
+
+			if ( 'svg' === ( $item['social_icon']['library'] ?? '' ) ) {
+				$social = get_post_meta( $item['social_icon']['value']['id'] ?? 0, '_wp_attachment_image_alt', true );
+			}
+
+			$label = ucwords( str_replace( '-', ' ', $social ) );
+			if ( empty( $label ) ) {
+				$label = 'Link';
+			}
+
+			$links[] = '- [' . $label . '](' . esc_url( $url ) . ')';
+		}
+
+		return implode( "\n", $links );
 	}
 }

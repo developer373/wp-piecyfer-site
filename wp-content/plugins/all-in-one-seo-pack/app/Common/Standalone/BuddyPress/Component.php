@@ -1,5 +1,4 @@
 <?php
-
 namespace AIOSEO\Plugin\Common\Standalone\BuddyPress;
 
 // Exit if accessed directly.
@@ -195,7 +194,7 @@ class Component {
 	}
 
 	/**
-	 * Sets the component author.
+	 * Sets the component date.
 	 *
 	 * @since 4.7.6
 	 *
@@ -246,7 +245,9 @@ class Component {
 			// The `content_rendered` is AIOSEO specific.
 			$this->activity['content_rendered'] = $this->activity['content'] ?? '';
 			if ( ! empty( $this->activity['content'] ) ) {
+				// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 				$this->activity['content_rendered'] = apply_filters( 'bp_get_activity_content', $this->activity['content'] );
+				// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 			}
 
 			return;
@@ -407,8 +408,6 @@ class Component {
 
 		switch ( $this->templateType ) {
 			case 'bp-activity_single':
-				aioseo()->schema->graphs[] = 'DiscussionForumPosting';
-
 				$datePublished = $this->activity['date_recorded'];
 				$contextUrl    = BuddyPressIntegration::getComponentSingleUrl( 'activity', $this->activity['id'] );
 

@@ -45,7 +45,8 @@ trait Strings {
 			return $escapeRegexReplacement[ $string ];
 		}
 
-		$escapeRegexReplacement[ $string ] = str_replace( '$', '\$', $string );
+		// Backslashes must be escaped first to avoid double-escaping the dollar sign escape.
+		$escapeRegexReplacement[ $string ] = str_replace( [ '\\', '$' ], [ '\\\\', '\$' ], $string );
 
 		return $escapeRegexReplacement[ $string ];
 	}
@@ -159,7 +160,7 @@ trait Strings {
 
 		// We must manually decode non-breaking spaces since html_entity_decode doesn't do this.
 		$string                        = $this->pregReplace( '/&nbsp;/', ' ', $string );
-		$decodeHtmlEntities[ $string ] = html_entity_decode( (string) $string, ENT_QUOTES );
+		$decodeHtmlEntities[ $string ] = html_entity_decode( (string) $string, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 );
 
 		return $decodeHtmlEntities[ $string ];
 	}

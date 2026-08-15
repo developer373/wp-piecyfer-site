@@ -2,8 +2,8 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-$s4_text_color = esc_attr($a['s4_text_color']);
-$s4_background_color = esc_attr($a['s4_background_color']);
+$s4_text_color = isset($a['s4_text_color']) ? esc_attr($a['s4_text_color']) : 'rgba(0, 0, 0, 0.6)';
+$s4_background_color = isset($a['s4_background_color']) ? esc_attr($a['s4_background_color']) : '#e4e4e4';
 
 
 $s4_text_color = $s4_text_color;

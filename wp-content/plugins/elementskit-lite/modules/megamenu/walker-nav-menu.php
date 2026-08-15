@@ -254,15 +254,17 @@ class ElementsKit_Menu_Walker extends \Walker_Nav_Menu {
 		if ( $this->is_megamenu( $args->menu ) == 1 ) {
 			// add badge text
 			if ( $item_meta['menu_badge_text'] != '' ) {
-				$badge_style        = 'background:' . $item_meta['menu_badge_background'] . '; color:' . $item_meta['menu_badge_color'];
-				$badge_carret_style = 'border-top-color:' . $item_meta['menu_badge_background'];
-				$item_output       .= '<span style="' . $badge_style . '" class="ekit-menu-badge">' . $item_meta['menu_badge_text'] . '<i style="' . $badge_carret_style . '" class="ekit-menu-badge-arrow"></i></span>';
+				$badge_background   = sanitize_hex_color( $item_meta['menu_badge_background'] );
+				$badge_color        = sanitize_hex_color( $item_meta['menu_badge_color'] );
+				$badge_style        = 'background:' . $badge_background . '; color:' . $badge_color;
+				$badge_carret_style = 'border-top-color:' . $badge_background;
+				$item_output       .= '<span style="' . esc_attr( $badge_style ) . '" class="ekit-menu-badge">' . esc_html( $item_meta['menu_badge_text'] ) . '<i style="' . esc_attr( $badge_carret_style ) . '" class="ekit-menu-badge-arrow"></i></span>';
 			}
 
 			// add menu icon & style
 			if ( $item_meta['menu_icon'] != '' ) {
-				$icon_style   = 'color:' . $item_meta['menu_icon_color'];
-				$item_output .= '<i class="ekit-menu-icon ' . $item_meta['menu_icon'] . '" style="' . $icon_style . '" ></i>';
+				$icon_style   = 'color:' . sanitize_hex_color( $item_meta['menu_icon_color'] );
+				$item_output .= '<i class="ekit-menu-icon ' . esc_attr( $item_meta['menu_icon'] ) . '" style="' . esc_attr( $icon_style ) . '" ></i>';
 			}
 		}
 
@@ -307,8 +309,7 @@ class ElementsKit_Menu_Walker extends \Walker_Nav_Menu {
 					$builder_post       = Utils::get_page_by_title( $builder_post_title, 'elementskit_content' );
 					$output            .= '<div class="elementskit-megamenu-panel">';
 					if ( $builder_post != null ) {
-						$elementor = \Elementor\Plugin::instance();
-						$mega_menu_output = $elementor->frontend->get_builder_content_for_display( $builder_post->ID );
+						$mega_menu_output = \ElementsKit_Lite\Utils::render_elementor_content( $builder_post->ID );
 
 						// if ajax load is enable and not elementor editor mode
 						if(!empty($item_meta['megamenu_ajax_load']) && $item_meta['megamenu_ajax_load'] == 'yes') {

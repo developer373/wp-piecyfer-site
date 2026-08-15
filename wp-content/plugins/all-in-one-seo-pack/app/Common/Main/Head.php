@@ -103,8 +103,18 @@ class Head {
 
 		add_filter( 'pre_get_document_title', [ $this, 'getTitle' ], 99999 );
 		add_filter( 'wp_title', [ $this, 'getTitle' ], 99999 );
-		if ( ! current_theme_supports( 'title-tag' ) ) {
-			add_action( 'template_redirect', [ $this->title, 'startOutputBuffering' ], 99999 );
+		if ( ! current_theme_supports( 'title-tag' ) && ! aioseo()->helpers->isBlockTheme() ) {
+			// WP 6.9 introduced template enhancement output buffering that starts on
+			// wp_before_include_template (priority 1000). Starting our buffer on template_redirect
+			// causes a level mismatch because WP's enhancement buffer opens on top of ours.
+			// Using wp_before_include_template at a higher priority ensures our buffer starts AFTER
+			// the enhancement buffer, making it the innermost buffer that can be properly closed.
+			// On WP < 6.9, wp_before_include_template doesn't exist, so we use template_redirect.
+			if ( version_compare( get_bloginfo( 'version' ), '6.9', '>=' ) ) {
+				add_action( 'wp_before_include_template', [ $this->title, 'startOutputBuffering' ], 99999 );
+			} else {
+				add_action( 'template_redirect', [ $this->title, 'startOutputBuffering' ], 99999 );
+			}
 			add_action( 'wp_head', [ $this->title, 'endOutputBuffering' ], 99999 );
 		}
 	}

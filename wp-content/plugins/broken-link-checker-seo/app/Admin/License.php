@@ -24,6 +24,15 @@ class License {
 	private $baseUrl = 'https://blc-licensing.aioseo.com/v1/';
 
 	/**
+	 * The action name for the periodic license check.
+	 *
+	 * @since 1.2.9
+	 *
+	 * @var string
+	 */
+	public $actionName = 'aioseo_blc_license_check';
+
+	/**
 	 * Options class instance.
 	 *
 	 * @since 1.0.0
@@ -49,18 +58,34 @@ class License {
 	public function __construct() {
 		$this->internalOptions = aioseoBrokenLinkChecker()->internalOptions;
 
-		add_action( 'init', [ $this, 'checkIfNeedsValidation' ] );
+		add_action( 'init', [ $this, 'scheduleLicenseCheck' ], 3 );
+		add_action( $this->actionName, [ $this, 'checkLicense' ] );
 	}
 
 	/**
-	 * Checks if we should validate the license key or not.
+	 * Schedules the license check as a recurring Action Scheduler action.
+	 *
+	 * @since 1.2.9
+	 *
+	 * @return void
+	 */
+	public function scheduleLicenseCheck() {
+		if ( ! aioseoBrokenLinkChecker()->sensitiveOptions->hasValue( 'licenseKey' ) ) {
+			return;
+		}
+
+		aioseoBrokenLinkChecker()->actionScheduler->scheduleRecurrent( $this->actionName, DAY_IN_SECONDS, DAY_IN_SECONDS );
+	}
+
+	/**
+	 * Validates the stored license and resets license data if no key is present.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
-	public function checkIfNeedsValidation() {
-		if ( ! $this->internalOptions->internal->license->licenseKey ) {
+	public function checkLicense() {
+		if ( ! aioseoBrokenLinkChecker()->sensitiveOptions->hasValue( 'licenseKey' ) ) {
 			if ( $this->needsReset() ) {
 				$this->internalOptions->internal->license->reset(
 					[
@@ -71,7 +96,8 @@ class License {
 						'activationsError',
 						'connectionError',
 						'requestError',
-						'level'
+						'level',
+						'counts'
 					]
 				);
 			}
@@ -79,33 +105,48 @@ class License {
 			return;
 		}
 
-		// Validate the license key every 12 hours.
-		$timestamp = $this->internalOptions->internal->license->lastChecked;
-		if ( time() < $timestamp ) {
-			return;
-		}
-
-		$success = $this->activate();
-		if ( $success || aioseoBrokenLinkChecker()->core->cache->get( 'failed_update' ) ) {
-			aioseoBrokenLinkChecker()->core->cache->delete( 'failed_update' );
-			$this->internalOptions->internal->license->lastChecked = strtotime( '+12 hours' );
-
-			return;
-		}
-
-		// If update failed, check again after one hour. If the second check fails too, we'll wait 12 hours.
-		aioseoBrokenLinkChecker()->core->cache->update( 'failed_update', time() );
-		$this->internalOptions->internal->license->lastChecked = strtotime( '+1 hour' );
+		$this->activateProgrammatic();
 	}
 
 	/**
-	 * Validate the license key.
+	 * Activates the license in response to a direct user action, e.g. connecting their account in the UI.
+	 * Unlike activateProgrammatic(), this is never rate-limited so the user gets immediate feedback.
+	 *
+	 * @since 1.2.9
+	 *
+	 * @return bool Whether or not the license was activated.
+	 */
+	public function activateManual() {
+		return $this->activate();
+	}
+
+	/**
+	 * Activates the license from an automated/background context, e.g. a scheduled check or a quota-change triggered update.
+	 * Rate-limited to one request per hour to prevent flooding the licensing server.
+	 *
+	 * @since 1.2.9
+	 *
+	 * @return bool Whether or not the license was activated.
+	 */
+	public function activateProgrammatic() {
+		if ( aioseoBrokenLinkChecker()->core->cache->get( 'license_programmatic_activation' ) ) {
+			return false;
+		}
+
+		aioseoBrokenLinkChecker()->core->cache->update( 'license_programmatic_activation', true, HOUR_IN_SECONDS );
+
+		return $this->activate();
+	}
+
+	/**
+	 * Activate/validate the license.
+	 * This method should never be called directly. Use activateManual() or activateProgrammatic() instead.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @return bool Whether or not it was activated.
 	 */
-	public function activate() {
+	private function activate() {
 		$this->internalOptions->internal->license->reset(
 			[
 				'expires',
@@ -115,11 +156,12 @@ class License {
 				'activationsError',
 				'connectionError',
 				'requestError',
-				'level'
+				'level',
+				'counts'
 			]
 		);
 
-		$licenseKey = $this->internalOptions->internal->license->licenseKey;
+		$licenseKey = aioseoBrokenLinkChecker()->sensitiveOptions->get( 'licenseKey' );
 		if ( empty( $licenseKey ) ) {
 			return false;
 		}
@@ -173,7 +215,7 @@ class License {
 		}
 
 		// Something bad happened, error unknown.
-		if ( empty( $response->success ) || empty( $response->level ) || empty( $response->broken_links_count ) ) {
+		if ( empty( $response->success ) || empty( $response->level ) || ! isset( $response->broken_links_count ) ) {
 			return false;
 		}
 
@@ -191,9 +233,9 @@ class License {
 			$this->internalOptions->internal->license->quotaRemaining = intval( $response->broken_links_count );
 		}
 
-		// Cancel all Link Status scans. The next request will fire off a new one.
-		if ( function_exists( 'as_unschedule_all_actions' ) ) {
-			as_unschedule_all_actions( aioseoBrokenLinkChecker()->main->linkStatus->actionName );
+		// Store activation counts if provided.
+		if ( ! empty( $response->counts ) ) {
+			$this->internalOptions->internal->license->counts = wp_json_encode( $response->counts );
 		}
 
 		return true;
@@ -207,7 +249,7 @@ class License {
 	 * @return bool Whether or not it was deactivated.
 	 */
 	public function deactivate() {
-		$licenseKey = $this->internalOptions->internal->license->licenseKey;
+		$licenseKey = aioseoBrokenLinkChecker()->sensitiveOptions->get( 'licenseKey' );
 		if ( empty( $licenseKey ) ) {
 			return false;
 		}
@@ -256,12 +298,14 @@ class License {
 				'activationsError',
 				'connectionError',
 				'requestError',
-				'level'
+				'level',
+				'counts'
 			]
 		);
 
 		// Cancel all Link Status scans.
 		as_unschedule_all_actions( aioseoBrokenLinkChecker()->main->linkStatus->actionName );
+		as_unschedule_all_actions( aioseoBrokenLinkChecker()->main->localScan->actionName );
 
 		return true;
 	}
@@ -290,17 +334,12 @@ class License {
 	 */
 	public function isExpired() {
 		$networkIsExpired = false;
-		$licenseKey       = $this->internalOptions->internal->license->licenseKey;
-		if ( empty( $licenseKey ) ) {
+		if ( ! aioseoBrokenLinkChecker()->sensitiveOptions->hasValue( 'licenseKey' ) ) {
 			return $networkIsExpired;
 		}
 
-		$expired = $this->internalOptions->internal->license->expired || $this->internalOptions->internal->license->expires < time();
-		if ( $expired ) {
-			$didActivationAttempt = $this->maybeReactivateExpiredLicense();
-
-			// If we tried to activate the license again, start over. Otherwise, return true.
-			return $didActivationAttempt ? $this->isExpired() : true;
+		if ( $this->internalOptions->internal->license->expired ) {
+			return true;
 		}
 
 		$expires = $this->internalOptions->internal->license->expires;
@@ -317,8 +356,7 @@ class License {
 	 */
 	public function isDisabled() {
 		$networkIsDisabled = false;
-		$licenseKey        = $this->internalOptions->internal->license->licenseKey;
-		if ( empty( $licenseKey ) ) {
+		if ( ! aioseoBrokenLinkChecker()->sensitiveOptions->hasValue( 'licenseKey' ) ) {
 			return $networkIsDisabled;
 		}
 
@@ -334,8 +372,7 @@ class License {
 	 */
 	public function isInvalid() {
 		$networkIsInvalid = false;
-		$licenseKey       = $this->internalOptions->internal->license->licenseKey;
-		if ( empty( $licenseKey ) ) {
+		if ( ! aioseoBrokenLinkChecker()->sensitiveOptions->hasValue( 'licenseKey' ) ) {
 			return $networkIsInvalid;
 		}
 
@@ -351,8 +388,7 @@ class License {
 	 */
 	public function isActive() {
 		$networkIsActive = false;
-		$licenseKey      = $this->internalOptions->internal->license->licenseKey;
-		if ( empty( $licenseKey ) ) {
+		if ( ! aioseoBrokenLinkChecker()->sensitiveOptions->hasValue( 'licenseKey' ) ) {
 			return $networkIsActive;
 		}
 
@@ -378,7 +414,7 @@ class License {
 	 * @return bool Whether the license data needs to be reet.
 	 */
 	private function needsReset() {
-		if ( ! empty( $this->internalOptions->internal->license->licenseKey ) ) {
+		if ( aioseoBrokenLinkChecker()->sensitiveOptions->hasValue( 'licenseKey' ) ) {
 			return false;
 		}
 
@@ -424,7 +460,13 @@ class License {
 			'wp_version'  => get_bloginfo( 'version' )
 		];
 
-		return aioseoBrokenLinkChecker()->helpers->sendRequest( $this->getUrl() . $type . '/', $payload );
+		$response     = aioseoBrokenLinkChecker()->helpers->wpRemotePost( $this->getUrl() . $type . '/', [
+			'timeout' => 20,
+			'body'    => wp_json_encode( $payload )
+		] );
+		$responseBody = wp_remote_retrieve_body( $response );
+
+		return ! empty( $responseBody ) ? json_decode( $responseBody ) : null;
 	}
 
 	/**
@@ -451,26 +493,5 @@ class License {
 	 */
 	public function isFree() {
 		return 'free' === strtolower( (string) $this->getLicenseLevel() );
-	}
-
-	/**
-	 * Checks if the license is expired and attempts to activate it again.
-	 *
-	 * @since 1.1.0
-	 *
-	 * @return bool True if an attempt was made to activate the license, false if not.
-	 */
-	private function maybeReactivateExpiredLicense() {
-		// If the license is expired, send out a request to check if it's still expired.
-		// We cache this for a few hours so we don't spam the server.
-		$transientName = 'expired_license_check';
-		if ( aioseoBrokenLinkChecker()->core->cache->get( $transientName ) ) {
-			return false;
-		}
-
-		$this->activate();
-		aioseoBrokenLinkChecker()->core->cache->update( $transientName, true, 4 * HOUR_IN_SECONDS );
-
-		return true;
 	}
 }

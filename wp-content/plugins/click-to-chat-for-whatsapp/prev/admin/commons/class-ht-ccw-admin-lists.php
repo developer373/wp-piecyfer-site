@@ -1,6 +1,6 @@
 <?php
 /**
- * some common things in admin .. 
+ * Some common things in admin .. 
  * Animations .. 
  */
 

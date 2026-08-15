@@ -220,10 +220,10 @@ abstract class Base {
 	 * @since 4.5.2
 	 *
 	 * @param  int    $postId  The post id.
-	 * @param  string $content The raw content.
+	 * @param  mixed  $content The raw content.
 	 * @return string          The processed content.
 	 */
-	public function processContent( $postId, $content = '' ) {
+	public function processContent( $postId, $content = null ) {
 		if ( empty( $content ) ) {
 			$post = get_post( $postId );
 			if ( is_a( $post, 'WP_Post' ) ) {
@@ -231,8 +231,8 @@ abstract class Base {
 			}
 		}
 
-		if ( aioseo()->helpers->isAjaxCronRestRequest() ) {
-			return apply_filters( 'the_content', $content );
+		if ( aioseo()->helpers->isAjaxCronRestRequest() && ! doing_filter( 'the_content' ) ) {
+			return apply_filters( 'the_content', $content ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 		}
 
 		return $content;

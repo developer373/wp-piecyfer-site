@@ -78,11 +78,20 @@ class Standalone {
 	public $buddyPress = null;
 
 	/**
+	 * BbPress class instance.
+	 *
+	 * @since 4.8.1
+	 *
+	 * @var BbPress\BbPress
+	 */
+	public $bbPress = null;
+
+	/**
 	 * List of page builder integration class instances.
 	 *
 	 * @since 4.2.7
 	 *
-	 * @var array[Object]
+	 * @var object[]
 	 */
 	public $pageBuilderIntegrations = [];
 
@@ -91,7 +100,7 @@ class Standalone {
 	 *
 	 * @since 4.2.7
 	 *
-	 * @var array[Object]
+	 * @var object[]
 	 */
 	public $standaloneBlocks = [];
 
@@ -107,15 +116,16 @@ class Standalone {
 		$this->setupWizard      = new SetupWizard();
 		$this->primaryTerm      = aioseo()->pro ? new ProStandalone\PrimaryTerm() : new PrimaryTerm();
 		$this->userProfileTab   = new UserProfileTab();
-		$this->buddyPress       = new BuddyPress\BuddyPress();
+		$this->buddyPress       = aioseo()->pro ? new ProStandalone\BuddyPress\BuddyPress() : new BuddyPress\BuddyPress();
+		$this->bbPress          = aioseo()->pro ? new ProStandalone\BbPress\BbPress() : new BbPress\BbPress();
 
 		aioseo()->pro ? new ProStandalone\DetailsColumn() : new DetailsColumn();
+		aioseo()->pro ? new ProStandalone\NpsSurvey() : null;
 
 		new AdminBarNoindexWarning();
 		new LimitModifiedDate();
 		new Notifications();
 		new PublishPanel();
-		new UserProfileTab();
 		new WpCode();
 
 		$this->pageBuilderIntegrations = [
@@ -125,12 +135,16 @@ class Standalone {
 			'wpbakery'   => new PageBuilders\WPBakery(),
 			'avada'      => new PageBuilders\Avada(),
 			'siteorigin' => new PageBuilders\SiteOrigin(),
-			'thrive'     => new PageBuilders\ThriveArchitect()
+			'thrive'     => new PageBuilders\ThriveArchitect(),
+			'bricks'     => new PageBuilders\Bricks(),
+			'oxygen'     => new PageBuilders\Oxygen()
 		];
 
 		$this->standaloneBlocks = [
-			'tocBlock' => new Blocks\TableOfContents(),
-			'faqBlock' => new Blocks\FaqPage()
+			'tocBlock'       => new Blocks\TableOfContents(),
+			'faqBlock'       => new Blocks\FaqPage(),
+			'keyPointsBlock' => new Blocks\KeyPoints(),
+			'aiAssistant'    => new Blocks\AiAssistant()
 		];
 	}
 }

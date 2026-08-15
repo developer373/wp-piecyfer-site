@@ -10,13 +10,17 @@ class ElementsKit_Widget_Video extends Widget_Base {
 	use \ElementsKit_Lite\Widgets\Widget_Notice;
 
 	public $base;
+	public function __construct( $data = [], $args = null ) {
+		parent::__construct( $data, $args );
+		$this->get_script_depends();
+	}
 
 	public function get_style_depends() {
-		return ['wp-mediaelement'];
+		return ['wp-mediaelement', 'magnific-popup', 'ekit-video'];
 	}
 
 	public function get_script_depends() {
-		return ['wp-mediaelement'];
+		return ['ekit-video', 'wp-mediaelement', 'magnific-popup'];
 	}
 
 	public function get_name() {
@@ -56,98 +60,6 @@ class ElementsKit_Widget_Video extends Widget_Base {
 		);
 
 		$this->add_control(
-			'ekit_video_popup_button_style',
-			[
-				'label' => esc_html__( 'Button Style', 'elementskit-lite' ),
-				'type' => Controls_Manager::SELECT,
-				'default' => 'icon',
-				'options' => [
-					'text'  => esc_html__( 'Text', 'elementskit-lite' ),
-					'icon' => esc_html__( 'Icon', 'elementskit-lite' ),
-					'both' => esc_html__( 'Both', 'elementskit-lite' ),
-				],
-			]
-		);
-
-		 $this->add_control(
-            'ekit_video_popup_button_title',
-            [
-                'label' =>esc_html__( 'Button Title', 'elementskit-lite' ),
-                'type' => Controls_Manager::TEXT,
-                'label_block' => true,
-                'placeholder' =>esc_html__( 'Play Video', 'elementskit-lite' ),
-				'default' =>esc_html__( 'Play Video', 'elementskit-lite' ),
-				'condition' => [
-					'ekit_video_popup_button_style' => ['text', 'both'],
-				],
-				'dynamic' => [
-					'active' => true,
-				],
-            ]
-		 );
-
-		 $this->add_control(
-            'ekit_video_popup_button_icons__switch',
-            [
-                'label' => esc_html__('Add icon? ', 'elementskit-lite'),
-                'type' => Controls_Manager::SWITCHER,
-                'default' => 'yes',
-                'label_on' => esc_html__( 'Yes', 'elementskit-lite' ),
-				'label_off' => esc_html__( 'No', 'elementskit-lite' ),
-				'condition' => [
-					'ekit_video_popup_button_style' 		=> ['icon', 'both'],
-				]
-            ]
-		);
-
-		 $this->add_control(
-            'ekit_video_popup_button_icons',
-            [
-                'label' =>esc_html__( 'Button Icon', 'elementskit-lite' ),
-				'type' => Controls_Manager::ICONS,
-				'fa4compatibility' => 'ekit_video_popup_button_icon',
-                'default' => [
-                    'value' => 'icon icon-play',
-                    'library' => 'ekiticons',
-                ],
-				'label_block' => true,
-				'condition' => [
-					'ekit_video_popup_button_style' 		=> ['icon', 'both'],
-					'ekit_video_popup_button_icons__switch'	=> 'yes',
-				]
-            ]
-		 );
-		 $this->add_control(
-			'ekit_video_popup_icon_align',
-			[
-				'label' =>esc_html__( 'Icon Position', 'elementskit-lite' ),
-				'type' => Controls_Manager::SELECT,
-				'default' => 'before',
-				'options' => [
-					'before' =>esc_html__( 'Before', 'elementskit-lite' ),
-					'after' =>esc_html__( 'After', 'elementskit-lite' ),
-				],
-				'condition' => [
-					'ekit_video_popup_button_style' => 'both',
-					'ekit_video_popup_button_icons__switch'	=> 'yes',
-				]
-			]
-		);
-
-		 $this->add_control(
-            'ekit_video_popup_video_glow',
-            [
-                'label' =>esc_html__( 'Active Glow', 'elementskit-lite' ),
-                'type' => Controls_Manager::SWITCHER,
-				'label_on' => esc_html__( 'Yes', 'elementskit-lite' ),
-				'label_off' => esc_html__( 'No', 'elementskit-lite' ),
-				'return_value' => 'yes',
-				'default' => 'yes',
-            ]
-		 );
-
-
-		 $this->add_control(
             'ekit_video_popup_video_type',
             [
                 'label'     => esc_html__( 'Video Type', 'elementskit-lite' ),
@@ -164,7 +76,7 @@ class ElementsKit_Widget_Video extends Widget_Base {
 		$this->add_control(
 			'ekit_video_popup_url',
 			[
-				'label' => esc_html__( 'URL to Embed', 'elementskit-lite' ),
+				'label' => esc_html__( 'Link', 'elementskit-lite' ),
 				'type' => Controls_Manager::TEXT,
 				'input_type' => 'url',
 				'placeholder' => esc_url( 'https://www.youtube.com/watch?v=VhBl3dHT5SY' ),
@@ -178,55 +90,10 @@ class ElementsKit_Widget_Video extends Widget_Base {
 			]
 		);
 
-		//video option
-		$this->add_control(
-			'ekit_video_popup_start_time',
-			[
-				'label' => esc_html__( 'Start Time', 'elementskit-lite' ),
-				'type' => Controls_Manager::NUMBER,
-				'dynamic' => [
-					'active' => true,
-				],
-				'input_type' => 'number',
-				'placeholder' =>  '',
-				'default' => '0',
-				'condition' => ['ekit_video_popup_video_type' => 'youtube' ]
-			]
-		);
-
-		$this->add_control(
-			'ekit_video_popup_end_time',
-			[
-				'label' => esc_html__( 'End Time', 'elementskit-lite' ),
-				'type' => Controls_Manager::NUMBER,
-				'dynamic' => [
-					'active' => true,
-				],
-				'input_type' => 'number',
-				'placeholder' => '',
-				'default' => '',
-				'condition' => ['ekit_video_popup_video_type' => 'youtube']
-			]
-		);
-
-		// video Options
-		$this->add_control(
-			'ekit_video_player_options_heading',
-			[
-				'label' => esc_html__('video Options', 'elementskit-lite'),
-				'type' => Controls_Manager::HEADING,
-				'separator' => 'before',
-				'condition' => [
-					'ekit_video_popup_video_type' => 'self',
-				],
-			]
-		);
-
-		// Self hosted
 		$this->add_control(
 			'ekit_video_self_url',
 			[
-				'label' => esc_html__('Custom Url', 'elementskit-lite'),
+				'label' => esc_html__('Custom URL', 'elementskit-lite'),
 				'type' => Controls_Manager::SWITCHER,
 				'default' => 'yes',
 				'label_on' => esc_html__('Yes', 'elementskit-lite'),
@@ -274,6 +141,439 @@ class ElementsKit_Widget_Video extends Widget_Base {
 			]
 		);
 
+		//video option
+		$this->add_control(
+			'ekit_video_popup_start_time',
+			[
+				'label' => esc_html__( 'Start Time (Sec)', 'elementskit-lite' ),
+				'type' => Controls_Manager::NUMBER,
+				'dynamic' => [
+					'active' => true,
+				],
+				'input_type' => 'number',
+				'placeholder' =>  '',
+				'default' => '0',
+				'condition' => ['ekit_video_popup_video_type' => 'youtube' ]
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_end_time',
+			[
+				'label' => esc_html__( 'End Time (Sec)', 'elementskit-lite' ),
+				'type' => Controls_Manager::NUMBER,
+				'dynamic' => [
+					'active' => true,
+				],
+				'input_type' => 'number',
+				'placeholder' => '',
+				'default' => '',
+				'condition' => ['ekit_video_popup_video_type' => 'youtube']
+			]
+		);
+
+		$this->add_control(
+            'content_tabs_after',
+            [
+                'type'  => Controls_Manager::DIVIDER,
+            ]
+        );
+
+		//video style
+
+		$this->add_control(
+			'ekit_video_style',
+			[
+				'label'   => esc_html__('Video Style', 'elementskit-lite'),
+				'type'    => \Elementor\Controls_Manager::SELECT,
+				'options' => [
+					'inline' => esc_html__('Inline', 'elementskit-lite'),
+					'popup'  => esc_html__('Popup', 'elementskit-lite'),
+				],
+				'default' => 'popup',
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_inline_image_overlay_switcher',
+			[
+				'label' => esc_html__( 'Image Overlay', 'elementskit-lite' ),
+				'type' => Controls_Manager::SWITCHER,
+				'label_on' => esc_html__( 'Yes', 'elementskit-lite' ),
+				'label_off' => esc_html__( 'No', 'elementskit-lite' ),
+				'default' => 'no',
+				'condition' => [
+					'ekit_video_style' => 'inline',
+				],
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_inline_overlay_image',
+			[
+				'label' => esc_html__( 'Overlay Image', 'elementskit-lite' ),
+				'type' => Controls_Manager::MEDIA,
+				'dynamic' => [
+					'active' => true,
+				],
+				'separator' => 'before',
+				'condition' => [
+					'ekit_video_style' => 'inline',
+					'ekit_video_inline_image_overlay_switcher' => 'yes',
+				],
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_button_style',
+			[
+				'label' => esc_html__( 'Button Style', 'elementskit-lite' ),
+				'type' => Controls_Manager::SELECT,
+				'default' => 'icon',
+				'options' => [
+					'text'  => esc_html__( 'Text', 'elementskit-lite' ),
+					'icon' => esc_html__( 'Icon', 'elementskit-lite' ),
+					'both' => esc_html__( 'Both', 'elementskit-lite' ),
+				],
+				'conditions' => [
+					'relation' => 'or',
+					'terms'    => [
+
+						// CASE 1: Popup button
+						[
+							'name'     => 'ekit_video_style',
+							'operator' => '===',
+							'value'    => 'popup',
+						],
+
+						// CASE 2: Inline button
+						[
+							'relation' => 'and',
+							'terms'    => [
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'inline',
+								],
+								[
+									'name'     => 'ekit_video_inline_image_overlay_switcher',
+									'operator' => '===',
+									'value'    => 'yes',
+								],
+								[
+									'name'     => 'ekit_video_inline_overlay_image[url]',
+									'operator' => '!=',
+									'value'    => '',
+								]
+							],
+						],
+					],
+				],
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_button_title',
+			[
+				'label' => esc_html__( 'Button Title', 'elementskit-lite' ),
+				'type' => Controls_Manager::TEXT,
+				'label_block' => true,
+				'placeholder' => esc_html__( 'Play', 'elementskit-lite' ),
+				'default' => esc_html__( 'Play', 'elementskit-lite' ),
+				'conditions' => [
+					'relation' => 'or',
+					'terms' => [
+						// CASE 1: Popup button (not inline)
+						[
+							'relation' => 'and',
+							'terms' => [
+								[
+									'name'     => 'ekit_video_popup_button_style',
+									'operator' => 'in',
+									'value'    => [ 'text', 'both' ],
+								],
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '!==',
+									'value'    => 'inline',
+								],
+							],
+						],
+
+						// CASE 2: Inline button
+						[
+							'relation' => 'and',
+							'terms' => [
+								[
+									'name'     => 'ekit_video_popup_button_style',
+									'operator' => 'in',
+									'value'    => [ 'text', 'both' ],
+								],
+								[
+									'name'     => 'ekit_video_inline_image_overlay_switcher',
+									'operator' => '===',
+									'value'    => 'yes',
+								],
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'inline',
+								],
+								[
+									'name'     => 'ekit_video_inline_overlay_image[url]',
+									'operator' => '!=',
+									'value'    => '',
+								],
+							],
+						],
+					],
+				],
+				'dynamic' => [
+					'active' => true,
+				],
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_button_icons',
+			[
+				'label' => esc_html__( 'Button Icon', 'elementskit-lite' ),
+				'type'  => Controls_Manager::ICONS,
+				'fa4compatibility' => 'ekit_video_popup_button_icon',
+				'default' => [
+					'value'   => 'icon icon-play',
+					'library' => 'ekiticons',
+				],
+				'label_block' => true,
+				'conditions' => [
+					'relation' => 'or',
+					'terms'    => [
+
+						// CASE 1: Popup icon
+						[
+							'relation' => 'and',
+							'terms' => [
+								[
+									'name'     => 'ekit_video_popup_button_style',
+									'operator' => 'in',
+									'value'    => [ 'icon', 'both' ],
+								],
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'popup',
+								],
+							],
+						],
+
+						// CASE 2: Inline icon
+						[
+							'relation' => 'and',
+							'terms' => [
+								[
+									'name'     => 'ekit_video_popup_button_style',
+									'operator' => 'in',
+									'value'    => [ 'icon', 'both' ],
+								],
+								[
+									'name'     => 'ekit_video_inline_overlay_image[url]',
+									'operator' => '!=',
+									'value'    => '',
+								],
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'inline',
+								],
+								[
+									'name'     => 'ekit_video_inline_image_overlay_switcher',
+									'operator' => '===',
+									'value'    => 'yes',
+								],
+							],
+						],
+					],
+				],
+			]
+		);
+
+		 $this->add_control(
+			'ekit_video_popup_icon_align',
+			[
+				'label' =>esc_html__( 'Icon Position', 'elementskit-lite' ),
+				'type' => Controls_Manager::SELECT,
+				'default' => 'before',
+				'options' => [
+					'before' =>esc_html__( 'Before', 'elementskit-lite' ),
+					'after' =>esc_html__( 'After', 'elementskit-lite' ),
+				],
+				'conditions' => [
+					'relation' => 'or',
+					'terms'    => [
+
+						// CASE 1: Popup icon
+						[
+							'relation' => 'and',
+							'terms' => [
+								[
+									'name'     => 'ekit_video_popup_button_style',
+									'operator' => 'in',
+									'value'    => ['both' ],
+								],
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'popup',
+								],
+							],
+						],
+
+						// CASE 2: Inline icon
+						[
+							'relation' => 'and',
+							'terms' => [
+								[
+									'name'     => 'ekit_video_popup_button_style',
+									'operator' => 'in',
+									'value'    => [ 'both' ],
+								],
+								[
+									'name'     => 'ekit_video_inline_overlay_image[url]',
+									'operator' => '!=',
+									'value'    => '',
+								],
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'inline',
+								],
+								[
+									'name'     => 'ekit_video_inline_image_overlay_switcher',
+									'operator' => '===',
+									'value'    => 'yes',
+								],
+							],
+						],
+					],
+				],
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_video_glow',
+			[
+				'label' => esc_html__( 'Active Glow', 'elementskit-lite' ),
+				'type'  => Controls_Manager::SWITCHER,
+				'label_on'  => esc_html__( 'Yes', 'elementskit-lite' ),
+				'label_off' => esc_html__( 'No', 'elementskit-lite' ),
+				'return_value' => 'yes',
+				'default' => 'yes',
+				'conditions' => [
+					'relation' => 'or',
+					'terms' => [
+
+						// CASE 1: Popup video
+						[
+							'name'     => 'ekit_video_style',
+							'operator' => '===',
+							'value'    => 'popup',
+						],
+
+						// CASE 2: Inline video
+						[
+							'relation' => 'and',
+							'terms' => [
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'inline',
+								],
+								[
+									'name'     => 'ekit_video_inline_overlay_image[url]',
+									'operator' => '!=',
+									'value'    => '',
+								],
+								[
+									'name'     => 'ekit_video_inline_image_overlay_switcher',
+									'operator' => '===',
+									'value'    => 'yes',
+								]
+							],
+						],
+
+					],
+				],
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_glow_animation_type',
+			[
+				'label' => esc_html__( 'Glow Animation Type', 'elementskit-lite' ),
+				'type' => Controls_Manager::SELECT,
+				'default' => 'ripple',
+				'options' => [
+					'ripple' => esc_html__( 'Ripple', 'elementskit-lite' ),
+					'radio_wave' => esc_html__( 'Radio Wave', 'elementskit-lite' ),
+				],
+				'conditions' => [
+					'relation' => 'or',
+					'terms' => [
+						[
+							'relation' => 'and',
+							'terms' => [
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'popup',
+								],
+								[
+									'name'     => 'ekit_video_popup_video_glow',
+									'operator' => '===',
+									'value'    => 'yes',
+								],
+							],
+						],
+						[
+							'relation' => 'and',
+							'terms' => [
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'inline',
+								],
+								[
+									'name'     => 'ekit_video_inline_image_overlay_switcher',
+									'operator' => '===',
+									'value'    => 'yes',
+								],
+								[
+									'name'     => 'ekit_video_popup_video_glow',
+									'operator' => '===',
+									'value'    => 'yes',
+								],
+								[
+									'name'     => 'ekit_video_inline_overlay_image[url]',
+									'operator' => '!=',
+									'value'    => '',
+								]
+							],
+						],
+					],
+				],
+
+			]
+		);
+
+		// video options
+		$this->add_control(
+			'ekit_video_player_options_heading',
+			[
+				'label' => esc_html__('Video Options', 'elementskit-lite'),
+				'type' => Controls_Manager::HEADING,
+				'separator' => 'before',
+			]
+		);
 		$this->add_control(
 			'ekit_video_popup_auto_play',
 			[
@@ -284,6 +584,33 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				'label_off' => esc_html__( 'No', 'elementskit-lite' ),
 				'default' => 'no',
 				'return_value' => '1',
+				'conditions' => [
+					'relation' => 'or',
+					'terms' => [
+						// Show for popup style
+						[
+							'name' => 'ekit_video_style',
+							'operator' => '===',
+							'value' => 'popup',
+						],
+						// Show for inline style when overlay is NOT enabled
+						[
+							'relation' => 'and',
+							'terms' => [
+								[
+									'name' => 'ekit_video_style',
+									'operator' => '===',
+									'value' => 'inline',
+								],
+								[
+									'name' => 'ekit_video_inline_image_overlay_switcher',
+									'operator' => '!==',
+									'value' => 'yes',
+								],
+							],
+						],
+					],
+				],
 			]
 		);
 
@@ -319,10 +646,13 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				'label_on' => esc_html__( 'Yes', 'elementskit-lite' ),
 				'label_off' => esc_html__( 'No', 'elementskit-lite' ),
 				'return_value' => '1',
-				'default' => 'no',
-				'condition' => ['ekit_video_popup_video_type!' => 'self']
+				'default' => 'yes',
+				'condition' => [
+					'ekit_video_popup_video_type!' => 'self',
+				]
 			]
 		);
+
 
 	   $this->add_control(
 			'ekit_video_popup_video_intro_title',
@@ -374,6 +704,7 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				'separator' => 'before',
 				'condition' => [
 					'ekit_video_popup_video_type' => 'self',
+					'ekit_video_style' => 'popup',
 				],
 			]
 		);
@@ -501,15 +832,18 @@ class ElementsKit_Widget_Video extends Widget_Base {
 					'ekit_video_popup_video_type' => 'self',
 				],
 			]
-		);		
+		);
 
         $this->end_controls_section();
 
         $this->start_controls_section(
 			'ekit_video_popup_style_section',
 			[
-				'label' => esc_html__( 'Wrapper Style', 'elementskit-lite' ),
+				'label' => esc_html__( 'Wrapper', 'elementskit-lite' ),
 				'tab' => Controls_Manager::TAB_STYLE,
+				'condition' => [
+					'ekit_video_style' => 'popup',
+				],
 			]
 		);
 
@@ -538,7 +872,7 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				],
 				'default'		 => 'center',
                 'selectors' => [
-                    '{{WRAPPER}} .video-content' => 'text-align: {{VALUE}};',
+                    '{{WRAPPER}} .video-content' => 'text-align: {{VALUE}};justify-content: {{VALUE}};display: flex;',
 				],
 			]
 		);
@@ -572,17 +906,55 @@ class ElementsKit_Widget_Video extends Widget_Base {
                 'size_units' => [ 'px', '%', 'em' ],
                 'selectors' => [
                     '{{WRAPPER}} .video-content' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+
                 ],
             ]
         );
 
 		$this->end_controls_section();
 
+
+		// Popup Button Style
 		$this->start_controls_section(
 			'ekit_video_popup_section_style',
 			[
-				'label' =>esc_html__( 'Button Style', 'elementskit-lite' ),
+				'label' =>esc_html__( 'Button', 'elementskit-lite' ),
 				'tab' => Controls_Manager::TAB_STYLE,
+				'conditions' => [
+					'relation' => 'or',
+					'terms' => [
+
+						// CASE 1: Popup video
+						[
+							'name'     => 'ekit_video_style',
+							'operator' => '===',
+							'value'    => 'popup',
+						],
+
+						// CASE 2: Inline video
+						[
+							'relation' => 'and',
+							'terms' => [
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'inline',
+								],
+								[
+									'name'     => 'ekit_video_inline_overlay_image[url]',
+									'operator' => '!=',
+									'value'    => '',
+								],
+								[
+									'name'     => 'ekit_video_inline_image_overlay_switcher',
+									'operator' => '===',
+									'value'    => 'yes',
+								]
+							],
+						],
+
+					],
+				],
 			]
 		);
 
@@ -594,6 +966,7 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				'size_units' => [ 'px', 'em', '%' ],
 				'selectors' => [
 					'{{WRAPPER}} .ekit-video-popup-btn' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+					'{{WRAPPER}} .ekit-video-inline-btn' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				],
 			]
 		);
@@ -603,31 +976,128 @@ class ElementsKit_Widget_Video extends Widget_Base {
             [
                 'label' => esc_html__( 'Icon Size', 'elementskit-lite' ),
                 'type' => Controls_Manager::SLIDER,
-                'size_units' => [ 'px', '%' ],
+                'size_units' => [ 'px' ],
                 'range' => [
                     'px' => [
                         'min' => 1,
-                        'max' => 100,
-                        'step' => 5,
-                    ],
-                    '%' => [
-                        'min' => 1,
-                        'max' => 100,
-                    ],
+                        'max' => 50,
+                        'step' => 1,
+                    ]
                 ],
-                'selectors' => [
-                    '{{WRAPPER}} .ekit-video-popup-btn i' => 'font-size: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .ekit-video-popup-btn svg' => 'max-width: {{SIZE}}{{UNIT}};',
-                ],
+				'default' => [
+					'unit' => 'px',
+					'size' => 15,
+				],
+				'selectors' => [
+					'{{WRAPPER}} a.ekit_icon_button:is(.ekit-video-popup-btn, .ekit-video-inline-btn):has(i,svg)' => 'font-size: {{SIZE}}{{UNIT}}',
+				],
+				'condition' => [
+					'ekit_video_popup_button_style' => 'icon',
+				]
             ]
         );
+
+		$this->add_responsive_control(
+			'ekit_video_popup_icon_padding_right',
+			[
+				'label' => esc_html__( 'Margin Right', 'elementskit-lite' ),
+				'type' => Controls_Manager::SLIDER,
+				'size_units' => [ 'px'],
+				'range' => [
+					'px' => [
+						'min' => 0,
+						'max' => 200,
+						'step' => 1,
+					]
+				],
+				'default' => [
+					'unit' => 'px',
+					'size' => 0,
+				],
+				'selectors' => [
+					'{{WRAPPER}} :is(.ekit-video-popup-btn, .ekit-video-inline-btn) > :is(i, svg)' => 'margin-right: {{SIZE}}{{UNIT}};',
+				],
+				'conditions' => [
+					'relation' => 'or',
+					'terms'    => [
+						[
+							'relation' => 'and',
+							'terms'    => [
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'popup',
+								],
+								[
+									'name'     => 'ekit_video_popup_button_style',
+									'operator' => 'in',
+									'value'    => [ 'both' ],
+								],
+								[
+									'name'     => 'ekit_video_popup_icon_align',
+									'operator' => '===',
+									'value'    => 'before',
+								],
+							],
+						],
+						[
+							'relation' => 'and',
+							'terms'    => [
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'inline',
+								],
+								[
+									'name'     => 'ekit_video_inline_overlay_image[url]',
+									'operator' => '!=',
+									'value'    => '',
+								],
+								[
+									'name'     => 'ekit_video_inline_image_overlay_switcher',
+									'operator' => '===',
+									'value'    => 'yes',
+								],
+								[
+									'name'     => 'ekit_video_popup_button_style',
+									'operator' => 'in',
+									'value'    => [ 'both' ],
+								],
+								[
+									'name'     => 'ekit_video_popup_icon_align',
+									'operator' => '===',
+									'value'    => 'before',
+								],
+							],
+						],
+					],
+				],
+			]
+		);
 
         $this->add_group_control(
 			Group_Control_Typography::get_type(),
 			[
 				'name' => 'ekit_video_popup_btn_typography',
 				'label' =>esc_html__( 'Typography', 'elementskit-lite' ),
-				'selector' => '{{WRAPPER}} .ekit-video-popup-btn',
+				'selector' => '{{WRAPPER}} a.glow-ripple.ekit-video-popup-btn, {{WRAPPER}} a.glow-ripple.ekit-video-inline-btn',
+				'condition' => [
+					'ekit_video_popup_button_style' => ['text', 'both'],
+					'ekit_video_popup_glow_animation_type' => ['ripple'],
+				],
+			]
+		);
+
+        $this->add_group_control(
+			Group_Control_Typography::get_type(),
+			[
+				'name' => 'ekit_video_popup_radio_wave_btn_typography',
+				'label' =>esc_html__( 'Typography', 'elementskit-lite' ),
+				'selector' => '{{WRAPPER}} a.glow-radio_wave.ekit-video-popup-btn,{{WRAPPER}} a.glow-radio_wave.ekit-video-inline-btn',
+				'condition' => [
+					'ekit_video_popup_button_style' => ['text', 'both'],
+					'ekit_video_popup_glow_animation_type' => ['radio_wave'],
+				],
 			]
 		);
 
@@ -667,6 +1137,7 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				],
 				'selectors' => [
 					'{{WRAPPER}} .ekit-video-popup-btn' => 'width: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .ekit-video-inline-btn' => 'width: {{SIZE}}{{UNIT}};'
 				],
 				'condition' => [
 					'ekit_video_popup_btn_use_height_and_width' => 'yes'
@@ -697,6 +1168,7 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				],
 				'selectors' => [
 					'{{WRAPPER}} .ekit-video-popup-btn' => 'height: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .ekit-video-inline-btn' => 'height: {{SIZE}}{{UNIT}};',
 				],
 				'condition' => [
 					'ekit_video_popup_btn_use_height_and_width' => 'yes'
@@ -712,20 +1184,22 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				'size_units' => [ 'px', '%' ],
 				'range' => [
 					'px' => [
-						'min' => 30,
-						'max' => 200,
+						'min' => 0,
+						'max' => 80,
 						'step' => 1,
 					],
 					'%' => [
-						'min' => 10,
+						'min' => 0,
 						'max' => 100,
 					],
 				],
 				'selectors' => [
 					'{{WRAPPER}} .ekit-video-popup-btn' => 'line-height: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .ekit-video-inline-btn' => 'line-height: {{SIZE}}{{UNIT}};',
 				],
 				'condition' => [
-					'ekit_video_popup_btn_use_height_and_width' => 'yes'
+					'ekit_video_popup_btn_use_height_and_width' => 'yes',
+					'ekit_video_popup_button_style' => ['both']
 				]
 			]
 		);
@@ -736,14 +1210,18 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				'label' => esc_html__( 'Glow Color', 'elementskit-lite' ),
 				'type' => Controls_Manager::COLOR,
 				'selectors' => [
-					'{{WRAPPER}} .ekit-video-popup-btn.glow-btn:before' => 'color: {{VALUE}}',
-					'{{WRAPPER}} .ekit-video-popup-btn.glow-btn:after' => 'color: {{VALUE}}',
-					'{{WRAPPER}} .ekit-video-popup-btn.glow-btn > i:after' => 'color: {{VALUE}}',
+					'{{WRAPPER}} .glow-ripple:before' => 'color: {{VALUE}}',
+					'{{WRAPPER}} .glow-ripple:after' => 'color: {{VALUE}}',
+					'{{WRAPPER}} .glow-ripple > i:after' => 'color: {{VALUE}}',
+					'{{WRAPPER}} .glow-radio_wave:before' => 'color: {{VALUE}}',
+					'{{WRAPPER}} .glow-radio_wave:after' => 'color: {{VALUE}}',
+					'{{WRAPPER}} .glow-radio_wave > i:after' => 'color: {{VALUE}}',
 				],
 				'default' => '#255cff',
 				'separator' => 'before',
 				'condition' => [
-					'ekit_video_popup_video_glow' => 'yes'
+					'ekit_video_popup_video_glow' => 'yes',
+					'ekit_video_popup_glow_animation_type!' => '',
 				]
 			]
 		);
@@ -756,17 +1234,49 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				'size_units' => [ 'px'],
 				'range' => [
 					'px' => [
-						'min' => 30,
+						'min' => 0,
 						'max' => 200,
 						'step' => 1,
 					],
 				],
+				'default' => [
+					'unit' => 'px',
+					'size' => 15,
+				],
 				'selectors' => [
 					'{{WRAPPER}} .ekit-video-popup-btn' => '--glow-size: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .ekit-video-inline-btn' => '--glow-size: {{SIZE}}{{UNIT}};',
 				],
 				'condition' => [
-					'ekit_video_popup_video_glow' => 'yes'
+					'ekit_video_popup_video_glow' => 'yes',
+					'ekit_video_popup_glow_animation_type' => 'ripple',
 				]
+			]
+		);
+
+		$this->add_control(
+		'ekit_video_popup_radio_wave_scale',
+		[
+				'label' => esc_html__('Radio Wave Scale', 'elementskit-lite'),
+				'type' => \Elementor\Controls_Manager::SLIDER,
+				'range' => [
+					'px' => [
+						'min' => 0.5,
+						'max' => 5,
+						'step' => 0.1,
+					],
+				],
+				'default' => [
+					'unit' => 'px',
+					'size' => 2,
+				],
+				'condition' => [
+					'ekit_video_popup_video_glow' => 'yes',
+					'ekit_video_popup_glow_animation_type' => 'radio_wave',
+				],
+				'selectors' => [
+					'{{WRAPPER}} .glow-radio_wave' => '--ekit-radio-wave-scale: {{SIZE}};',
+				],
 			]
 		);
 
@@ -782,12 +1292,14 @@ class ElementsKit_Widget_Video extends Widget_Base {
 		$this->add_control(
 			'ekit_video_popup_btn_text_color',
 			[
-				'label' =>esc_html__( 'Text Color', 'elementskit-lite' ),
+				'label' =>esc_html__( 'Icon Color', 'elementskit-lite' ),
 				'type' => Controls_Manager::COLOR,
 				'default' => '#ffffff',
 				'selectors' => [
 					'{{WRAPPER}} .ekit-video-popup-btn' => 'color: {{VALUE}};',
-					'{{WRAPPER}} .ekit-video-popup-btn svg path'	=> 'stroke: {{VALUE}}; fill: {{VALUE}};',
+					'{{WRAPPER}} .ekit-video-inline-btn' => 'color: {{VALUE}};',
+					'{{WRAPPER}} .ekit-video-popup-btn svg'	=> 'fill: {{VALUE}};',
+					'{{WRAPPER}} .ekit-video-inline-btn svg' => 'fill: {{VALUE}};',
 				],
 			]
 		);
@@ -795,7 +1307,7 @@ class ElementsKit_Widget_Video extends Widget_Base {
             Group_Control_Background::get_type(),
             array(
 				'name'     => 'ekit_video_popup_btn_bg_color',
-				'selector' => '{{WRAPPER}} .ekit-video-popup-btn',
+				'selector' => '{{WRAPPER}} .ekit-video-popup-btn,{{WRAPPER}} .ekit-video-inline-btn',
             )
         );
 
@@ -811,12 +1323,14 @@ class ElementsKit_Widget_Video extends Widget_Base {
 		$this->add_control(
 			'ekit_video_popup_btn_hover_color',
 			[
-				'label' =>esc_html__( 'Text Color', 'elementskit-lite' ),
+				'label' =>esc_html__( 'Icon Color', 'elementskit-lite' ),
 				'type' => Controls_Manager::COLOR,
 				'default' => '#ffffff',
 				'selectors' => [
 					'{{WRAPPER}} .ekit-video-popup-btn:hover' => 'color: {{VALUE}};',
-					'{{WRAPPER}} .ekit-video-popup-btn:hover svg path'	=> 'stroke: {{VALUE}}; fill: {{VALUE}};',
+					'{{WRAPPER}} .ekit-video-inline-btn:hover' => 'color: {{VALUE}};',
+					'{{WRAPPER}} .ekit-video-popup-btn:hover svg'	=> 'fill: {{VALUE}};',
+					'{{WRAPPER}} .ekit-video-inline-btn:hover svg'	=> 'fill: {{VALUE}};',
 				],
 			]
 		);
@@ -825,7 +1339,7 @@ class ElementsKit_Widget_Video extends Widget_Base {
 		    Group_Control_Background::get_type(),
 		    array(
 			    'name'     => 'ekit_video_popup_btn_bg_hover_color',
-			    'selector' => '{{WRAPPER}} .ekit-video-popup-btn:hover',
+       			'selector' => '{{WRAPPER}} .ekit-video-popup-btn:hover, {{WRAPPER}} .ekit-video-inline-btn:hover',
 		    )
 	    );
 
@@ -836,8 +1350,43 @@ class ElementsKit_Widget_Video extends Widget_Base {
         $this->start_controls_section(
 			'ekit_video_popup_border_style',
 			[
-				'label' =>esc_html__( 'Border Style', 'elementskit-lite' ),
+				'label' =>esc_html__( 'Border', 'elementskit-lite' ),
 				'tab' => Controls_Manager::TAB_STYLE,
+				'conditions' => [
+					'relation' => 'or',
+					'terms' => [
+
+						// CASE 1: Popup video
+						[
+							'name'     => 'ekit_video_style',
+							'operator' => '===',
+							'value'    => 'popup',
+						],
+
+						// CASE 2: Inline video
+						[
+							'relation' => 'and',
+							'terms' => [
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'inline',
+								],
+								[
+									'name'     => 'ekit_video_inline_overlay_image[url]',
+									'operator' => '!=',
+									'value'    => '',
+								],
+								[
+									'name'     => 'ekit_video_inline_image_overlay_switcher',
+									'operator' => '===',
+									'value'    => 'yes',
+								]
+							],
+						],
+
+					],
+				],
 			]
 		);
 
@@ -856,6 +1405,7 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				],
 				'selectors' => [
 					'{{WRAPPER}} .ekit-video-popup-btn' => 'border-style: {{VALUE}};',
+					'{{WRAPPER}} .ekit-video-inline-btn' => 'border-style: {{VALUE}};',
 				],
 			]
 		);
@@ -866,6 +1416,10 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				'type' => Controls_Manager::DIMENSIONS,
 				'selectors' => [
 					'{{WRAPPER}} .ekit-video-popup-btn' => 'border-width: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+					'{{WRAPPER}} .ekit-video-inline-btn' => 'border-width: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				],
+				'condition' => [
+					'ekit_video_popup_btn_border_style!' => '',
 				],
 			]
 		);
@@ -874,7 +1428,10 @@ class ElementsKit_Widget_Video extends Widget_Base {
 			'ekit_video_popup__button_border_normal',
 			[
 				'label' =>esc_html__( 'Normal', 'elementskit-lite' ),
-			]
+				'condition' => [
+					'ekit_video_popup_btn_border_style!' => '',
+				]
+			],
 		);
 
 		$this->add_control(
@@ -885,7 +1442,11 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				'default' => '',
 				'selectors' => [
 					'{{WRAPPER}} .ekit-video-popup-btn' => 'border-color: {{VALUE}};',
+					'{{WRAPPER}} .ekit-video-inline-btn' => 'border-color: {{VALUE}};',
 				],
+				'condition' => [
+					'ekit_video_popup_btn_border_style!' => '',
+				]
 			]
 		);
 		$this->end_controls_tab();
@@ -894,6 +1455,9 @@ class ElementsKit_Widget_Video extends Widget_Base {
 			'ekit_video_popup_btn_tab_button_border_hover',
 			[
 				'label' =>esc_html__( 'Hover', 'elementskit-lite' ),
+				'condition' => [
+					'ekit_video_popup_btn_border_style!' => '',
+				]
 			]
 		);
 		$this->add_control(
@@ -904,7 +1468,11 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				'default' => '',
 				'selectors' => [
 					'{{WRAPPER}} .ekit-video-popup-btn:hover' => 'border-color: {{VALUE}};',
+					'{{WRAPPER}} .ekit-video-inline-btn:hover' => 'border-color: {{VALUE}};',
 				],
+				'condition' => [
+					'ekit_video_popup_btn_border_style!' => '',
+				]
 			]
 		);
 		$this->end_controls_tab();
@@ -923,6 +1491,9 @@ class ElementsKit_Widget_Video extends Widget_Base {
 				],
 				'selectors' => [
 					'{{WRAPPER}} .ekit-video-popup-btn, {{WRAPPER}} .ekit-video-popup-btn:before' =>  'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+					'{{WRAPPER}} .ekit-video-inline-btn, {{WRAPPER}} .ekit-video-inline-btn:before' =>  'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+					 '{{WRAPPER}} .glow-ripple.ekit-video-popup-btn' => '--video-glow-border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+            		'{{WRAPPER}} .glow-ripple.ekit-video-inline-btn' => '--video-glow-border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				],
 			]
 		);
@@ -931,8 +1502,43 @@ class ElementsKit_Widget_Video extends Widget_Base {
         $this->start_controls_section(
 			'ekit_video_popup_box_shadow_style',
 			[
-				'label' =>esc_html__( 'Shadow Style', 'elementskit-lite' ),
+				'label' =>esc_html__( 'Shadow', 'elementskit-lite' ),
 				'tab' => Controls_Manager::TAB_STYLE,
+				'conditions' => [
+					'relation' => 'or',
+					'terms' => [
+
+						// CASE 1: Popup video
+						[
+							'name'     => 'ekit_video_style',
+							'operator' => '===',
+							'value'    => 'popup',
+						],
+
+						// CASE 2: Inline video
+						[
+							'relation' => 'and',
+							'terms' => [
+								[
+									'name'     => 'ekit_video_style',
+									'operator' => '===',
+									'value'    => 'inline',
+								],
+								[
+									'name'     => 'ekit_video_inline_overlay_image[url]',
+									'operator' => '!=',
+									'value'    => '',
+								],
+								[
+									'name'     => 'ekit_video_inline_image_overlay_switcher',
+									'operator' => '===',
+									'value'    => 'yes',
+								]
+							],
+						],
+
+					],
+				],
 			]
 		);
 
@@ -941,7 +1547,7 @@ class ElementsKit_Widget_Video extends Widget_Base {
 			[
 				'name' => 'ekit_video_popup_btn_box_shadow',
 				'label' => esc_html__( 'Box Shadow', 'elementskit-lite' ),
-				'selector' => '{{WRAPPER}} .ekit-video-popup-btn',
+				'selector' => '{{WRAPPER}} .ekit-video-popup-btn, {{WRAPPER}} .ekit-video-inline-btn',
 			]
 		);
 
@@ -950,89 +1556,424 @@ class ElementsKit_Widget_Video extends Widget_Base {
 			[
 				'name' => 'ekit_video_popup_btn_text_shadow',
 				'label' => esc_html__( 'Text Shadow', 'elementskit-lite' ),
-				'selector' => '{{WRAPPER}} .ekit-video-popup-btn',
+				'selector' => '{{WRAPPER}} .ekit-video-popup-btn, {{WRAPPER}} .ekit-video-inline-btn',
 			]
 		);
 
 		$this->end_controls_section();
 
 		$this->start_controls_section(
-			'ekit_video_popup_icon_style',
+			'ekit_video_popup_control_style',
 			[
-				'label' => esc_html__( 'Icon', 'elementskit-lite' ),
+				'label' => esc_html__( 'Popup', 'elementskit-lite' ),
 				'tab' => Controls_Manager::TAB_STYLE,
 				'condition' => [
-					'ekit_video_popup_button_icons__switch'	=> 'yes',
-					'ekit_video_popup_button_style' => ['both']
+					'ekit_video_style' => 'popup',
 				]
 			]
 		);
 
-		$this->add_responsive_control(
-			'ekit_video_popup_icon_padding_right',
+		$this->add_control(
+			'ekit_video_popup_background_color',
 			[
-				'label' => esc_html__( 'Padding Right', 'elementskit-lite' ),
+				'label' =>esc_html__( 'Background', 'elementskit-lite' ),
+				'type' => Controls_Manager::COLOR,
+				// 'selectors' => [
+				// 	'.mfp-iframe-holder' => 'background-color: {{VALUE}};',
+				// ],
+			]
+		);
+		$this->end_controls_section();
+
+		$this->start_controls_section(
+			'ekit_video_popup_close_icon_style',
+			[
+				'label' => esc_html__( 'Popup Close Button', 'elementskit-lite' ),
+				'tab' => Controls_Manager::TAB_STYLE,
+				'condition' => [
+					'ekit_video_style' => 'popup',
+				]
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_close_icon',
+			[
+				'label' =>esc_html__( 'Icon', 'elementskit-lite' ),
+				'type' => Controls_Manager::ICONS,
+				'default' => [
+					'value' => 'icon icon-cancel',
+					'library' => 'ekiticons',
+				],
+				'label_block' => true,
+				'frontend_available' => true,
+			]
+		 );
+
+		$this->add_control(
+			'popup_close_icon_after',
+			[
+				'type'  => Controls_Manager::DIVIDER,
+			]
+		);
+
+		$this->add_responsive_control(
+			'ekit_video_popup_close_icon_width',
+			[
+				'label' => esc_html__( 'Width', 'elementskit-lite' ),
 				'type' => Controls_Manager::SLIDER,
 				'size_units' => [ 'px', '%' ],
+				'range' => [
+					'px' => [
+						'min' => 30,
+						'max' => 200,
+						'step' => 1,
+					],
+					'%' => [
+						'min' => 10,
+						'max' => 100,
+					],
+				],
+				'default' => [
+					'unit' => 'px',
+					'size' => 44,
+				],
+				'selectors' => [
+					'.mfp-close.ekit-video-popup-close' => 'width: {{SIZE}}{{UNIT}};'
+				],
+			]
+		);
+
+		$this->add_responsive_control(
+			'ekit_video_popup_close_icon_height',
+			[
+				'label' => esc_html__( 'Height', 'elementskit-lite' ),
+				'type' => Controls_Manager::SLIDER,
+				'size_units' => [ 'px', '%' ],
+				'range' => [
+					'px' => [
+						'min' => 30,
+						'max' => 200,
+						'step' => 1,
+					],
+					'%' => [
+						'min' => 10,
+						'max' => 100,
+					],
+				],
+				'default' => [
+					'unit' => 'px',
+					'size' => 44,
+				],
+				'selectors' => [
+					'.mfp-close.ekit-video-popup-close' => 'height: {{SIZE}}{{UNIT}};'
+				],
+			]
+		);
+
+		$this->add_control(
+			'popup_close_icon_height_width_after',
+			[
+				'type'  => Controls_Manager::DIVIDER,
+			]
+		);
+
+
+		$this->add_responsive_control(
+			'ekit_video_popup_close_icon_size',
+			[
+				'label' => esc_html__( 'Icon Size', 'elementskit-lite' ),
+				'type' => Controls_Manager::SLIDER,
+				'size_units' => [ 'px'],
 				'range' => [
 					'px' => [
 						'min' => 0,
 						'max' => 200,
 						'step' => 1,
 					],
-					'%' => [
-						'min' => 0,
-						'max' => 100,
-					],
 				],
 				'default' => [
 					'unit' => 'px',
-					'size' => 5,
+					'size' => 10,
 				],
 				'selectors' => [
-					'{{WRAPPER}} .ekit-video-popup-btn > i' => 'padding-right: {{SIZE}}{{UNIT}};',
+					'.mfp-close.ekit-video-popup-close' => 'font-size: {{SIZE}}{{UNIT}};',
+					'.mfp-close.ekit-video-popup-close svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};'
+				],
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_close_icon_border_style',
+			[
+				'label' => esc_html_x( 'Border Type', 'Border Control', 'elementskit-lite' ),
+				'type' => Controls_Manager::SELECT,
+				'options' => [
+					'' => esc_html__( 'None', 'elementskit-lite' ),
+					'solid' => esc_html_x( 'Solid', 'Border Control', 'elementskit-lite' ),
+					'double' => esc_html_x( 'Double', 'Border Control', 'elementskit-lite' ),
+					'dotted' => esc_html_x( 'Dotted', 'Border Control', 'elementskit-lite' ),
+					'dashed' => esc_html_x( 'Dashed', 'Border Control', 'elementskit-lite' ),
+					'groove' => esc_html_x( 'Groove', 'Border Control', 'elementskit-lite' ),
+				],
+				'selectors' => [
+					'.mfp-close.ekit-video-popup-close' => 'border-style: {{VALUE}};',
+				],
+			]
+		);
+		$this->add_control(
+			'ekit_video_popup_close_icon_border_width',
+			[
+				'label' => esc_html_x( 'Border Width', 'Border Control', 'elementskit-lite' ),
+				'type' => Controls_Manager::DIMENSIONS,
+				'selectors' => [
+					'.mfp-close.ekit-video-popup-close' => 'border-width: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				],
 				'condition' => [
-					'ekit_video_popup_button_style' => 'both',
-					'ekit_video_popup_icon_align' => 'before'
-				]
+					'ekit_video_popup_close_icon_border_style!' => '',
+				],
+			]
+		);
+		$this->add_responsive_control(
+		'ekit_video_popup_close_icon_position', [
+				'label'			 =>esc_html__( 'Close Button Position', 'elementskit-lite' ),
+				'type'			 => Controls_Manager::CHOOSE,
+				'options'		 => [
+
+					'left'		 => [
+						'title'	 =>esc_html__( 'Left', 'elementskit-lite' ),
+						'icon'	 => 'eicon-text-align-left',
+					],
+					'right'		 => [
+						'title'	 =>esc_html__( 'Right', 'elementskit-lite' ),
+						'icon'	 => 'eicon-text-align-right',
+					],
+
+				],
+				'default'		 => 'right',
+				'selectors' => [
+					'.mfp-close.ekit-video-popup-close' => '{{VALUE}}: 0;',
+				],
+			]
+		);
+
+		$this->start_controls_tabs( 'ekit_video_popup_close_icon_style_tabs' );
+
+		$this->start_controls_tab(
+			'ekit_video_popup_close_icon_normal',
+			[
+				'label' =>esc_html__( 'Normal', 'elementskit-lite' ),
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_close_icon_background_color',
+			[
+				'label' =>esc_html__( 'Background', 'elementskit-lite' ),
+				'type' => Controls_Manager::COLOR,
+				'default' => '#000000',
+				'selectors' => [
+					'.mfp-close.ekit-video-popup-close' => 'background-color: {{VALUE}};',
+
+				],
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_close_icon_color',
+			[
+				'label' =>esc_html__( 'Color', 'elementskit-lite' ),
+				'type' => Controls_Manager::COLOR,
+				'default' => '#ffffff',
+				'selectors' => [
+					'.mfp-close.ekit-video-popup-close' => 'color: {{VALUE}};',
+					'.mfp-close.ekit-video-popup-close .ekit-popup-close-icon svg' => 'fill: {{VALUE}};'
+				],
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_close_icon_border_color',
+			[
+				'label' =>esc_html__( 'Border Color', 'elementskit-lite' ),
+				'type' => Controls_Manager::COLOR,
+				'default' => '#ffffff',
+				'selectors' => [
+					'.mfp-close.ekit-video-popup-close' => 'border-color: {{VALUE}};',
+				],
+				'condition' => [
+					'ekit_video_popup_close_icon_border_style!' => '',
+				],
 			]
 		);
 
 		$this->add_responsive_control(
-			'ekit_video_popup_icon_padding_left',
+			'ekit_video_popup_close_icon_border_radius',
 			[
-				'label' => esc_html__( 'Padding Left', 'elementskit-lite' ),
-				'type' => Controls_Manager::SLIDER,
-				'size_units' => [ 'px', '%' ],
-				'range' => [
-					'px' => [
-						'min' => 0,
-						'max' => 200,
-						'step' => 1,
-					],
-					'%' => [
-						'min' => 0,
-						'max' => 100,
-					],
-				],
+				'label' =>esc_html__( 'Border Radius', 'elementskit-lite' ),
+				'type' => Controls_Manager::DIMENSIONS,
+				'size_units' => [ 'px', '%'],
 				'default' => [
-					'unit' => 'px',
-					'size' => 5,
+					'top' => '50',
+					'right' => '50',
+					'bottom' => '50',
+					'left' => '50',
+					'unit' => '%'
 				],
 				'selectors' => [
-					'{{WRAPPER}} .ekit-video-popup-btn > i' => 'padding-left: {{SIZE}}{{UNIT}};',
+					'.mfp-close.ekit-video-popup-close' =>  'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				],
+			]
+		);
+
+		$this->end_controls_tab();
+
+		$this->start_controls_tab(
+			'ekit_video_popup_close_icon_hover',
+			[
+				'label' =>esc_html__( 'Hover', 'elementskit-lite' ),
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_close_icon_background_color_hover',
+			[
+				'label' =>esc_html__( 'Background', 'elementskit-lite' ),
+				'type' => Controls_Manager::COLOR,
+				'default' => '#000000',
+				'selectors' => [
+					'.mfp-close.ekit-video-popup-close:hover' => 'background-color: {{VALUE}};',
+					'.ekit_self_video_wrap .mfp-close.ekit-video-popup-close:hover' => 'background-color: {{VALUE}};',
+
+				],
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_close_icon_color_hover',
+			[
+				'label' =>esc_html__( 'Color', 'elementskit-lite' ),
+				'type' => Controls_Manager::COLOR,
+				'default' => '#ffffff',
+				'selectors' => [
+					'.mfp-close.ekit-video-popup-close:hover .ekit-popup-close-icon i' => 'color: {{VALUE}};',
+					'.mfp-close.ekit-video-popup-close:hover .ekit-popup-close-icon svg' => 'fill: {{VALUE}};'
+
+				],
+			]
+		);
+
+		$this->add_control(
+			'ekit_video_popup_close_icon_border_color_hover',
+			[
+				'label' =>esc_html__( 'Border Color', 'elementskit-lite' ),
+				'type' => Controls_Manager::COLOR,
+				'default' => '#ffffff',
+				'selectors' => [
+					'.mfp-close.ekit-video-popup-close:hover' => 'border-color: {{VALUE}};',
 				],
 				'condition' => [
-					'ekit_video_popup_button_style' => 'both',
-					'ekit_video_popup_icon_align' => 'after'
-				]
+					'ekit_video_popup_close_icon_border_style!' => '',
+				],
+			]
+		);
+
+		$this->add_responsive_control(
+			'ekit_video_popup_close_icon_border_radius_hover',
+			[
+				'label' =>esc_html__( 'Border Radius', 'elementskit-lite' ),
+				'type' => Controls_Manager::DIMENSIONS,
+				'size_units' => [ 'px', '%'],
+				'default' => [
+					'top' => '50',
+					'right' => '50',
+					'bottom' => '50',
+					'left' => '50',
+					'unit' => '%'
+				],
+				'selectors' => [
+					'.mfp-close.ekit-video-popup-close:hover' =>  'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				],
+			]
+		);
+
+		$this->end_controls_tab();
+		$this->end_controls_tabs();
+
+		$this->end_controls_section();
+
+        $this->start_controls_section(
+			'ekit_video_inline_play_style',
+			[
+				'label' =>esc_html__( 'Player', 'elementskit-lite' ),
+				'tab' => Controls_Manager::TAB_STYLE,
+				'condition' => [
+					'ekit_video_style' => 'inline',
+				],
+			]
+		);
+
+		$this->add_control(
+			'aspect_ratio',
+			[
+				'label' => esc_html__( 'Aspect Ratio', 'elementskit-lite' ),
+				'type' => Controls_Manager::SELECT,
+				'options' => [
+					'169' => '16:9',
+					'219' => '21:9',
+					'43' => '4:3',
+					'32' => '3:2',
+					'11' => '1:1',
+					'916' => '9:16',
+				],
+				'selectors_dictionary' => [
+					'169' => '1.77777', // 16 / 9
+					'219' => '2.33333', // 21 / 9
+					'43' => '1.33333', // 4 / 3
+					'32' => '1.5', // 3 / 2
+					'11' => '1', // 1 / 1
+					'916' => '0.5625', // 9 / 16
+				],
+				'default' => '169',
+				'selectors' => [
+					'{{WRAPPER}} .ekit-inline-video-content' => '--video-aspect-ratio: {{VALUE}}!important; aspect-ratio: {{VALUE}}!important;',
+				],
 			]
 		);
 
 		$this->end_controls_section();
-
 		$this->insert_pro_message();
+	}
+
+    private function get_hosted_params() {
+        $settings = $this->get_settings_for_display();
+
+        $video_params = [];
+		if ( isset( $settings['ekit_video_popup_auto_play'] ) && $settings['ekit_video_popup_auto_play'] === '1' && empty($settings['ekit_video_inline_overlay_image']['url'])) {
+            $video_params['autoplay'] = 'autoplay';
+        }
+        // Use strict comparison so that 'no' (default) does NOT evaluate as truthy.
+        if ( isset( $settings['ekit_video_popup_video_loop'] ) && $settings['ekit_video_popup_video_loop'] === '1' ) {
+            $video_params['loop'] = 'loop';
+        }
+        if ( isset( $settings['ekit_video_popup_video_mute'] ) && $settings['ekit_video_popup_video_mute'] === '1' ) {
+            $video_params['muted'] = 'muted';
+        }
+
+        return $video_params;
+    }
+	/**
+	 * Render hidden icons for JS
+	 */
+	private function render_hidden_icons() {
+		$settings = $this->get_settings_for_display();
+		?>
+		<div class="ekit-hidden-icons" style="display: none;">
+			<div class="ekit-popup-close-icon">
+				<?php Icons_Manager::render_icon($settings['ekit_video_popup_close_icon'], ['aria-hidden' => 'true']); ?>
+			</div>
+		</div>
+		<?php
 	}
 
 	/**
@@ -1041,7 +1982,7 @@ class ElementsKit_Widget_Video extends Widget_Base {
 	private function video_icon() {
 		$settings = $this->get_settings_for_display();
 
-		// new icon
+		// new icon popup button
 		$migrated = isset( $settings['__fa4_migrated']['ekit_video_popup_button_icons'] );
 		// Check if its a new widget without previously selected icon using the old Icon control
 		$is_new = empty( $settings['ekit_video_popup_button_icon'] );
@@ -1079,17 +2020,30 @@ class ElementsKit_Widget_Video extends Widget_Base {
 		if( !empty($video_properties['video_id']) ) {
 			$video_id = $video_properties['video_id'];
 		}
-		
-		$is_autoplay = (int) $ekit_video_popup_auto_play;
+		if ($ekit_video_style === 'inline' && ($ekit_video_popup_video_type === "vimeo" || $ekit_video_popup_video_type === "youtube") && !empty($ekit_video_inline_overlay_image['url'])) {
+			$is_autoplay = 0;
+		}else{
+			$is_autoplay = (int) $ekit_video_popup_auto_play;
+		}
 		$is_muted = (int) $ekit_video_popup_video_mute;
 
-		if($ekit_video_popup_video_type == "vimeo"){
-			$url = explode('#', $ekit_video_popup_url, 2);
+		if ( $ekit_video_popup_video_type === "vimeo" ) {
+			$url = explode( '#', $ekit_video_popup_url, 2 );
 			$ekit_video_popup_url = $url[0];
-			$ekit_video_popup_url = $ekit_video_popup_url."?playlist={$video_id}&muted={$is_muted}&autoplay={$is_autoplay}&loop={$ekit_video_popup_video_loop}&controls={$player_control}&start={$ekit_video_popup_start_time}&end={$ekit_video_popup_end_time}";
+
+			// Controls (default to 0 if not enabled)
+			$title    = $settings['ekit_video_popup_video_intro_title'] == 1 ? 1 :0;
+			$portrait = $settings['ekit_video_popup_video_intro_portrait'] == 1 ? 1: 0;
+			$byline   = $settings['ekit_video_popup_video_intro_byline'] == 1 ? 1: 0;
+
+			// Build URL
+			$ekit_video_popup_url .= "?playlist={$video_id}&muted={$is_muted}&autoplay={$is_autoplay}&loop={$ekit_video_popup_video_loop}&controls={$player_control}&start={$ekit_video_popup_start_time}&end={$ekit_video_popup_end_time}&title={$title}&portrait={$portrait}&byline={$byline}";
+
+
 		}
 		else{
 			$ekit_video_popup_url = $ekit_video_popup_url."?playlist={$video_id}&mute={$is_muted}&autoplay={$is_autoplay}&loop={$ekit_video_popup_video_loop}&controls={$player_control}&start={$ekit_video_popup_start_time}&end={$ekit_video_popup_end_time}";
+
 		};
 
 		// set player features playpause, current, progress, duration, volume
@@ -1101,16 +2055,23 @@ class ElementsKit_Widget_Video extends Widget_Base {
 		($ekit_video_player_volume === 'yes') && array_push($features, 'volume');
 
 
+
 		// set settings data attributes
 		$video_settings['videoVolume'] = (!empty($ekit_video_player_volume_slider_layout)) ? $ekit_video_player_volume_slider_layout: 'horizontal';
 		$video_settings['startVolume'] = (!empty($ekit_video_player_start_volume['size'])) ? $ekit_video_player_start_volume['size']: 0.8;
 		$video_settings['videoType'] = (!empty($ekit_video_popup_video_type === 'vimeo' || $ekit_video_popup_video_type === 'youtube')) ? 'iframe': 'inline';
 		$video_settings['videoClass'] = (!empty($ekit_video_popup_video_type === 'vimeo' || $ekit_video_popup_video_type === 'youtube')) ? 'mfp-fade': 'ekit_self_video_wrap_content';
+		$video_settings['popupIcon'] = (!empty($ekit_video_popup_close_icon)) ? $ekit_video_popup_close_icon : '';
+		$video_settings['videoStyle'] = (!empty($ekit_video_style)) ? $ekit_video_style : '';
+		$video_settings['videoTypeName'] = (!empty($ekit_video_popup_video_type)) ? $ekit_video_popup_video_type : '';
+		$video_settings['autoplay'] = (!empty($ekit_video_popup_auto_play) && $ekit_video_popup_auto_play === '1') ? true : false;
+		$video_settings['muted']    = (!empty($ekit_video_popup_video_mute) && $ekit_video_popup_video_mute === '1') ? true : false;
+		$video_settings['loop']     = (!empty($ekit_video_popup_video_loop) && $ekit_video_popup_video_loop === '1') ? true : false;
+		$video_settings['bg_color'] = !empty($settings['ekit_video_popup_background_color']) ? $settings['ekit_video_popup_background_color'] : '';
 		$poster_image =  !empty($self_poster_image['url']) ? esc_url($self_poster_image['url']) : '';
-
+		$hosted_params = $this->get_hosted_params();
 		//generate id
 		$generate_id = "test-popup-link".$this->get_id();
-
 		// registering video player default attributes.
 		$this->add_render_attribute(
 			'player',
@@ -1128,6 +2089,7 @@ class ElementsKit_Widget_Video extends Widget_Base {
 
 		if (!empty($ekit_video_popup_video_loop) && $ekit_video_popup_video_loop === '1') {
 			$this->add_render_attribute('player', 'loop', '');
+			$ekit_video_popup_url = $ekit_video_popup_url = preg_replace( '/[?&]feature=oembed/', '', $ekit_video_popup_url ); // Remove feature=oembed from the URL to prevent Vimeo from adding a loop parameter
 		}
 
 		if (!empty($ekit_video_popup_video_mute) && $ekit_video_popup_video_mute === '1') {
@@ -1139,23 +2101,68 @@ class ElementsKit_Widget_Video extends Widget_Base {
 			$clean_url = $ekit_video_self_external_url;
 		}
 
-		$clean_url = ($ekit_video_self_url === 'yes' && $clean_url !== '') 
-		? $clean_url 
+		$clean_url = ($ekit_video_self_url === 'yes' && $clean_url !== '')
+		? $clean_url
 		: (isset($ekit_video_player_self_hosted['url']) ? esc_url($ekit_video_player_self_hosted['url']) : '#');
-		
+
+		if($ekit_video_style === 'popup') {
 		?>
 		<div class="video-content" data-video-player="<?php echo esc_attr(wp_json_encode($features)); ?>" data-video-setting="<?php echo esc_attr(wp_json_encode($video_settings)); ?>">
-			<?php if($ekit_video_popup_video_type === 'vimeo' || $ekit_video_popup_video_type === 'youtube') :
+			<?php
+			$this->render_hidden_icons();
+			if($ekit_video_popup_video_type === 'vimeo' || $ekit_video_popup_video_type === 'youtube') :
 				include Handler::get_dir() . 'parts/video-button.php';  ?>
-			<?php else : 
+			<?php else :
 				include Handler::get_dir() . 'parts/video-button.php'; ?>
 				<div id="<?php echo esc_attr($generate_id); ?>" class="mfp-hide ekit_self_video_wrap">
-					<video class="video_class" <?php $this->print_render_attribute_string('player'); ?> >
+					<video class="video_class"
+						<?php if($poster_image) : ?> poster="<?php echo esc_url($poster_image); ?>" <?php endif; ?>
+					>
 						<source type="video/mp4" src="<?php echo esc_url($clean_url); ?>" />
 					</video>
 				</div>
 			<?php endif;?>
 		</div>
 		<?php
+		}else {
+			?>
+			<div class="ekit-video-frame" data-video-player="<?php echo esc_attr(wp_json_encode($features)); ?>" data-video-setting="<?php echo esc_attr(wp_json_encode($video_settings)); ?>">
+			<div class="ekit-inline-video-content <?php if($settings['ekit_video_inline_image_overlay_switcher'] === 'yes') : ?> ekit-video-inline-overlay-wrapper <?php endif; ?><?php if($ekit_video_popup_video_type === 'self') : ?> ekit-video-self-hosted<?php endif; ?>">
+					<?php if($ekit_video_popup_video_type === 'vimeo' || $ekit_video_popup_video_type === 'youtube') :
+						if(isset($settings['ekit_video_inline_image_overlay_switcher']) && $settings['ekit_video_inline_image_overlay_switcher'] === 'yes' ) {
+							include Handler::get_dir() . 'parts/video-button.php';
+						}
+					?>
+					<iframe src="<?php echo esc_url($ekit_video_popup_url); ?>" allow="autoplay" allowfullscreen></iframe>
+					<?php else :
+						if(isset($settings['ekit_video_inline_image_overlay_switcher']) && $settings['ekit_video_inline_image_overlay_switcher'] === 'yes'){
+							include Handler::get_dir() . 'parts/video-button.php';
+						}
+						if ( $ekit_video_popup_video_type === 'self' &&  isset( $settings['ekit_video_popup_video_player_control'] ) && $settings['ekit_video_popup_video_player_control'] === '1') {
+                            $hosted_params['controls'] = 'controls';
+                        }
+
+						?>
+						<!-- <video class="inline_video_class" src="<?php echo esc_url($clean_url); ?>" <?php Utils::print_html_attributes( $hosted_params ); ?>>
+						</video> -->
+
+						<video class="inline_video_class"
+						<?php Utils::print_html_attributes( $hosted_params ); ?>
+						<?php if($poster_image) : ?> poster="<?php echo esc_url($poster_image); ?>" <?php endif; ?>
+					>
+						<source type="video/mp4" src="<?php echo esc_url($clean_url); ?>" />
+					</video>
+					<?php endif; ?>
+
+					<?php if (!empty($settings['ekit_video_inline_overlay_image']['url']) && $settings['ekit_video_inline_image_overlay_switcher'] === 'yes') :
+						?>
+						<div class="ekit-inline-video-overlay-image">
+							<img src="<?php echo esc_url($settings['ekit_video_inline_overlay_image']['url']); ?>" alt="Overlay Image">
+						</div>
+					<?php endif; ?>
+				</div>
+			</div>
+			<?php
+		}
 	}
 }

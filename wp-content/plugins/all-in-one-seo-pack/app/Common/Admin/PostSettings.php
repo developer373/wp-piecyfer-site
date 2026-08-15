@@ -50,8 +50,8 @@ class PostSettings {
 		// Add metabox.
 		add_action( 'add_meta_boxes', [ $this, 'addPostSettingsMetabox' ] );
 
-		// Add metabox to terms on init hook.
-		add_action( 'init', [ $this, 'init' ], 1000 );
+		// Add metabox (upsell) to terms on init hook.
+		add_action( 'admin_init', [ $this, 'init' ], 1000 );
 
 		// Save metabox.
 		add_action( 'save_post', [ $this, 'saveSettingsMetabox' ] );
@@ -77,16 +77,27 @@ class PostSettings {
 			aioseo()->helpers->isScreenBase( 'edit-tags' ) ||
 			aioseo()->helpers->isScreenBase( 'site-editor' )
 		) {
-			$page = null;
+			$page         = null;
+			$staticPostId = null;
 			if (
 				aioseo()->helpers->isScreenBase( 'event-espresso' ) ||
 				aioseo()->helpers->isScreenBase( 'post' )
 			) {
 				$page = 'post';
+
+				// Resolve the edited post ID from the request rather than relying on `get_the_ID()`
+				// inside Vue data generation. Third-party plugins (e.g. Breakdance) can run post loops
+				// during admin enqueue and leave the global `$post` pointing at a different post,
+				// which would then surface as the wrong post in `window.aioseo.currentPost`.
+				// phpcs:ignore HM.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Recommended
+				$requestedPostId = isset( $_GET['post'] ) ? absint( wp_unslash( $_GET['post'] ) ) : 0;
+				if ( $requestedPostId ) {
+					$staticPostId = $requestedPostId;
+				}
 			}
 
-			aioseo()->core->assets->load( 'src/vue/standalone/post-settings/main.js', [], aioseo()->helpers->getVueData( $page ) );
-			aioseo()->core->assets->load( 'src/vue/standalone/link-format/main.js', [], aioseo()->helpers->getVueData( $page ) );
+			aioseo()->core->assets->load( 'src/vue/standalone/post-settings/main.js', [], aioseo()->helpers->getVueData( $page, $staticPostId ) );
+			aioseo()->core->assets->load( 'src/vue/standalone/link-format/main.js', [], aioseo()->helpers->getVueData( $page, $staticPostId ) );
 		}
 
 		$screen = aioseo()->helpers->getCurrentScreen();
@@ -114,6 +125,7 @@ class PostSettings {
 		$generalSettingsCapability      = aioseo()->access->hasCapability( 'aioseo_page_general_settings' );
 		$socialSettingsCapability       = aioseo()->access->hasCapability( 'aioseo_page_social_settings' );
 		$schemaSettingsCapability       = aioseo()->access->hasCapability( 'aioseo_page_schema_settings' );
+		$aiContentSettingsCapability    = aioseo()->access->hasCapability( 'aioseo_page_ai_content_settings' );
 		$linkAssistantCapability        = aioseo()->access->hasCapability( 'aioseo_page_link_assistant_settings' );
 		$redirectsCapability            = aioseo()->access->hasCapability( 'aioseo_page_redirects_manage' );
 		$advancedSettingsCapability     = aioseo()->access->hasCapability( 'aioseo_page_advanced_settings' );
@@ -127,7 +139,49 @@ class PostSettings {
 				empty( $generalSettingsCapability ) &&
 				empty( $socialSettingsCapability ) &&
 				empty( $schemaSettingsCapability ) &&
+				empty( $aiContentSettingsCapability ) &&
 				empty( $linkAssistantCapability ) &&
+				empty( $redirectsCapability ) &&
+				empty( $advancedSettingsCapability ) &&
+				empty( $seoRevisionsSettingsCapability )
+			)
+		) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check whether or not we can add the metabox in a page builder context.
+	 * Link Assistant is excluded because it does not support page builder integrations.
+	 *
+	 * @since 4.9.9
+	 *
+	 * @param  string  $postType The post type to check.
+	 * @return boolean           Whether or not can add the Metabox.
+	 */
+	public function canAddPageBuilderMetabox( $postType ) {
+		$dynamicOptions = aioseo()->dynamicOptions->noConflict();
+
+		$pageAnalysisSettingsCapability = aioseo()->access->hasCapability( 'aioseo_page_analysis' );
+		$generalSettingsCapability      = aioseo()->access->hasCapability( 'aioseo_page_general_settings' );
+		$socialSettingsCapability       = aioseo()->access->hasCapability( 'aioseo_page_social_settings' );
+		$schemaSettingsCapability       = aioseo()->access->hasCapability( 'aioseo_page_schema_settings' );
+		$aiContentSettingsCapability    = aioseo()->access->hasCapability( 'aioseo_page_ai_content_settings' );
+		$redirectsCapability            = aioseo()->access->hasCapability( 'aioseo_page_redirects_manage' );
+		$advancedSettingsCapability     = aioseo()->access->hasCapability( 'aioseo_page_advanced_settings' );
+		$seoRevisionsSettingsCapability = aioseo()->access->hasCapability( 'aioseo_page_seo_revisions_settings' );
+
+		if (
+			$dynamicOptions->searchAppearance->postTypes->has( $postType ) &&
+			$dynamicOptions->searchAppearance->postTypes->$postType->advanced->showMetaBox &&
+			! (
+				empty( $pageAnalysisSettingsCapability ) &&
+				empty( $generalSettingsCapability ) &&
+				empty( $socialSettingsCapability ) &&
+				empty( $schemaSettingsCapability ) &&
+				empty( $aiContentSettingsCapability ) &&
 				empty( $redirectsCapability ) &&
 				empty( $advancedSettingsCapability ) &&
 				empty( $seoRevisionsSettingsCapability )
@@ -210,7 +264,8 @@ class PostSettings {
 	/**
 	 * Handles metabox saving.
 	 *
-	 * @since 4.0.3
+	 * @since   4.0.3
+	 * @version 4.9.9 Sanitize social posts via {@see \AIOSEO\Plugin\Common\Ai\Ai::sanitizeSocialPosts()}.
 	 *
 	 * @param  int  $postId Post ID.
 	 * @return void
@@ -235,12 +290,27 @@ class PostSettings {
 			return;
 		}
 
-		$currentPost = json_decode( sanitize_text_field( wp_unslash( ( $_POST['aioseo-post-settings'] ) ) ), true );
+		$currentPost = json_decode( wp_unslash( ( $_POST['aioseo-post-settings'] ) ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+
+		// AI social post content can contain newlines and links that the generic
+		// sanitize() helper would strip, so we set it aside and run it through the
+		// dedicated social-post sanitizer after the rest is sanitized.
+		$socialPosts = isset( $currentPost['ai']['socialPosts'] ) ? $currentPost['ai']['socialPosts'] : null;
+		if ( null !== $socialPosts ) {
+			unset( $currentPost['ai']['socialPosts'] );
+		}
+
+		$currentPost = aioseo()->helpers->sanitize( $currentPost );
 
 		// If there is no data, there likely was an error, e.g. if the hidden field wasn't populated on load and the user saved the post without making changes in the metabox.
 		// In that case we should return to prevent a complete reset of the data.
-		if ( empty( $currentPost ) ) {
+
+		if ( empty( $currentPost ) && null === $socialPosts ) {
 			return;
+		}
+
+		if ( null !== $socialPosts ) {
+			$currentPost['ai']['socialPosts'] = aioseo()->ai->sanitizeSocialPosts( $socialPosts );
 		}
 
 		Models\Post::savePost( $postId, $currentPost );
@@ -301,11 +371,11 @@ class PostSettings {
 		$eligiblePostTypes = aioseo()->helpers->getTruSeoEligiblePostTypes();
 		if ( ! in_array( $postType, $eligiblePostTypes, true ) ) {
 			return [
-				'total'                 => 0,
-				'withoutFocusKeyphrase' => 0,
-				'needsImprovement'      => 0,
-				'okay'                  => 0,
-				'good'                  => 0
+				'total'               => 0,
+				'withoutFocusKeyword' => 0,
+				'needsImprovement'    => 0,
+				'okay'                => 0,
+				'good'                => 0
 			];
 		}
 
@@ -314,24 +384,22 @@ class PostSettings {
 		$implodedPageIdPlaceholders = implode( ', ', $implodedPageIdPlaceholders );
 
 		global $wpdb;
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 		$overviewData = $wpdb->get_row(
-			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 			$wpdb->prepare(
-				"SELECT 
+				"SELECT
 					COUNT(*) as total,
-					COALESCE( SUM(CASE WHEN ap.keyphrases = '' OR ap.keyphrases IS NULL OR ap.keyphrases LIKE %s THEN 1 ELSE 0 END), 0) as withoutFocusKeyphrase,
-					COALESCE( SUM(CASE WHEN ap.seo_score < 50 AND NOT (ap.keyphrases = '' OR ap.keyphrases IS NULL OR ap.keyphrases LIKE %s) THEN 1 ELSE 0 END), 0) as needsImprovement,
-					COALESCE( SUM(CASE WHEN ap.seo_score BETWEEN 50 AND 79 AND NOT (ap.keyphrases = '' OR ap.keyphrases IS NULL OR ap.keyphrases LIKE %s) THEN 1 ELSE 0 END), 0) as okay,
-					COALESCE( SUM(CASE WHEN ap.seo_score >= 80 AND NOT (ap.keyphrases = '' OR ap.keyphrases IS NULL OR ap.keyphrases LIKE %s) THEN 1 ELSE 0 END), 0) as good
+					COALESCE( SUM(CASE WHEN ap.keyphrases = '' OR ap.keyphrases IS NULL OR ap.keyphrases LIKE %s THEN 1 ELSE 0 END), 0) as withoutFocusKeyword,
+					COALESCE( SUM(CASE WHEN ap.seo_score IS NULL OR ap.seo_score = 0 THEN 1 ELSE 0 END), 0) as withoutTruSeoScore,
+					COALESCE( SUM(CASE WHEN ap.seo_score > 0 AND ap.seo_score < 50 THEN 1 ELSE 0 END), 0) as needsImprovement,
+					COALESCE( SUM(CASE WHEN ap.seo_score BETWEEN 50 AND 79 THEN 1 ELSE 0 END), 0) as okay,
+					COALESCE( SUM(CASE WHEN ap.seo_score >= 80 THEN 1 ELSE 0 END), 0) as good
 				FROM {$wpdb->posts} as p
 				LEFT JOIN {$wpdb->prefix}aioseo_posts as ap ON ap.post_id = p.ID
 				WHERE p.post_status = 'publish'
 				AND p.post_type = %s
 				AND p.ID NOT IN ( $implodedPageIdPlaceholders )",
-				// phpcs:enable
-				'{"focus":{"keyphrase":""%',
-				'{"focus":{"keyphrase":""%',
-				'{"focus":{"keyphrase":""%',
 				'{"focus":{"keyphrase":""%',
 				$postType,
 				...array_values( $specialPageIds )
@@ -372,17 +440,20 @@ class PostSettings {
 		$whereClause        = '';
 		$noKeyphrasesClause = "(aioseo_p.keyphrases = '' OR aioseo_p.keyphrases IS NULL OR aioseo_p.keyphrases LIKE '{\"focus\":{\"keyphrase\":\"\"%')";
 		switch ( $filter ) {
-			case 'withoutFocusKeyphrase':
+			case 'withoutFocusKeyword':
 				$whereClause = " AND $noKeyphrasesClause ";
 				break;
+			case 'withoutTruSeoScore':
+				$whereClause = ' AND ( aioseo_p.seo_score IS NULL OR aioseo_p.seo_score = 0 ) ';
+				break;
 			case 'needsImprovement':
-				$whereClause = " AND aioseo_p.seo_score < 50 AND NOT $noKeyphrasesClause ";
+				$whereClause = ' AND ( aioseo_p.seo_score > 0 AND aioseo_p.seo_score < 50 ) ';
 				break;
 			case 'okay':
-				$whereClause = " AND aioseo_p.seo_score BETWEEN 50 AND 80 AND NOT $noKeyphrasesClause ";
+				$whereClause = ' AND aioseo_p.seo_score BETWEEN 50 AND 80 ';
 				break;
 			case 'good':
-				$whereClause = " AND aioseo_p.seo_score > 80 AND NOT $noKeyphrasesClause ";
+				$whereClause = ' AND aioseo_p.seo_score > 80 ';
 				break;
 		}
 

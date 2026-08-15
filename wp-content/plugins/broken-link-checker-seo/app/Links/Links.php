@@ -46,45 +46,83 @@ class Links {
 	/**
 	 * Class constructor.
 	 *
-	 * @since 1.0.0
+	 * @since   1.0.0
+	 * @version 1.2.9 Remove is_admin() check to allow frontend scheduling.
 	 */
 	public function __construct() {
 		$this->data = new Data();
 
+		add_action( 'admin_init', [ $this, 'scheduleScan' ], 3003 );
 		add_action( $this->scanActionName, [ $this, 'scanPosts' ], 11, 1 );
+
 		add_action( 'save_post', [ $this, 'scanPost' ], 21, 1 );
+		add_action( 'delete_post', [ $this, 'deletePostLinks' ] );
 		add_action( 'shutdown', [ $this, 'rescanPosts' ] );
-
-		if ( ! is_admin() ) {
-			return;
-		}
-
-		add_action( 'init', [ $this, 'scheduleScan' ], 3003 );
 	}
 
 	/**
-	 * Schedules the initial links scan.
+	 * Deletes all link records for a given post when it is permanently deleted, plus any
+	 * link-status rows left unreferenced once those links are gone.
 	 *
-	 * @since 1.0.0
+	 * Statuses are captured before the links are deleted; only fires on permanent delete,
+	 * so a link status whose post is merely trashed (and may be restored) is kept.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param  int  $postId The post ID.
+	 * @return void
+	 */
+	public function deletePostLinks( $postId ) {
+		$linkStatusIds = Models\Link::getLinkStatusIds( $postId );
+
+		Models\Link::deleteLinks( $postId );
+
+		if ( $linkStatusIds ) {
+			Models\LinkStatus::deleteOrphaned( $linkStatusIds );
+		}
+	}
+
+	/**
+	 * Schedules the links scan as a recurring action.
+	 *
+	 * @since   1.0.0
+	 * @version 1.2.9 Switch to recurring action with cache-based idle state.
 	 *
 	 * @return void
 	 */
 	public function scheduleScan() {
-		// If there is no action at all, schedule one.
-		if ( ! aioseoBrokenLinkChecker()->actionScheduler->isScheduled( $this->scanActionName ) ) {
-			aioseoBrokenLinkChecker()->actionScheduler->scheduleAsync( $this->scanActionName );
+		// If we're in idle mode (no posts to scan), unschedule and don't reschedule yet.
+		if ( aioseoBrokenLinkChecker()->core->cache->get( 'as_blc_links_scan_idle' ) ) {
+			aioseoBrokenLinkChecker()->actionScheduler->unschedule( $this->scanActionName );
+
+			return;
 		}
+
+		if ( aioseoBrokenLinkChecker()->actionScheduler->isScheduled( $this->scanActionName ) ) {
+			return;
+		}
+
+		aioseoBrokenLinkChecker()->actionScheduler->scheduleRecurrent( $this->scanActionName, 10, MINUTE_IN_SECONDS );
 	}
 
 	/**
 	 * Scans posts for links and stores them in the DB.
 	 *
-	 * @since 1.0.0
+	 * @since   1.0.0
+	 * @version 1.2.9 Use recurring action with runtime lock and idle state.
 	 *
-	 * @param  bool $scheduleNewAction Whether to schedule a new action.
 	 * @return void
 	 */
-	public function scanPosts( $scheduleNewAction = true ) {
+	public function scanPosts() {
+		// Runtime lock: Prevent concurrent execution of this action.
+		$lockKey = 'as_blc_links_scan_running';
+		if ( aioseoBrokenLinkChecker()->core->cache->get( $lockKey ) ) {
+			return;
+		}
+
+		// Set lock with a safety timeout in case the action fails mid-execution.
+		aioseoBrokenLinkChecker()->core->cache->update( $lockKey, true, 2 * MINUTE_IN_SECONDS );
+
 		static $iterations = 0;
 		$iterations++;
 
@@ -93,9 +131,9 @@ class Links {
 		$postsToScan = $this->data->getPostsToScan();
 
 		if ( empty( $postsToScan ) ) {
-			if ( $scheduleNewAction ) {
-				aioseoBrokenLinkChecker()->actionScheduler->scheduleSingle( $this->scanActionName, 15 * MINUTE_IN_SECONDS );
-			}
+			// No more posts to scan - enter idle mode and unschedule the recurring action.
+			aioseoBrokenLinkChecker()->core->cache->update( 'as_blc_links_scan_idle', true, HOUR_IN_SECONDS );
+			aioseoBrokenLinkChecker()->core->cache->delete( $lockKey );
 
 			return;
 		}
@@ -106,15 +144,15 @@ class Links {
 
 		$timeElapsed = aioseoBrokenLinkChecker()->helpers->timeElapsed();
 		if ( 10 > $timeElapsed && 200 > $iterations ) {
+			// Release the lock before recursing so the recursive call doesn't bail.
+			aioseoBrokenLinkChecker()->core->cache->delete( $lockKey );
 			// If we still have time, do another scan.
 			$this->scanPosts();
 
 			return;
 		}
 
-		if ( $scheduleNewAction ) {
-			aioseoBrokenLinkChecker()->actionScheduler->scheduleSingle( $this->scanActionName, MINUTE_IN_SECONDS );
-		}
+		aioseoBrokenLinkChecker()->core->cache->delete( $lockKey );
 	}
 
 	/**
@@ -133,6 +171,10 @@ class Links {
 
 		if ( ! is_object( $post ) ) {
 			$post = get_post( $post );
+		}
+
+		if ( ! is_a( $post, 'WP_Post' ) ) {
+			return;
 		}
 
 		// Check if we didn't scan this post in the last 3 seconds. This is to prevent a second, subsequent request from scanning the same post.

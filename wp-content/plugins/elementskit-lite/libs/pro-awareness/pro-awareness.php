@@ -16,15 +16,15 @@ if ( ! class_exists( '\Wpmet\Libs\Pro_Awareness' ) ) :
 		private $parent_menu_slug;
 		private $menu_slug              = '_get_help';
 		private $default_grid_link      = 'https://wpmet.com/support-ticket';
-		private $default_grid_title     = 'Support Center';
+		private $default_grid_title     = '';
 		private $default_grid_thumbnail = '';
-		private $default_grid_desc      = 'Our experienced support team is ready to resolve your issues any time.';
+		private $default_grid_desc      = '';
 		private $pro_link_conf          = array();
 
 		private $grids            = array();
 		private $action_links     = array();
 		private $row_meta_links   = array();
-		private $parent_menu_text = 'Get Help';
+		private $parent_menu_text = '';
 		private $products = array();
 
 
@@ -65,11 +65,17 @@ if ( ! class_exists( '\Wpmet\Libs\Pro_Awareness' ) ) :
 
 		private function default_grid() {
 
+			$title = ! empty( $this->default_grid_title )
+				? $this->default_grid_title
+				: esc_html__( 'Support Center', 'elementskit-lite' );
+			$description = ! empty( $this->default_grid_desc )
+				? $this->default_grid_desc
+				: esc_html__( 'Our experienced support team is ready to resolve your issues any time.', 'elementskit-lite' );
 			return array(
 				'url'         => $this->default_grid_link,
-				'title'       => $this->default_grid_title,
+				'title'       => $title,
 				'thumbnail'   => $this->default_grid_thumbnail,
-				'description' => $this->default_grid_desc,
+				'description' => $description,
 			);
 		}
 
@@ -139,7 +145,7 @@ if ( ! class_exists( '\Wpmet\Libs\Pro_Awareness' ) ) :
 			$this->pro_link_conf[] = array(
 				'url'        => $url,
 				'target'     => '_blank',
-				'anchor'     => empty( $conf['anchor'] ) ? '<span style="color: #FCB214;" class="pro_aware pro">Upgrade To Premium</span>' : $conf['anchor'],
+				'anchor'     => empty( $conf['anchor'] ) ? sprintf( '<span style="color: #FCB214;" class="pro_aware pro">%s</span>', esc_html__( 'Upgrade To Premium', 'elementskit-lite' ) ) : $conf['anchor'],
 				'permission' => empty( $conf['permission'] ) ? 'manage_options' : $conf['permission'],
 			);
 
@@ -202,7 +208,18 @@ if ( ! class_exists( '\Wpmet\Libs\Pro_Awareness' ) ) :
 
 			if ( ! empty( $this->grids ) ) {
 
-				add_submenu_page( $this->parent_menu_slug, $this->parent_menu_text, $this->parent_menu_text, 'manage_options', $this->text_domain . $this->menu_slug, array( $this, 'generate_grids' ) );
+				$get_help_title = !empty( $this->parent_menu_text )
+					? $this->parent_menu_text
+					: esc_html__( 'Get Help', 'elementskit-lite' );
+
+				add_submenu_page(
+					$this->parent_menu_slug,
+					$get_help_title,
+					$get_help_title,
+					'manage_options',
+					$this->text_domain . $this->menu_slug,
+					array( $this, 'generate_grids' )
+				);
 			}
 		}
 
@@ -227,7 +244,7 @@ if ( ! class_exists( '\Wpmet\Libs\Pro_Awareness' ) ) :
 						?>
 						<div class="grid wpmet_pro_a-grid">
 							<div class="wpmet_pro_a-grid-inner">
-								<a target="_blank" href="<?php echo esc_url( $grid['url'] ); ?>"
+								<a target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( $grid['url'] ); ?>"
 								   class="wpmet_pro_a_wrapper" title="<?php echo esc_attr( $grid['title'] ); ?>"
 								   title="<?php echo esc_attr( $grid['title'] ); ?>">
 									<div class="wpmet_pro_a_thumb">
@@ -257,7 +274,7 @@ if ( ! class_exists( '\Wpmet\Libs\Pro_Awareness' ) ) :
 					</div>
 					<div class="wpmet-products__content">
 						<?php foreach ( $this->products as $product ) : ?>
-							<a title="<?php echo esc_attr($product['title']); ?>" class="help-card" href="<?php echo esc_url( $product['url'] ); ?>" target="_blank">
+							<a title="<?php echo esc_attr($product['title']); ?>" class="help-card" href="<?php echo esc_url( $product['url'] ); ?>" target="_blank" rel="noopener noreferrer">
 								<label>
 									<img src="<?php echo esc_url( $product['thumbnail'] ); ?>" alt="Thumbnail">
 								</label>
@@ -432,7 +449,7 @@ if ( ! class_exists( '\Wpmet\Libs\Pro_Awareness' ) ) :
 						}
 					}
 
-					$links[] = sprintf( '<a href="%s" ' . $attributes . ' > %s </a>', $action_link['link'], esc_html( $action_link['text'] ) );
+					$links[] = sprintf( '<a href="%s" ' . $attributes . ' > %s </a>', esc_url( $action_link['link'] ), esc_html( $action_link['text'] ) );
 				}
 			}
 

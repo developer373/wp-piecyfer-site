@@ -47,15 +47,18 @@ class PostMeta {
 	 */
 	public function importPostMeta() {
 		$postsPerAction  = apply_filters( 'aioseo_import_yoast_seo_posts_per_action', 100 );
-		$publicPostTypes = implode( "', '", aioseo()->helpers->getPublicPostTypes( true ) );
-		$timeStarted     = gmdate( 'Y-m-d H:i:s', aioseo()->core->cache->get( 'import_post_meta_yoast_seo' ) );
+		$publicPostTypes = aioseo()->helpers->getPublicPostTypes( true );
+		$timeStarted     = esc_sql( gmdate( 'Y-m-d H:i:s', aioseo()->core->cache->get( 'import_post_meta_yoast_seo' ) ) );
 
 		$posts = aioseo()->core->db
 			->start( 'posts' . ' as p' )
 			->select( 'p.ID, p.post_type' )
 			->leftJoin( 'aioseo_posts as ap', '`p`.`ID` = `ap`.`post_id`' )
-			->whereRaw( "( p.post_type IN ( '$publicPostTypes' ) )" )
+			->join( 'postmeta as pm', '`p`.`ID` = `pm`.`post_id`' )
+			->whereIn( 'p.post_type', $publicPostTypes )
 			->whereRaw( "( ap.post_id IS NULL OR ap.updated < '$timeStarted' )" )
+			->whereLike( 'pm.meta_key', '_yoast_wpseo_%', true )
+			->groupBy( 'p.ID' )
 			->orderBy( 'p.ID DESC' )
 			->limit( $postsPerAction )
 			->run()
@@ -92,9 +95,14 @@ class PostMeta {
 				->start( 'postmeta' . ' as pm' )
 				->select( 'pm.meta_key, pm.meta_value' )
 				->where( 'pm.post_id', $post->ID )
-				->whereRaw( "`pm`.`meta_key` LIKE '_yoast_wpseo_%'" )
+				->whereLike( 'pm.meta_key', '_yoast_wpseo_%', true )
 				->run()
 				->result();
+
+			if ( ! $postMeta || ! count( $postMeta ) ) {
+				// Skip posts with no Yoast meta (shouldn't happen with our query filter, but defensive check).
+				continue;
+			}
 
 			$featuredImage = get_the_post_thumbnail_url( $post->ID );
 			$meta          = [
@@ -120,15 +128,6 @@ class PostMeta {
 				'twitter_image_custom_url' => '',
 				'twitter_image_type'       => 'default'
 			];
-
-			if ( ! $postMeta || ! count( $postMeta ) ) {
-				$aioseoPost = Models\Post::getPost( (int) $post->ID );
-				$aioseoPost->set( $meta );
-				$aioseoPost->save();
-
-				aioseo()->migration->meta->migrateAdditionalPostMeta( $post->ID );
-				continue;
-			}
 
 			$title = '';
 			foreach ( $postMeta as $record ) {
@@ -315,6 +314,11 @@ class PostMeta {
 				$meta['twitter_title']  = $title;
 			}
 
+			if ( isset( $meta['keyphrases'] ) ) {
+				// The keyphrases column is only kept for backwards compatibility; the post editor reads the keyword columns.
+				$meta = array_merge( $meta, Models\Post::getKeywordColumnsFromKeyphrases( $meta['keyphrases'] ) );
+			}
+
 			$aioseoPost = Models\Post::getPost( (int) $post->ID );
 			$aioseoPost->set( $meta );
 			$aioseoPost->save();
@@ -327,7 +331,7 @@ class PostMeta {
 
 		if ( count( $posts ) === $postsPerAction ) {
 			try {
-				as_schedule_single_action( time() + 5, aioseo()->importExport->yoastSeo->postActionName, [], 'aioseo' );
+				as_schedule_single_action( time() + 30, aioseo()->importExport->yoastSeo->postActionName, [], 'aioseo' );
 			} catch ( \Exception $e ) {
 				// Do nothing.
 			}

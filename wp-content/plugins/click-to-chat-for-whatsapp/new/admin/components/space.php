@@ -1,21 +1,25 @@
 <?php
 /**
- * add space / line breaks
+ * Add space / line breaks
+ *
+ * @package Click_To_Chat
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
-$type = (isset($input['type'])) ? esc_attr($input['type']) : '';
+$space_type = ( isset( $input['type'] ) ) ? esc_attr( $input['type'] ) : '';
 
-if ('line' == $type) {
-    ?>
-    <br>
-    <?php
-} else if ('margin' == $type) {
+if ( 'line' === $space_type ) {
+	?>
+	<br>
+	<?php
+} elseif ( 'margin' === $space_type ) {
 
-    $margin_bottom = (isset($input['margin_bottom'])) ? "margin-bottom: " . esc_attr($input['margin_bottom']) . ";" : '';
+	$margin_bottom = ( isset( $input['margin_bottom'] ) ) ? 'margin-bottom: ' . esc_attr( $input['margin_bottom'] ) . ';' : '';
 
-    ?>
-    <span style="display:block; <?= $margin_bottom ?>"></span>
-    <?php
+	?>
+	<span style="display:block; <?php echo esc_attr( $margin_bottom ); ?>"></span>
+	<?php
 }

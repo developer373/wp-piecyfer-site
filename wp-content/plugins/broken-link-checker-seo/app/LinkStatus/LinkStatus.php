@@ -44,49 +44,72 @@ class LinkStatus {
 	/**
 	 * Class constructor.
 	 *
-	 * @since 1.0.0
+	 * @since   1.0.0
+	 * @version 1.2.9 Remove is_admin() check to allow frontend scheduling.
 	 */
 	public function __construct() {
 		$this->data = new Data();
 
-		if ( ! aioseoBrokenLinkChecker()->license->isActive() ) {
-			return;
-		}
-
+		add_action( 'admin_init', [ $this, 'scheduleScan' ], 3003 );
 		add_action( $this->actionName, [ $this, 'checkLinkStatuses' ], 11, 1 );
-		if ( ! is_admin() ) {
-			return;
-		}
-
-		add_action( 'init', [ $this, 'scheduleScan' ], 3003 );
 	}
 
 	/**
-	 * Schedules the link status scan.
+	 * Schedules the link status scan as a recurring action.
 	 *
-	 * @since 1.0.0
+	 * @since   1.0.0
+	 * @version 1.2.9 Switch to recurring action with cache-based idle state.
 	 *
 	 * @return void
 	 */
 	public function scheduleScan() {
-		// If there is no action at all, schedule one.
-		if ( ! aioseoBrokenLinkChecker()->actionScheduler->isScheduled( $this->actionName ) ) {
-			aioseoBrokenLinkChecker()->actionScheduler->scheduleAsync( $this->actionName );
+		if ( ! aioseoBrokenLinkChecker()->license->isActive() ) {
+			return;
 		}
+
+		// If we're in idle/backoff mode, unschedule and don't reschedule yet.
+		if ( aioseoBrokenLinkChecker()->core->cache->get( 'as_blc_link_status_idle' ) ) {
+			aioseoBrokenLinkChecker()->actionScheduler->unschedule( $this->actionName );
+
+			return;
+		}
+
+		if ( aioseoBrokenLinkChecker()->actionScheduler->isScheduled( $this->actionName ) ) {
+			return;
+		}
+
+		aioseoBrokenLinkChecker()->actionScheduler->scheduleRecurrent( $this->actionName, 10, MINUTE_IN_SECONDS );
 	}
 
 	/**
 	 * Sends links to the server to check their status.
 	 *
-	 * @since 1.0.0
+	 * @since   1.0.0
+	 * @version 1.2.9 Use recurring action with runtime lock and idle state.
 	 *
 	 * @return void
 	 */
 	public function checkLinkStatuses() {
+		// Runtime lock: Prevent concurrent execution of this action.
+		$lockKey = 'as_blc_link_status_running';
+		if ( aioseoBrokenLinkChecker()->core->cache->get( $lockKey ) ) {
+			return;
+		}
+
+		// Set lock with a safety timeout in case the action fails mid-execution.
+		aioseoBrokenLinkChecker()->core->cache->update( $lockKey, true, 2 * MINUTE_IN_SECONDS );
+
+		if ( ! aioseoBrokenLinkChecker()->license->isActive() ) {
+			aioseoBrokenLinkChecker()->core->cache->delete( $lockKey );
+
+			return;
+		}
+
 		$scanId = aioseoBrokenLinkChecker()->internalOptions->internal->scanId;
 		if ( ! empty( $scanId ) ) {
 			// If we have a scan ID, check if the results are ready.
 			$this->checkForScanResults();
+			aioseoBrokenLinkChecker()->core->cache->delete( $lockKey );
 
 			return;
 		}
@@ -94,20 +117,24 @@ class LinkStatus {
 		// If we don't have a scan ID, first check if there are links that need to be checked.
 		$linksToCheck = $this->data->getlinksToCheck();
 		if ( empty( $linksToCheck ) ) {
-			// If there are no links to check, wait 15 minutes.
-			aioseoBrokenLinkChecker()->actionScheduler->scheduleSingle( $this->actionName, 15 * MINUTE_IN_SECONDS );
+			// No links to check - set idle cache. The schedule method on the next init will unschedule.
+			aioseoBrokenLinkChecker()->core->cache->update( 'as_blc_link_status_idle', true, HOUR_IN_SECONDS );
+			aioseoBrokenLinkChecker()->core->cache->delete( $lockKey );
 
 			return;
 		}
 
 		// If there are links to check, start a new scan.
 		$this->startScan();
+
+		aioseoBrokenLinkChecker()->core->cache->delete( $lockKey );
 	}
 
 	/**
 	 * Start a scan and store the scan ID.
 	 *
-	 * @since 1.0.0
+	 * @since   1.0.0
+	 * @version 1.2.9 Remove self-scheduling; recurring action handles next tick. Unschedule + idle on API errors.
 	 *
 	 * @return void
 	 */
@@ -123,18 +150,23 @@ class LinkStatus {
 		$responseCode = (int) wp_remote_retrieve_response_code( $response );
 
 		if ( 401 === $responseCode ) {
-			aioseoBrokenLinkChecker()->actionScheduler->scheduleSingle( $this->actionName, DAY_IN_SECONDS + wp_rand( 60, 600 ) );
+			// Set idle cache. The schedule method on the next init will unschedule.
+			aioseoBrokenLinkChecker()->core->cache->update( 'as_blc_link_status_idle', true, DAY_IN_SECONDS + wp_rand( 60, 600 ) );
 
 			return;
 		}
 
 		if ( 418 === $responseCode ) {
-			aioseoBrokenLinkChecker()->actionScheduler->scheduleSingle( $this->actionName, HOUR_IN_SECONDS + wp_rand( 60, 600 ) );
+			aioseoBrokenLinkChecker()->core->cache->update( 'as_blc_link_status_idle', true, HOUR_IN_SECONDS + wp_rand( 60, 600 ) );
 
 			return;
 		}
 
 		$responseBody = json_decode( wp_remote_retrieve_body( $response ) );
+		if ( $this->setIdleIfError( $responseBody ) ) {
+			return;
+		}
+
 		if (
 			is_wp_error( $response ) ||
 			200 !== $responseCode ||
@@ -142,8 +174,7 @@ class LinkStatus {
 			empty( $responseBody->scanId ) ||
 			! isset( $responseBody->quotaRemaining )
 		) {
-			aioseoBrokenLinkChecker()->actionScheduler->scheduleSingle( $this->actionName, MINUTE_IN_SECONDS );
-
+			// Return and let the next recurring action give it another go.
 			return;
 		}
 
@@ -152,16 +183,15 @@ class LinkStatus {
 		if ( aioseoBrokenLinkChecker()->internalOptions->internal->license->quota !== $responseBody->quota ) {
 			// If the quota changed, reactivate the license to pull in the latest date from the marketing site.
 			aioseoBrokenLinkChecker()->internalOptions->internal->license->quota = $responseBody->quota;
-			aioseoBrokenLinkChecker()->license->activate();
+			aioseoBrokenLinkChecker()->license->activateProgrammatic();
 		}
-
-		aioseoBrokenLinkChecker()->actionScheduler->scheduleSingle( $this->actionName, MINUTE_IN_SECONDS );
 	}
 
 	/**
 	 * Checks if the scan has been completed. If so, parses and stores the results.
 	 *
-	 * @since 1.0.0
+	 * @since   1.0.0
+	 * @version 1.2.9 Remove self-scheduling; recurring action handles next tick. Idle on API errors.
 	 *
 	 * @return void
 	 */
@@ -175,26 +205,29 @@ class LinkStatus {
 		$responseCode = (int) wp_remote_retrieve_response_code( $response );
 
 		if ( 401 === $responseCode ) {
-			aioseoBrokenLinkChecker()->actionScheduler->scheduleSingle( $this->actionName, DAY_IN_SECONDS + wp_rand( 60, 600 ) );
+			aioseoBrokenLinkChecker()->core->cache->update( 'as_blc_link_status_idle', true, DAY_IN_SECONDS + wp_rand( 60, 600 ) );
 
 			return;
 		}
 
 		if ( 418 === $responseCode ) {
-			aioseoBrokenLinkChecker()->actionScheduler->scheduleSingle( $this->actionName, HOUR_IN_SECONDS + wp_rand( 60, 600 ) );
+			aioseoBrokenLinkChecker()->core->cache->update( 'as_blc_link_status_idle', true, HOUR_IN_SECONDS + wp_rand( 60, 600 ) );
 
 			return;
 		}
 
 		$responseBody = json_decode( wp_remote_retrieve_body( $response ) );
-		if ( is_wp_error( $response ) && 200 !== $responseCode || empty( $responseBody->success ) ) {
+		if ( $this->setIdleIfError( $responseBody ) ) {
+			return;
+		}
+
+		if ( is_wp_error( $response ) || 200 !== $responseCode || empty( $responseBody->success ) ) {
 			// If the scan data cannot be found on the server, wipe the scan ID so the scan restarts.
 			if ( ! empty( $responseBody->error ) && 'missing-scan-data' === strtolower( $responseBody->error ) ) {
 				aioseoBrokenLinkChecker()->internalOptions->internal->scanId = '';
 			}
 
-			aioseoBrokenLinkChecker()->actionScheduler->scheduleSingle( $this->actionName, MINUTE_IN_SECONDS );
-
+			// Return and let the next recurring action give it another go.
 			return;
 		}
 
@@ -204,12 +237,35 @@ class LinkStatus {
 		if ( aioseoBrokenLinkChecker()->internalOptions->internal->license->quota !== $responseBody->quota ) {
 			// If the quota changed, reactivate the license to pull in the latest date from the marketing site.
 			aioseoBrokenLinkChecker()->internalOptions->internal->license->quota = $responseBody->quota;
-			aioseoBrokenLinkChecker()->license->activate();
+			aioseoBrokenLinkChecker()->license->activateProgrammatic();
 		}
 
 		// Once the request is successful, we know the scan has been completed and we can go ahead and reset it.
 		$this->doDeleteRequest( "scan/{$scanId}/" );
 		aioseoBrokenLinkChecker()->internalOptions->internal->scanId = '';
+	}
+
+	/**
+	 * Checks the response body for error codes and sets the idle cache if found.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param  object|null $responseBody The decoded response body.
+	 * @return bool                      Whether an error was found and idle was set.
+	 */
+	private function setIdleIfError( $responseBody ) {
+		if ( empty( $responseBody->error ) ) {
+			return false;
+		}
+
+		$errors = [ 'no-license', 'invalid-license', 'invalid-token', 'quota-exceeded', 'out-of-quota' ];
+		if ( in_array( strtolower( $responseBody->error ), $errors, true ) ) {
+			aioseoBrokenLinkChecker()->core->cache->update( 'as_blc_link_status_idle', true, DAY_IN_SECONDS + wp_rand( 60, 600 ) );
+
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -234,7 +290,8 @@ class LinkStatus {
 	/**
 	 * Helper function for parseResults().
 	 *
-	 * @since 1.0.0
+	 * @since   1.0.0
+	 * @version 1.3.0 Set needs_additional_scan and clear idle cache on broken results.
 	 *
 	 * @param  Object $url The URL object.
 	 * @return void
@@ -262,6 +319,8 @@ class LinkStatus {
 				$linkStatus->first_failure = aioseoBrokenLinkChecker()->helpers->timeToMysql( time() );
 			}
 
+			$this->maybeQueueLocalScan( $linkStatus );
+
 			$linkStatus->save();
 
 			return;
@@ -285,13 +344,37 @@ class LinkStatus {
 		];
 
 		if ( $success ) {
-			$linkStatus->last_success  = aioseoBrokenLinkChecker()->helpers->timeToMysql( time() );
-			$linkStatus->first_failure = null;
-		} elseif ( ! $linkStatus->first_failure ) {
-			$linkStatus->first_failure = aioseoBrokenLinkChecker()->helpers->timeToMysql( time() );
+			$linkStatus->last_success             = aioseoBrokenLinkChecker()->helpers->timeToMysql( time() );
+			$linkStatus->first_failure            = null;
+			$linkStatus->needs_additional_scan    = false;
+			$linkStatus->client_confirmed_broken  = false;
+			$linkStatus->local_scan_count         = 0;
+		} else {
+			if ( ! $linkStatus->first_failure ) {
+				$linkStatus->first_failure = aioseoBrokenLinkChecker()->helpers->timeToMysql( time() );
+			}
+
+			$this->maybeQueueLocalScan( $linkStatus );
 		}
 
 		$linkStatus->save();
+	}
+
+	/**
+	 * Queues a local re-scan unless the client has already confirmed the link is broken.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param  Models\LinkStatus $linkStatus The link status model instance.
+	 * @return void
+	 */
+	private function maybeQueueLocalScan( Models\LinkStatus $linkStatus ) {
+		if ( ! $linkStatus->client_confirmed_broken ) {
+			$linkStatus->needs_additional_scan = true;
+			aioseoBrokenLinkChecker()->core->cache->delete( 'as_blc_local_scan_idle' );
+		} else {
+			$linkStatus->needs_additional_scan = false;
+		}
 	}
 
 	/**
@@ -320,10 +403,6 @@ class LinkStatus {
 	 */
 	public function doPostRequest( $path, $requestBody = [] ) {
 		$requestData = [
-			'headers' => [
-				'X-AIOSEO-BLC-License' => aioseoBrokenLinkChecker()->internalOptions->internal->license->licenseKey,
-				'Content-Type'         => 'application/json'
-			],
 			'timeout' => 60
 		];
 
@@ -331,10 +410,7 @@ class LinkStatus {
 			$requestData['body'] = wp_json_encode( $requestBody );
 		}
 
-		$baseUrl  = $this->getUrl();
-		$response = wp_remote_post( $baseUrl . $path, $requestData );
-
-		return $response;
+		return aioseoBrokenLinkChecker()->helpers->wpRemotePost( $this->getUrl() . $path, $requestData );
 	}
 
 	/**
@@ -346,18 +422,8 @@ class LinkStatus {
 	 * @return array|\WP_Error       The response or WP_Error on failure.
 	 */
 	public function doDeleteRequest( $path ) {
-		$requestData = [
-			'method'  => 'DELETE',
-			'headers' => [
-				'X-AIOSEO-BLC-License' => aioseoBrokenLinkChecker()->internalOptions->internal->license->licenseKey,
-				'Content-Type'         => 'application/json'
-			],
+		return aioseoBrokenLinkChecker()->helpers->wpRemoteDelete( $this->getUrl() . $path, [
 			'timeout' => 60
-		];
-
-		$baseUrl  = $this->getUrl();
-		$response = wp_remote_request( $baseUrl . $path, $requestData );
-
-		return $response;
+		] );
 	}
 }

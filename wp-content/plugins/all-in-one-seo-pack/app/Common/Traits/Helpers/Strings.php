@@ -251,24 +251,26 @@ trait Strings {
 	 * Strips punctuation from a given string.
 	 *
 	 * @since 4.0.0
+	 * @version 4.7.9 Added the $keepSpaces parameter.
 	 *
 	 * @param  string $string           The string.
 	 * @param  array  $charactersToKeep The characters that can't be stripped (optional).
+	 * @param  bool   $keepSpaces       Whether to keep spaces.
 	 * @return string                   The string without punctuation.
 	 */
-	public function stripPunctuation( $string, $charactersToKeep = [] ) {
+	public function stripPunctuation( $string, $charactersToKeep = [], $keepSpaces = false ) {
 		$characterRegexPattern = '';
 		if ( ! empty( $charactersToKeep ) ) {
 			$characterString       = implode( '', $charactersToKeep );
 			$characterRegexPattern = "(?![$characterString])";
 		}
 
-		$string = aioseo()->helpers->decodeHtmlEntities( $string );
-		$string = preg_replace( "/{$characterRegexPattern}[\p{P}\d+]/u", '', (string) $string );
+		$string = aioseo()->helpers->decodeHtmlEntities( (string) $string );
+		$string = preg_replace( "/{$characterRegexPattern}[\p{P}\d+]/u", '', $string );
 		$string = aioseo()->helpers->encodeOutputHtml( $string );
 
 		// Trim both internal and external whitespace.
-		return preg_replace( '/\s\s+/u', ' ', (string) trim( $string ) );
+		return $keepSpaces ? $string : preg_replace( '/\s\s+/u', ' ', trim( $string ) );
 	}
 
 	/**
@@ -290,12 +292,17 @@ trait Strings {
 	/**
 	 * Returns the string after all HTML entities have been decoded.
 	 *
-	 * @since 4.0.0
+	 * @since   4.0.0
+	 * @version 4.9.10 Coerce non-string input to an empty string before using it as the static cache key (PHP 8.5 deprecates null offsets).
 	 *
 	 * @param  string $string The string to decode.
 	 * @return string         The decoded string.
 	 */
 	public function decodeHtmlEntities( $string ) {
+		if ( ! is_string( $string ) ) {
+			return '';
+		}
+
 		static $decodeHtmlEntities = [];
 		if ( isset( $decodeHtmlEntities[ $string ] ) ) {
 			return $decodeHtmlEntities[ $string ];
@@ -303,9 +310,35 @@ trait Strings {
 
 		// We must manually decode non-breaking spaces since html_entity_decode doesn't do this.
 		$string                        = $this->pregReplace( '/&nbsp;/', ' ', $string );
-		$decodeHtmlEntities[ $string ] = html_entity_decode( (string) $string, ENT_QUOTES );
+		$decodeHtmlEntities[ $string ] = html_entity_decode( $string, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 );
 
 		return $decodeHtmlEntities[ $string ];
+	}
+
+	/**
+	 * Recursively decode HTML entities until no more decoding is possible.
+	 *
+	 * @since 4.8.7
+	 *
+	 * @param  string $string        The string to decode.
+	 * @param  int    $maxIterations The maximum number of iterations.
+	 * @return string                The decoded string.
+	 */
+	public function decodeHtmlEntitiesRecursive( $string, $maxIterations = 10 ) {
+		if ( ! is_string( $string ) ) {
+			return '';
+		}
+
+		$decodedValue = $string;
+		$iterations   = 0;
+		do {
+			$previousValue = $decodedValue;
+			$decodedValue  = $this->decodeHtmlEntities( $decodedValue );
+
+			$iterations++;
+		} while ( $previousValue !== $decodedValue && $iterations < $maxIterations );
+
+		return $decodedValue;
 	}
 
 	/**
@@ -353,17 +386,34 @@ trait Strings {
 	/**
 	 * Returns the given JSON formatted data tags as a comma separated list with their values instead.
 	 *
-	 * @since 4.1.0
+	 * @since   4.1.0
+	 * @version 4.9.8 Tolerate scalar tags and invalid JSON instead of throwing a TypeError.
 	 *
 	 * @param  string|array $tags The Array or JSON formatted data tags.
 	 * @return string             The comma separated values.
 	 */
 	public function jsonTagsToCommaSeparatedList( $tags ) {
-		$tags = is_string( $tags ) ? json_decode( $tags ) : $tags;
+		if ( is_string( $tags ) ) {
+			$decoded = json_decode( $tags );
+
+			// If the string isn't valid JSON, it's likely already a plain (comma separated) list.
+			if ( null === $decoded && 'null' !== strtolower( trim( $tags ) ) ) {
+				return $tags;
+			}
+
+			$tags = $decoded;
+		}
 
 		$values = [];
-		foreach ( $tags as $k => $tag ) {
-			$values[ $k ] = is_object( $tag ) ? $tag->value : $tag['value'];
+		foreach ( (array) $tags as $k => $tag ) {
+			if ( is_object( $tag ) ) {
+				$values[ $k ] = $tag->value ?? '';
+			} elseif ( is_array( $tag ) ) {
+				$values[ $k ] = $tag['value'] ?? '';
+			} else {
+				// Plain scalar tags (e.g. a JSON array of strings) are used as-is.
+				$values[ $k ] = (string) $tag;
+			}
 		}
 
 		return implode( ',', $values );
@@ -646,5 +696,56 @@ trait Strings {
 	 */
 	public function createHash( ...$args ) {
 		return sha1( wp_json_encode( $args ) );
+	}
+
+	/**
+	 * Extracts URLs from a given string.
+	 *
+	 * @since 4.8.1
+	 *
+	 * @param  string $string The string.
+	 * @return array          The extracted URLs.
+	 */
+	public function extractUrls( $string ) {
+		$urls = wp_extract_urls( $string );
+
+		if ( empty( $urls ) ) {
+			return [];
+		}
+
+		$allUrls = [];
+
+		// Attempt to split multiple URLs. Elementor does not always separate them properly.
+		foreach ( $urls as $url ) {
+			$splitUrls = preg_split( '/(?=https?:\/\/)/', $url, - 1, PREG_SPLIT_NO_EMPTY );
+			$allUrls   = array_merge( $allUrls, $splitUrls );
+		}
+
+		return $allUrls;
+	}
+
+	/**
+	 * Determines if a text string contains an emoji or not.
+	 *
+	 * @since 4.8.0
+	 *
+	 * @param  string $string The text string to detect emoji in.
+	 * @return bool
+	 */
+	public function hasEmojis( $string ) {
+		$emojisRegexPattern = '/[\x{1F600}-\x{1F64F}' . // Emoticons
+							'\x{1F300}-\x{1F5FF}' . // Misc Symbols and Pictographs
+							'\x{1F680}-\x{1F6FF}' . // Transport and Map Symbols
+							'\x{1F1E0}-\x{1F1FF}' . // Flags (iOS)
+							'\x{2600}-\x{26FF}' . // Misc symbols
+							'\x{2700}-\x{27BF}' . // Dingbats
+							'\x{FE00}-\x{FE0F}' . // Variation Selectors
+							'\x{1F900}-\x{1F9FF}' . // Supplemental Symbols and Pictographs
+							'\x{1F018}-\x{1F270}' . // Various Asian characters
+							'\x{238C}-\x{2454}' . // Misc items
+							'\x{20D0}-\x{20FF}' . // Combining Diacritical Marks for Symbols
+							']/u';
+
+		return preg_match( $emojisRegexPattern, $string );
 	}
 }

@@ -19,7 +19,8 @@ $s_99_img_width_mobile = esc_attr( $ccw_options_cs['s99_img_width_mobile'] );
 // image - width, height based on device
 $img_css = "";
 
-if( 1 == $is_mobile ) {
+// output : is in string ony '1'
+if( '1' === $is_mobile ) {
     // $own_image = esc_attr( $ccw_options_cs['s99_mobile_img'] );
     $own_image = esc_url( $ccw_options_cs['s99_mobile_img'] );
 
@@ -31,7 +32,7 @@ if( 1 == $is_mobile ) {
     }
 } else {
     // $own_image = esc_attr( $ccw_options_cs['s99_desktop_img'] );
-    $own_image = esc_url( $ccw_options_cs['s99_desktop_img'] );
+    $own_image = isset($ccw_options_cs['s99_desktop_img']) ? esc_url( $ccw_options_cs['s99_desktop_img'] ) : '';
 
     if ( '' !== $s_99_img_height_desktop ) {
         $img_css .= "height: $s_99_img_height_desktop; ";
@@ -42,16 +43,16 @@ if( 1 == $is_mobile ) {
     }
 }
 
-if ( '' == $own_image ) {
+if ( '' === $own_image ) {
     $own_image = plugins_url( './new/inc/assets/img/whatsapp-logo.svg', HT_CTC_PLUGIN_FILE );
 }
 
 ?>
 
-<div class="ccw_plugin chatbot" style="<?= $p1 ?>; <?= $p2 ?>;">
-    <div class="ccw_style_99 animated <?= $an_on_load .' '. $an_on_hover ?>">
-        <a target="_blank" href="<?= $redirect_a ?>" rel="noreferrer" class="img-icon-a nofocus">   
-            <img class="own-img ccw-analytics" id="style-9" data-ccw="style-99-own-image" style="<?= $img_css ?>" src="<?= $own_image ?>" alt="WhatsApp chat">
+<div class="ccw_plugin chatbot" style="<?php echo esc_attr($p1) ?>; <?php echo esc_attr($p2) ?>;">
+    <div class="ccw_style_99 animated <?php echo esc_attr($an_on_load) .' '. esc_attr($an_on_hover) ?>">
+        <a target="_blank" href="<?php echo esc_url($redirect_a) ?>" rel="noreferrer" class="img-icon-a nofocus">   
+            <img class="own-img ccw-analytics" id="style-9" data-ccw="style-99-own-image" style="<?php echo esc_attr($img_css) ?>" src="<?php echo esc_url($own_image) ?>" alt="WhatsApp chat">
         </a>
     </div>
 </div>

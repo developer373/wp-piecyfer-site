@@ -22,7 +22,7 @@
 							<span class="ekit-admin-subtitle"><?php echo esc_html( $section['sub-title'] ); ?></span>
 						</div>
 						<div class="ekit-admin-tab-icon">
-							<i class="<?php echo esc_attr( $section['icon'] ); ?>"></i>
+							<?php echo wp_kses( $section['svg'], \ElementsKit_Lite\Utils::get_kses_array() ); ?>
 						</div>
 					</a>
 				</li>
@@ -61,23 +61,26 @@ endforeach;
 				?>
 				<div class="attr-tab-pane <?php echo esc_attr($attr_section_key) ?>" id="v-elementskit-<?php echo esc_attr( $section_key ); ?>" role="tabpanel" aria-labelledby="v-elementskit-tab-<?php echo esc_attr( $section_key ); ?>">
 					<div class="ekit-admin-section-header">
-						<h2 class="ekit-admin-section-heaer-title"><i class="<?php echo esc_attr( $section['icon'] ); ?>"></i><?php echo esc_html( $section['title'] ); ?></h2>
+						<h2 class="ekit-admin-section-heaer-title"><?php echo esc_html( $section['title'] ); ?></h2>
+						<!-- <i class="<?php //echo esc_attr( $section['icon'] ); ?>"></i> -->
 								
 						<?php if ( in_array( $section_key, array( 'widgets', 'modules' ) ) ) : ?>
 							<div class="attr-input attr-input-switch ekit-content-type-free ekit-all-element-switch">
 								<div class="ekit-admin-input-switch attr-card-body">
 									<input checked="" type="checkbox" value="image-accordion" class="ekit-admin-control-input ekit-all-control-input" name="ekit_all_activation_input_widget_<?php echo esc_attr( $section_key ); ?>" id="ekit_all_activation_input_widget_<?php echo esc_attr( $section_key ); ?>">
 									<label class="ekit-admin-control-label" for="ekit_all_activation_input_widget_<?php echo esc_attr( $section_key ); ?>">
-										Disable All
-										<span class="ekit-admin-control-label-switch" data-active="ON"
-											data-inactive="OFF"></span>
-										Enable All
+										<span class="ekit-admin-control-label-wrap">
+											<span class="ekit-admin-control-label-disable attr-disable"> <?php esc_html_e( 'Disable All', 'elementskit-lite' ); ?></span>
+											<span class="ekit-admin-control-label-switch" data-active="ON"
+												data-inactive="OFF"></span>
+											<span class="ekit-admin-control-label-enable"> <?php esc_html_e( 'Enable All', 'elementskit-lite' ); ?></span>
+										</span>
 									</label>                                        
 								</div>
 							</div>
 						<?php endif; ?>
 						<div class="ekit-admin-input-switch">
-							<button class="attr-btn-primary attr-btn ekit-admin-settings-form-submit"><div class="ekit-spinner"></div><i class="ekit-admin-save-icon fa fa-check-circle"></i><?php esc_html_e( 'Save Changes', 'elementskit-lite' ); ?></button>
+							<button class="attr-btn-primary attr-btn ekit-admin-settings-form-submit"><div class="ekit-spinner"></div><i class="ekit-admin-save-icon fas fa-check-circle"></i><?php esc_html_e( 'Save Changes', 'elementskit-lite' ); ?></button>
 						</div>
 					</div>
 					<?php 

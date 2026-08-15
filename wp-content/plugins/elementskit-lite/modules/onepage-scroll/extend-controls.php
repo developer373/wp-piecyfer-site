@@ -3,6 +3,7 @@
 namespace Elementor;
 
 use \ElementsKit_Lite\Modules\Onepage_Scroll\Init;
+use ElementsKit_Lite\Utils;
 
 class ElementsKit_Extend_Onepage_Scroll {
 
@@ -72,7 +73,7 @@ class ElementsKit_Extend_Onepage_Scroll {
 		$element->start_controls_section(
 			'ekit_page_settings',
 			array(
-				'label' => esc_html__( 'ElementsKit Settings', 'elementskit-lite' ),
+				'label' => Utils::get_promo_icon() . esc_html__('Settings', 'elementskit-lite'),
 				'tab'   => Controls_Manager::TAB_SETTINGS,
 			)
 		);
@@ -101,7 +102,7 @@ class ElementsKit_Extend_Onepage_Scroll {
 		$element->start_controls_section(
 			'ekit_onepagescroll_section',
 			array(
-				'label'         => esc_html__( 'ElementsKit Onepage Scroll', 'elementskit-lite' ),
+				'label'         => Utils::get_promo_icon() . esc_html__( 'Onepage Scroll', 'elementskit-lite' ),
 				'tab'           => Controls_Manager::TAB_ADVANCED,
 				'hide_in_inner' => true,
 			)

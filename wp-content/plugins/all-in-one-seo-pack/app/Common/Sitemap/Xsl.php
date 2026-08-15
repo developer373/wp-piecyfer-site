@@ -33,13 +33,33 @@ class Xsl {
 		// Remove everything after ? from sitemapPath to avoid caching issues.
 		$sitemapPath = wp_parse_url( $sitemapPath, PHP_URL_PATH ) ?: '';
 
+		// These variables are used in the XSL file.
+		// phpcs:disable VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+		$linksPerIndex = aioseo()->options->sitemap->general->linksPerIndex;
+		$advanced      = aioseo()->options->sitemap->general->advancedSettings->enable;
+		$excludeImages = aioseo()->sitemap->helpers->excludeImages();
+		$sitemapParams = aioseo()->helpers->getParametersFromUrl( $sitemapUrl );
+		$xslParams     = aioseo()->core->cache->get( 'aioseo_sitemap_' . aioseo()->helpers->cleanSlug( $sitemapPath ) );
+		// phpcs:enable VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+
 		if ( ! empty( $sitemapInfo[1] ) ) {
+			// phpcs:disable VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 			switch ( $sitemapInfo[1] ) {
 				case 'addl':
-					$sitemapName = __( 'Additional Pages', 'all-in-one-seo-pack' );
+					$sitemapName   = __( 'Additional Pages', 'all-in-one-seo-pack' );
+					$excludeImages = true;
 					break;
 				case 'post-archive':
-					$sitemapName = __( 'Post Archive', 'all-in-one-seo-pack' );
+					$sitemapName   = __( 'Post Archive', 'all-in-one-seo-pack' );
+					$excludeImages = true;
+					break;
+				case 'author':
+					$sitemapName   = __( 'Author', 'all-in-one-seo-pack' );
+					$excludeImages = true;
+					break;
+				case 'date':
+					$sitemapName   = __( 'Date', 'all-in-one-seo-pack' );
+					$excludeImages = true;
 					break;
 				case 'bp-activity':
 				case 'bp-group':
@@ -47,32 +67,32 @@ class Xsl {
 					$bpFakePostTypes = aioseo()->standalone->buddyPress->getFakePostTypes();
 					$labels          = array_column( wp_list_filter( $bpFakePostTypes, [ 'name' => $sitemapInfo[1] ] ), 'label' );
 					$sitemapName     = ! empty( $labels[0] ) ? $labels[0] : $sitemapName;
+					$excludeImages   = true;
 					break;
 				case 'product_attributes':
-					$sitemapName = __( 'Product Attributes', 'all-in-one-seo-pack' );
+					$sitemapName   = __( 'Product Attributes', 'all-in-one-seo-pack' );
+					$excludeImages = true;
 					break;
 				default:
 					if ( post_type_exists( $sitemapInfo[1] ) ) {
 						$postTypeObject = get_post_type_object( $sitemapInfo[1] );
 						$sitemapName    = $postTypeObject->labels->singular_name;
+
+						if ( 'attachment' === $sitemapInfo[1] ) {
+							$excludeImages = true;
+						}
 					}
 					if ( taxonomy_exists( $sitemapInfo[1] ) ) {
 						$taxonomyObject = get_taxonomy( $sitemapInfo[1] );
 						$sitemapName    = $taxonomyObject->labels->singular_name;
+						$excludeImages  = true;
 					}
 					break;
 			}
+			// phpcs:enable VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 		}
 
 		$currentPage = ! empty( $sitemapInfo[2] ) ? (int) $sitemapInfo[2] : 1;
-
-		// phpcs:disable VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-		$linksPerIndex = aioseo()->options->sitemap->general->linksPerIndex;
-		$advanced      = aioseo()->options->sitemap->general->advancedSettings->enable;
-		$excludeImages = aioseo()->options->sitemap->general->advancedSettings->excludeImages;
-		$sitemapParams = aioseo()->helpers->getParametersFromUrl( $sitemapUrl );
-		$xslParams     = aioseo()->core->cache->get( 'aioseo_sitemap_' . aioseo()->sitemap->requestParser->cleanSlug( $sitemapPath ) );
-		// phpcs:enable VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 
 		// Translators: 1 - The sitemap name, 2 - The current page.
 		$title = sprintf( __( '%1$s Sitemap %2$s', 'all-in-one-seo-pack' ), $sitemapName, $currentPage > 1 ? $currentPage : '' );

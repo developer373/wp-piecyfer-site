@@ -1,6 +1,6 @@
 <?php
 /**
-*  starting point for the admin side of this plugin.
+*  Starting point for the admin side of this plugin.
 *  include other file here .. which need in admin side. 
 *  In click-to-chat.php this file will be loaded as is_admin
 *

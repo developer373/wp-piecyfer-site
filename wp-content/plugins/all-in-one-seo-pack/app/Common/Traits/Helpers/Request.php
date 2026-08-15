@@ -87,9 +87,31 @@ trait Request {
 		$url = '';
 
 		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-			$url = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+			$url = sanitize_url( wp_unslash( $_SERVER['REQUEST_URI'] ) );
 		}
 
-		return rawurldecode( $url );
+		// Use the existing decodeUrl helper for proper non-Latin character handling
+		return aioseo()->helpers->decodeUrl( $url );
+	}
+
+	/**
+	 * Gets the LLMs URL if accessible.
+	 *
+	 * @since 4.8.8
+	 *
+	 * @param  bool   $full Whether to get the full version URL.
+	 * @return array        The LLMs URL if accessible, null otherwise.
+	 */
+	public function getLlmsUrl( $full = false ) {
+		$file = aioseo()->llms->getFilePath( $full );
+
+		// Use `dirname` of `WP_CONTENT_URL` to match `dirname` of `WP_CONTENT_DIR` used for file path.
+		// This ensures compatibility with non-standard setups like Bedrock where `site_url()` differs from the document root.
+		$baseUrl = trailingslashit( dirname( content_url() ) );
+
+		return [
+			'url'          => $baseUrl . basename( $file ),
+			'isAccessible' => aioseo()->core->fs->exists( $file )
+		];
 	}
 }

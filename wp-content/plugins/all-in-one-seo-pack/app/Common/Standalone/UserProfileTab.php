@@ -59,12 +59,17 @@ class UserProfileTab {
 		}
 
 		aioseo()->core->assets->load( 'src/vue/standalone/user-profile-tab/main.js', [], $this->getVueData() );
+		// Load script again so we can add extra data to localize the strings.
+		aioseo()->core->assets->load( 'src/vue/standalone/user-profile-tab/main.js', [], [
+			'translations' => aioseo()->helpers->getJedLocaleData( 'aioseo-eeat' )
+		], 'eeat' );
 	}
 
 	/**
 	 * Returns the data Vue requires.
 	 *
-	 * @since 4.2.2
+	 * @since   4.2.2
+	 * @version 4.9.10 Strip site-global configuration for users who cannot manage AIOSEO.
 	 *
 	 * @return array
 	 */
@@ -90,7 +95,7 @@ class UserProfileTab {
 
 		$extraVueData = [
 			'userProfile' => [
-				'userData'                          => get_userdata( $user_id )->data, // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+				'userData'                          => aioseo()->helpers->getUserData( $user_id )->data, // phpcs:ignore Squiz.NamingConventions.ValidVariableName
 				'profiles'                          => [
 					'sameUsername'   => $sameUsername,
 					'urls'           => $socialProfiles,
@@ -103,7 +108,7 @@ class UserProfileTab {
 		$vueData = aioseo()->helpers->getVueData();
 		$vueData = array_merge( $vueData, $extraVueData );
 
-		return $vueData;
+		return aioseo()->helpers->filterPrivilegedVueData( $vueData );
 	}
 
 	/**
@@ -174,6 +179,8 @@ class UserProfileTab {
 			'wikipediaUrl'    => '',
 			'myspaceUrl'      => '',
 			'wordPressUrl'    => '',
+			'blueskyUrl'      => '',
+			'threadsUrl'      => ''
 		];
 	}
 }

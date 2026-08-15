@@ -17,6 +17,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Embed {
 
 	/**
+	 * Embeddable background video providers.
+	 *
+	 * Holds the list of providers whose background video is rendered as an embedded
+	 * iframe player (.elementor-background-video-embed) rather than a hosted <video>
+	 * element. This is intentionally a SUBSET of the providers recognized by
+	 * get_video_properties() — the frontend background-video handler only mounts
+	 * YouTube/Vimeo players, so other providers must fall through to hosted rendering.
+	 *
+	 * @access private
+	 * @static
+	 *
+	 * @var array Embeddable background video provider slugs.
+	 */
+	private static $video_embed_providers = [ 'youtube', 'vimeo' ];
+
+
+	/**
 	 * Provider match masks.
 	 *
 	 * Holds a list of supported providers with their URL structure in a regex format.
@@ -28,7 +45,7 @@ class Embed {
 	 * @var array Provider URL structure regex.
 	 */
 	private static $provider_match_masks = [
-		'youtube' => '/^.*(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:(?:watch)?\?(?:.*&)?vi?=|(?:embed|v|vi|user)\/))([^\?&\"\'>]+)/',
+		'youtube' => '/^.*(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:(?:watch)?\?(?:.*&)?vi?=|(?:embed|v|vi|user|shorts)\/))([^\?&\"\'>]+)/',
 		'vimeo' => '/^.*vimeo\.com\/(?:[a-z]*\/)*([‌​0-9]{6,11})[?]?.*/',
 		'dailymotion' => '/^.*dailymotion.com\/(?:video|hub)\/([^_]+)[^#]*(#video=([^_&]+))?/',
 		'videopress' => [
@@ -85,6 +102,22 @@ class Embed {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Is embeddable background video.
+	 *
+	 * Whether a given video URL belongs to a provider that the frontend
+	 * background-video handler renders as an embedded iframe player.
+	 *
+	 * @param string $video_url Video URL.
+	 *
+	 * @return bool
+	 **/
+	public static function is_embed_video( $video_url ) {
+		$video_properties = self::get_video_properties( $video_url );
+
+		return null !== $video_properties && in_array( $video_properties['provider'], self::$video_embed_providers, true );
 	}
 
 	/**
@@ -227,8 +260,8 @@ class Embed {
 	 * Get oembed data from the cache.
 	 * if not exists in the cache it will fetch from provider and then save to the cache.
 	 *
-	 * @param $oembed_url
-	 * @param $cached_post_id
+	 * @param string $oembed_url
+	 * @param string $cached_post_id
 	 *
 	 * @return array|null
 	 */
@@ -258,8 +291,7 @@ class Embed {
 	/**
 	 * Fetch oembed data from oembed provider.
 	 *
-	 * @param $oembed_url
-	 *
+	 * @param string $oembed_url
 	 * @return array|null
 	 */
 	public static function fetch_oembed_data( $oembed_url ) {
@@ -276,7 +308,7 @@ class Embed {
 	}
 
 	/**
-	 * @param $oembed_url
+	 * @param string          $oembed_url
 	 * @param null|string|int $cached_post_id
 	 *
 	 * @return string|null

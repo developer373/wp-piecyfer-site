@@ -96,7 +96,7 @@ class SystemStatus {
 				],
 				[
 					'header' => __( 'Search Engine Visibility', 'all-in-one-seo-pack' ),
-					'value'  => get_option( 'blog_public' ) ? __( 'Visible', 'all-in-one-seo-pack' ) : __( 'Hidden', 'all-in-one-seo-pack' )
+					'value'  => ! aioseo()->helpers->isSearchEnginesDiscouraged() ? __( 'Visible', 'all-in-one-seo-pack' ) : __( 'Hidden', 'all-in-one-seo-pack' )
 				],
 				[
 					'header' => __( 'Upload Directory Info', 'all-in-one-seo-pack' ),
@@ -120,10 +120,6 @@ class SystemStatus {
 	public static function getDatabaseInfo() {
 		$dbInfo = aioseo()->core->db->getDatabaseInfo();
 		if ( empty( $dbInfo['tables'] ) ) {
-			return [];
-		}
-
-		if ( ! aioseo()->helpers->isDev() ) {
 			return [];
 		}
 
@@ -194,8 +190,24 @@ class SystemStatus {
 					'value'  => defined( 'WP_DEBUG_DISPLAY' ) ? ( WP_DEBUG_DISPLAY ? WP_DEBUG_DISPLAY : __( 'Disabled', 'all-in-one-seo-pack' ) ) : __( 'Not set', 'all-in-one-seo-pack' )
 				],
 				[
-					'header' => 'WPS_DEBUG',
-					'value'  => defined( 'WPS_DEBUG' ) ? ( WPS_DEBUG ? WPS_DEBUG : __( 'Disabled', 'all-in-one-seo-pack' ) ) : __( 'Not set', 'all-in-one-seo-pack' )
+					'header' => 'WP_POST_REVISIONS',
+					'value'  => defined( 'WP_POST_REVISIONS' ) ? WP_POST_REVISIONS : __( 'Not set', 'all-in-one-seo-pack' )
+				],
+				[
+					'header' => 'DISABLE_WP_CRON',
+					'value'  => defined( 'DISABLE_WP_CRON' ) ? DISABLE_WP_CRON : __( 'Not set', 'all-in-one-seo-pack' )
+				],
+				[
+					'header' => 'EMPTY_TRASH_DAYS',
+					'value'  => defined( 'EMPTY_TRASH_DAYS' ) ? EMPTY_TRASH_DAYS : __( 'Not set', 'all-in-one-seo-pack' )
+				],
+				[
+					'header' => 'AUTOSAVE_INTERVAL',
+					'value'  => defined( 'AUTOSAVE_INTERVAL' ) ? AUTOSAVE_INTERVAL : __( 'Not set', 'all-in-one-seo-pack' )
+				],
+				[
+					'header' => 'SCRIPT_DEBUG',
+					'value'  => defined( 'SCRIPT_DEBUG' ) ? SCRIPT_DEBUG : __( 'Not set', 'all-in-one-seo-pack' )
 				],
 				[
 					'header' => 'DB_CHARSET',

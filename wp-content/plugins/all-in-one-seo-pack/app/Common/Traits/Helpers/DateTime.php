@@ -113,4 +113,69 @@ trait DateTime {
 
 		return date( 'Y-m-d H:i:s', $time ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 	}
+
+	/**
+	 * Formats a date in WordPress format.
+	 *
+	 * @since 4.8.2
+	 *
+	 * @param  string      $dateTime          Same as you'd pass to `strtotime()`.
+	 * @param  string      $dateTimeSeparator The separator between the date and time.
+	 * @return string|null                    The date formatted in WordPress format. Null if the passed date is invalid.
+	 */
+	public function dateToWpFormat( $dateTime, $dateTimeSeparator = ', ' ) {
+		static $format = null;
+		if ( ! isset( $format ) ) {
+			$dateFormat = get_option( 'date_format', 'd M' );
+			$timeFormat = get_option( 'time_format', 'H:i' );
+			$format     = $dateFormat . $dateTimeSeparator . $timeFormat;
+		}
+
+		$timestamp = strtotime( (string) $dateTime );
+
+		return $timestamp && 0 < $timestamp ? date_i18n( $format, $timestamp ) : null;
+	}
+
+	/**
+	 * Checks if a given string is a valid date.
+	 *
+	 * @since 4.8.3
+	 *
+	 * @param  string $date   The date string to check.
+	 * @param  string $format The format of the date string.
+	 * @return bool           True if the string is a valid date, false otherwise.
+	 */
+	public function isValidDate( $date, $format = null ) {
+		if ( ! $date ) {
+			return false;
+		}
+
+		if ( $format ) {
+			$d = \DateTime::createFromFormat( $format, $date );
+
+			return $d && $d->format( $format ) === $date;
+		}
+
+		$timestamp = strtotime( $date );
+
+		return false !== $timestamp;
+	}
+
+	/**
+	 * Generates a random (yet unique per identifier) time offset based on a site identifier.
+	 *
+	 * @since 4.7.9
+	 *
+	 * @param  string $identifier       Data such as the site URL, site ID, or a combination of both to serve as the seed for generating a random time offset.
+	 * @param  int    $maxOffsetMinutes The range for the random offset in minutes.
+	 * @return int                      The random (yet unique per identifier) time offset in minutes.
+	 */
+	public function generateRandomTimeOffset( $identifier, $maxOffsetMinutes ) {
+		$hash = md5( strval( $identifier ) );
+
+		// Convert part of the hash to an integer.
+		$hashInteger = hexdec( substr( $hash, 0, 8 ) );
+
+		return $hashInteger % $maxOffsetMinutes;
+	}
 }

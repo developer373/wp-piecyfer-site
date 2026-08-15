@@ -1,6 +1,6 @@
 <?php
 /**
- * app.js  -  autop issue solution, animtions - added for all styles
+ * App.js  -  autop issue solution, animtions - added for all styles
  * 
  * mainstyles.css  -  for all styles .. 
  * mdstyle8.css  - style 8 needed - 
@@ -27,20 +27,18 @@ class CCW_Add_Styles_Scripts {
         wp_register_style('ccw_main_css', plugins_url( 'prev/assets/css/mainstyles.css', HT_CTC_PLUGIN_FILE ), '', HT_CTC_VERSION );
         wp_enqueue_style('ccw_main_css');
         
-        
-        wp_register_style('ccw_mdstyle8_css', plugins_url( 'new/inc/assets/css/mdstyle8.css', HT_CTC_PLUGIN_FILE ), '', HT_CTC_VERSION );
-        // needs - s8
-        // wp_enqueue_style('ccw_mdstyle8_css');
+        wp_register_style('ccw_mdstyle8_css', plugins_url( 'prev/assets/css/mdstyle8.css', HT_CTC_PLUGIN_FILE ), '', HT_CTC_VERSION );
         
         wp_enqueue_script( 'ccw_app', plugins_url( 'prev/assets/js/app.js', HT_CTC_PLUGIN_FILE ), array ( 'jquery' ), HT_CTC_VERSION, true );
 
         // As now - for floating style - enqueue md style added like this
         // but for shortcodes enqueue while calling that template file
-        $mobile_style = ht_ccw()->variables->get_option['stylemobile'];
-        $desktop_style = ht_ccw()->variables->get_option['style'];
+        $opts = ht_ccw()->variables->get_option;
+        $mobile_style = isset( $opts['stylemobile'] ) ? (int) $opts['stylemobile'] : 3;
+        $desktop_style = isset( $opts['style'] ) ? (int) $opts['style'] : 9;
 
         /**
-         * is mobile or not
+         * Is mobile or not
          * and then enqueue styles if selected style is 8
          */
         if ( 1 == ht_ccw()->device_type->is_mobile ) {
