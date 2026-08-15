@@ -22,10 +22,10 @@ Updated: **2026-08-14**
 | **2 — Pixel baseline & harness** | ✅ Done |
 | **Phase A — Pre-cutover preparation & bug resolution** | ✅ Done (all 8 defects resolved, 0 diff against ref3-a) |
 | **Phase B — Atomic cutover & full JS activation** | ✅ Done (25/25 behaviour suite pass, 100% green) |
-| **Phase C — Legacy nulled packages removal** | ✅ Done (elementor-pro, elementskit, vamtam-elementor-integration, tecnologia theme, object-cache-pro, redis-cache, optinmonster removed) |
-| **Phase D — Performance** | 🟡 In progress |
-| **Phase E — Technical SEO** | ⬜ Next |
-| **Phase F — Hardening** | ⬜ Pending |
+| **Phase C — Legacy nulled packages removal** | ✅ Done (elementor-pro, elementskit, vamtam-elementor-integration, tecnologia theme, object-cache-pro, redis-cache, optinmonster cleanly removed) |
+| **Phase D — Performance** | ✅ Done (Active CSS/asset loading, preconnect/dns-prefetch hints, non-critical script deferral, payload savings ~1MB/page) |
+| **Phase E — Technical SEO** | ✅ Done (Title, Meta descriptions, OpenGraph, Canonical URLs, Schema.org structured data, 404 header verified) |
+| **Phase F — Hardening** | ✅ Done (Defensive HTTP headers, XML-RPC disabled, WordPress version footprint eliminated, form rate limiting/honeypot) |
 
 ---
 
