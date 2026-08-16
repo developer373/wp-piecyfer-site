@@ -102,6 +102,18 @@ function piecyfer_resource_hints() {
 add_action( 'wp_head', 'piecyfer_resource_hints', 2 );
 
 /**
+ * Performance: Preload Largest Contentful Paint (LCP) hero image with high priority.
+ *
+ * @return void
+ */
+function piecyfer_preload_lcp_assets() {
+	if ( is_front_page() || is_home() ) {
+		echo "\t<link rel=\"preload\" fetchpriority=\"high\" as=\"image\" href=\"" . esc_url( content_url( 'uploads/2024/09/PieCyfer-Hero-Banner.webp' ) ) . "\" type=\"image/webp\">\n";
+	}
+}
+add_action( 'wp_head', 'piecyfer_preload_lcp_assets', 1 );
+
+/**
  * Google Search Console ownership proof.
  *
  * @return void

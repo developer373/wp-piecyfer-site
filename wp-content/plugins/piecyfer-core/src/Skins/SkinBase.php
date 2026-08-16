@@ -1051,7 +1051,7 @@ abstract class SkinBase extends Elementor_Skin_Base {
 		$optional_attributes_html = $this->get_optional_link_attributes_html();
 
 		?>
-		<a class="elementor-post__thumbnail__link" href="<?php echo esc_attr( $this->current_permalink ); ?>" tabindex="-1" <?php echo esc_attr( $optional_attributes_html ); ?>>
+		<a class="elementor-post__thumbnail__link" href="<?php echo esc_attr( $this->current_permalink ); ?>" aria-label="<?php echo esc_attr( get_the_title() ); ?>" tabindex="-1" <?php echo esc_attr( $optional_attributes_html ); ?>>
 			<div class="elementor-post__thumbnail"><?php echo wp_kses_post( $thumbnail_html ); ?></div>
 		</a>
 		<?php

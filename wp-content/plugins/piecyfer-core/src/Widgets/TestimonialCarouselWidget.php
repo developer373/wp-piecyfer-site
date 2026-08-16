@@ -1398,6 +1398,8 @@ class TestimonialCarouselWidget extends AbstractWidget {
 		if ( ! empty( $slide['image']['url'] ) ) {
 			$img_src = $this->get_slide_image_url( $slide, $settings );
 
+			$img_attribute = array();
+
 			if ( $lazyload ) {
 				$img_attribute['class']    = 'swiper-lazy';
 				$img_attribute['data-src'] = $img_src;
@@ -1406,6 +1408,17 @@ class TestimonialCarouselWidget extends AbstractWidget {
 			}
 
 			$img_attribute['alt'] = ! empty( $slide['image']['alt'] ) ? $slide['image']['alt'] : $slide['name'];
+
+			if ( ! empty( $slide['image']['id'] ) ) {
+				$img_meta = wp_get_attachment_image_src( (int) $slide['image']['id'], 'full' );
+				if ( is_array( $img_meta ) && ! empty( $img_meta[1] ) && ! empty( $img_meta[2] ) ) {
+					$img_attribute['width']  = (string) $img_meta[1];
+					$img_attribute['height'] = (string) $img_meta[2];
+				}
+			}
+
+			$img_attribute['loading']  = 'lazy';
+			$img_attribute['decoding'] = 'async';
 
 			$this->add_render_attribute( $element_key . '-image', $img_attribute );
 		}
