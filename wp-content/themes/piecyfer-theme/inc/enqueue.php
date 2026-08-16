@@ -387,6 +387,7 @@ function piecyfer_optimize_style_loader_tag( $tag, $handle, $href, $media ) {
 	}
 
 	// Critical stylesheets that MUST remain render-blocking to avoid layout shift (CLS):
+	$current_id = get_queried_object_id();
 	$critical_handles = array(
 		'vamtam-front-all',
 		'vamtam-theme-elementor-max',
@@ -394,9 +395,12 @@ function piecyfer_optimize_style_loader_tag( $tag, $handle, $href, $media ) {
 		'vamtam-theme-elementor-small',
 		'elementor-frontend',
 		'elementor-icons-theme-icons',
+		'elementor-post-' . $current_id,
+		'elementor-post-171',
+		'elementor-post-5',
 	);
 
-	if ( in_array( $handle, $critical_handles, true ) || 0 === strpos( $handle, 'elementor-post-' ) ) {
+	if ( in_array( $handle, $critical_handles, true ) ) {
 		return $tag;
 	}
 
