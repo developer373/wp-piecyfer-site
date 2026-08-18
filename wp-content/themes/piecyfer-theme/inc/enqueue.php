@@ -363,54 +363,5 @@ function piecyfer_remove_jquery_migrate( $scripts ) {
 }
 add_action( 'wp_default_scripts', 'piecyfer_remove_jquery_migrate' );
 
-/**
- * Performance: Asynchronously load non-critical stylesheets and Google Fonts.
- *
- * Converts non-critical CSS and Google Fonts stylesheets to load asynchronously
- * via the print onload swap pattern, completely eliminating render-blocking CSS
- * while keeping core critical theme layout stylesheets synchronous.
- *
- * @param string $tag    The link tag for the enqueued style.
- * @param string $handle The style's registered handle.
- * @param string $href   The stylesheet's source URL.
- * @param string $media  The stylesheet's media attribute.
- * @return string
- */
-function piecyfer_optimize_style_loader_tag( $tag, $handle, $href, $media ) {
-	if ( is_admin() || is_feed() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
-		return $tag;
-	}
 
-	// Never async in Elementor editor mode.
-	if ( class_exists( '\Elementor\Plugin' ) && isset( \Elementor\Plugin::$instance->editor ) && \Elementor\Plugin::$instance->editor->is_edit_mode() ) {
-		return $tag;
-	}
-
-	// Critical stylesheets that MUST remain render-blocking to avoid layout shift (CLS):
-	$current_id = get_queried_object_id();
-	$critical_handles = array(
-		'vamtam-front-all',
-		'vamtam-theme-elementor-max',
-		'vamtam-theme-elementor-below-max',
-		'vamtam-theme-elementor-small',
-		'elementor-frontend',
-		'elementor-icons-theme-icons',
-		'elementor-post-' . $current_id,
-		'elementor-post-171',
-		'elementor-post-5',
-	);
-
-	if ( in_array( $handle, $critical_handles, true ) ) {
-		return $tag;
-	}
-
-	$target_media = ! empty( $media ) && 'all' !== $media ? $media : 'all';
-
-	$async_tag = preg_replace( '/\smedia=([\'"])[^\'"]*\\1/', '', $tag );
-	$async_tag = str_replace( "rel='stylesheet'", "rel='stylesheet' media='print' onload=\"this.media='{$target_media}'\"", $async_tag );
-	$async_tag = str_replace( 'rel="stylesheet"', 'rel="stylesheet" media="print" onload="this.media=\'' . $target_media . '\'"', $async_tag );
-
-	return $async_tag . '<noscript>' . $tag . '</noscript>';
-}
-add_filter( 'style_loader_tag', 'piecyfer_optimize_style_loader_tag', 10, 4 );
 
