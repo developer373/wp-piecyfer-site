@@ -618,7 +618,7 @@ input:disabled+.slider {
     width: 16px;
     height: 16px;
     /* The dashicons "?" glyph sits ~3px low within its own box (font metric), so it reads
-       off-centre next to the label even when the button is vertically centred. Nudge it up. */
+       off-center next to the label even when the button is vertically centered. Nudge it up. */
     transform: translateY(-3px);
 }
 
@@ -662,79 +662,10 @@ input:disabled+.slider {
     }
 }
 
-/* @supports (appearance: base-select) {
-    / * 1. Standard syntax & clean opt-in * /
-    select,
-    ::picker(select) {
-        appearance: base-select !important;
-    }
+/* Native customizable <select> (appearance: base-select, ::picker, ::checkmark)
+   was styled here in 318a73b1 and disabled a day later in a8c49c38. Removed
+   rather than left commented — `git show 318a73b1` has the working version if
+   this is picked up again. Note that the select markup has moved on since
+   (contextual panels, per-option data attributes), so it would need rewriting
+   against the current renderer rather than restoring wholesale. */
 
-    / * Style the actual closed button part * /
-    select {
-        padding-block: 8px;
-        padding-inline: 12px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm, 6px);
-        background-color: var(--surface);
-        color: var(--text);
-    }
-
-    / * 2. Style the dropdown popup (picker) * /
-    ::picker(select) {
-        box-sizing: border-box;
-        background-color: #ffffff; / * Solid white to fix transparency bleeding * /
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md, 8px);
-        padding: 4px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        
-        / * Modern Anchor Positioning alignment * /
-        width: anchor-size(width);
-        margin-block-start: 4px; / * Logical property: replaces 'margin-top' * /
-    }
-
-    / * Ensure dark mode popup is perfectly solid dark grey * /
-    html[data-theme="dark"] ::picker(select) {
-        background-color: #1e1e24;
-    }
-
-    / * 3. Style the options & clear selection state hacks * /
-    option {
-        position: relative;
-        padding-block: 8px;
-        padding-inline-end: 12px;
-        padding-inline-start: 32px; / * Extra inline-start padding to house native checkmark * /
-        border-radius: var(--radius-sm, 6px);
-        color: var(--text);
-        cursor: pointer;
-        transition: background-color 0.1s ease;
-        
-        / * Ensure spacing without handling margin-bottom on last child * /
-        margin-block-end: 2px; 
-    }
-
-    option:last-of-type {
-        margin-block-end: 0;
-    }
-
-    / * Clean combination of focus/hover states * /
-    option:is(:hover, :focus-visible) {
-        background-color: var(--primary-glow);
-        outline: none;
-    }
-
-    / * Native selected state handling * /
-    option:checked {
-        background-color: var(--primary);
-        color: #fff;
-    }
-
-    / * 4. Leverage the native checkmark pseudo-element * /
-    option::checkmark {
-        position: absolute;
-        inset-inline-start: 10px; / * RTL safe: replaces 'left' * /
-        inset-block-start: 50%; / * Logical property: replaces 'top' * /
-        transform: translateY(-50%);
-        content: "✓"; / * Style or replace the browser's default indicator * /
-    }
-} */

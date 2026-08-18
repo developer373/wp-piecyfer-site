@@ -16,6 +16,17 @@ _project/quarantine/
 # small and ARE tracked, because they are the actual evidence.
 _project/snapshots/*/shots/
 _project/snapshots/_diff-*/*.png
+_project/snapshots/**/*.png
+_project/snapshots/**/*.mp4
+_project/snapshots/**/*.vtt
+_project/snapshots/**/*.svg
+_project/snapshots/**/*.html
+_project/snapshots/**/*.json
+_project/snapshots/*.png
+_project/snapshots/*.mp4
+_project/snapshots/*.vtt
+_project/snapshots/*.json
+_project/behaviour-tool/results/
 _project/pixel-tool/node_modules/
 
 # --- Caches & build artefacts ----------------------------------------------
@@ -29,10 +40,18 @@ wp-content/et-cache/
 wp-content/*-old/
 node_modules/
 vendor/bin/
+imagify-backup/
+*.tar
+*.bak
 
 # --- Local environment ------------------------------------------------------
 # wp-config.php holds DB credentials and the auth salts. Never commit it.
 wp-config.php
+wp-config-*.php
+wp-salt.php
+[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*.php
+*.bk
+bv-preload.php
 .env
 *.log
 debug.log

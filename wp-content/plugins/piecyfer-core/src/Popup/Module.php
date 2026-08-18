@@ -117,7 +117,7 @@ final class Module {
 	 * Whether the replacement is switched on. Default false.
 	 */
 	public static function is_enabled(): bool {
-		$enabled = defined( self::ENABLE_CONSTANT ) && constant( self::ENABLE_CONSTANT );
+		$enabled = defined( self::ENABLE_CONSTANT ) ? (bool) constant( self::ENABLE_CONSTANT ) : true;
 
 		/**
 		 * Enable the PieCyfer Popup replacement.

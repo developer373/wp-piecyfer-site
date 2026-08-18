@@ -4,7 +4,7 @@
  *
  * @package Click_To_Chat
  * @subpackage admin
- * @since 1.0
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -37,7 +37,18 @@ if ( ! class_exists( 'HT_CTC_Admin_Settings_Fields' ) ) {
 				'greetings-settings'        => 'greetings_settings',
 				'analytics-settings'        => 'analytics_settings',
 				'advanced-settings'         => 'advanced_settings',
-				'customize-settings'        => 'customize_settings',
+
+				/*
+				 * Customize: settings now open inline at the style picker, via the
+				 * Contextual Settings Panel below. Unmapped, customize_settings()
+				 * commented out below, and the tab unregistered in HT_CTC_Admin_Dashboard
+				 * — restore all three together, or none. HT_CTC_Settings_Customize itself
+				 * is untouched and still holds the full field list.
+				 *
+				 * 'customize-settings' => 'customize_settings',
+				 */
+				'contextual-styles'         => 'contextual_styles',
+				'contextual-greetings'      => 'contextual_greetings',
 				'group-settings'            => 'group_settings',
 				'share-settings'            => 'share_settings',
 				'woo-settings'              => 'woo_settings',
@@ -67,6 +78,23 @@ if ( ! class_exists( 'HT_CTC_Admin_Settings_Fields' ) ) {
 		 */
 		private static function get_tab_fields( $tab, $class_name ) {
 			HT_CTC_Utils::load_class( 'new/admin2/views/tabs/class-ht-ctc-settings-' . $tab . '.php', $class_name );
+
+			if ( is_callable( array( $class_name, 'fields' ) ) ) {
+				return $class_name::fields();
+			}
+
+			return array();
+		}
+
+		/**
+		 * Helper to lazy load contextual classes and fetch fields safely.
+		 *
+		 * @param string $context The contextual file identifier.
+		 * @param string $class_name The expected class name.
+		 * @return array
+		 */
+		private static function get_contextual_fields( $context, $class_name ) {
+			HT_CTC_Utils::load_class( 'new/admin2/views/contextual/class-ht-ctc-contextual-' . $context . '.php', $class_name );
 
 			if ( is_callable( array( $class_name, 'fields' ) ) ) {
 				return $class_name::fields();
@@ -123,12 +151,30 @@ if ( ! class_exists( 'HT_CTC_Admin_Settings_Fields' ) ) {
 		/**
 		 * Customize Settings
 		 *
+		 * @deprecated 4.43 Will be replaced by Contextual Settings Panel fields loader.
 		 * @return array
 		 */
-		public static function customize_settings() {
-			return self::get_tab_fields( 'customize', 'HT_CTC_Settings_Customize' );
+		// public static function customize_settings() {
+		// return self::get_tab_fields( 'customize', 'HT_CTC_Settings_Customize' );
+		// }
+
+		/**
+		 * Contextual Styles Settings Group
+		 *
+		 * @return array
+		 */
+		public static function contextual_styles() {
+			return self::get_contextual_fields( 'styles', 'HT_CTC_Contextual_Styles' );
 		}
 
+		/**
+		 * Contextual Greetings Settings Group
+		 *
+		 * @return array
+		 */
+		public static function contextual_greetings() {
+			return self::get_contextual_fields( 'greetings', 'HT_CTC_Contextual_Greetings' );
+		}
 
 		/**
 		 * Group Settings

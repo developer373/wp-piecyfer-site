@@ -4,6 +4,7 @@
  *
  * @package Click_To_Chat
  * @subpackage Administration
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -58,7 +59,7 @@ if ( ! class_exists( 'HT_CTC_Admin_Settings_Page' ) ) {
 						// submit_button();
 						?>
 
-						<!-- todo(4.42): will do it after initial release as planing to add dynamic way of identifying issues 
+						<!-- todo(4.44): will do it after initial release as planing to add dynamic way of identifying issues 
 						may be at dashboard.php ..  <main class="main-content"> or a notification icon like in header with notification count and message.
 						-->
 						<div class="ctc-admin-notices"></div>
@@ -86,15 +87,27 @@ if ( ! class_exists( 'HT_CTC_Admin_Settings_Page' ) ) {
 
 				</div>
 
-				<!-- Toast notification -->
+				<?php
+				/*
+				 * Toast notification.
+				 *
+				 * The dismiss button and the hover/focus pause (UIManager) exist
+				 * because the toast is not always throwaway: save errors carry a
+				 * copyable technical detail and PRO toasts carry an action link,
+				 * and both used to slide away mid-read or mid-reach on a fixed timer.
+				 */
+				?>
 				<div id="toast" class="toast" aria-live="polite" role="status">
 					<div class="toast-content">
-						<span class="dashicons dashicons-yes-alt"></span>
+						<span class="dashicons dashicons-yes-alt" aria-hidden="true"></span>
 						<div class="toast-message">
 							<span class="toast-title">Settings saved</span>
 							<span class="toast-description">Your changes have been successfully saved.</span>
-							<a class="toast-action" href="#" target="_blank" rel="noopener" style="display: none;"><span class="toast-action-text"></span><span class="dashicons dashicons-arrow-right-alt"></span></a>
+							<a class="toast-action" href="#" target="_blank" rel="noopener" style="display: none;"><span class="toast-action-text"></span><span class="dashicons dashicons-arrow-right-alt" aria-hidden="true"></span></a>
 						</div>
+						<button type="button" class="toast-close" aria-label="Dismiss notification">
+							<span class="dashicons dashicons-no-alt" aria-hidden="true"></span>
+						</button>
 					</div>
 					<div class="toast-progress"></div>
 				</div>

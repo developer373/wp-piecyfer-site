@@ -4,7 +4,7 @@
  *
  * @package Click_To_Chat
  * @subpackage admin
- * @since 5.0
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -44,10 +44,10 @@ if ( ! class_exists( 'HT_CTC_Settings_Greetings' ) ) {
 			$fields[] = self::card_greetings_content();
 
 			// Greetings Dialog - 1
-			$fields[] = self::card_greetings_style_1();
+			// $fields[] = self::card_greetings_style_1();
 
 			// Greetings Dialog - 2
-			$fields[] = self::card_greetings_style_2();
+			// $fields[] = self::card_greetings_style_2();
 
 			// Opt-in Settings
 			$fields[] = self::card_opt_in_settings();
@@ -154,7 +154,7 @@ if ( ! class_exists( 'HT_CTC_Settings_Greetings' ) ) {
 			$os              = is_array( $os ) ? $os : array();
 			$disable_tinymce = isset( $os['disable_tinymce'] );
 			$editor_type     = ( $disable_tinymce ) ? 'field_textarea' : 'block_editor_tinymce';
-			$tinymce_help    = ( $disable_tinymce ) ? '<br> Enable TinyMCE rich text editor at <a href="#advanced-settings/todo" class="ctc-shortcut-link">Advanced <span class="dashicons dashicons-arrow-right-alt2"></span></a> tab.' : '';
+			$tinymce_help    = ( $disable_tinymce ) ? '<br> Enable TinyMCE rich text editor at <a href="#advanced-settings/disable_tinymce" class="ctc-shortcut-link">Advanced <span class="dashicons dashicons-arrow-right-alt2"></span></a> tab.' : '';
 
 			$badge_colors_fields = array(
 				array(
@@ -260,6 +260,13 @@ if ( ! class_exists( 'HT_CTC_Settings_Greetings' ) ) {
 
 		/**
 		 * Greetings Style 1 Card
+		 *
+		 * @deprecated 4.43 Superseded by HT_CTC_Contextual_Greetings::fields()['greetings_1'],
+		 *                 which renders the same fields in the contextual panel beneath the
+		 *                 Greetings-1 tile.
+		 *
+		 *                 This method is commented out in the fields() method and is no longer
+		 *                 served to the Fields_Handler. It is retained here for reference.
 		 */
 		private static function card_greetings_style_1() {
 			$values = array(
@@ -311,10 +318,33 @@ if ( ! class_exists( 'HT_CTC_Settings_Greetings' ) ) {
 								'label'        => __( 'Call to Action - button type', 'click-to-chat-for-whatsapp' ),
 								'option_group' => 'ht_ctc_greetings_1',
 								'options'      => array(
-									'1'   => 'Style 1: Theme Button',
-									'7_1' => 'Style 7 Extend: Rounded Button',
+
+									/*
+									 * Each option names the style it stands for, so the
+									 * Customize trigger below opens the right one without
+									 * deriving an id from the stored value.
+									 */
+									'1'   => array(
+										'label'      => 'Style 1: Theme Button',
+										'attributes' => array( 'data-contextual-id' => 'style_1' ),
+									),
+									'7_1' => array(
+										'label'      => 'Style 7 Extend: Rounded Button',
+										'attributes' => array( 'data-contextual-id' => 'style_7_1' ),
+									),
 								),
-								'help'         => 'Call to Action - button type (Click to Chat -> Customize)',
+							),
+
+							/*
+							 * Opens the picked button style's settings inline, instead of
+							 * sending the user to Click to Chat -> Customize. It follows the
+							 * select above, opening whichever style the chosen option names.
+							 */
+							array(
+								'field_type'       => 'block_contextual_trigger',
+								'label'            => 'Customize',
+								'contextual_group' => 'contextual_styles',
+								'contextual_watch' => '#cta_style',
 							),
 						),
 						'style'      => 'margin: 1px 0px 5px 0px;',
@@ -333,6 +363,13 @@ if ( ! class_exists( 'HT_CTC_Settings_Greetings' ) ) {
 
 		/**
 		 * Greetings Style 2 Card
+		 *
+		 * @deprecated 4.43 Superseded by HT_CTC_Contextual_Greetings::fields()['greetings_2'],
+		 *                 which renders the same fields in the contextual panel beneath the
+		 *                 Greetings-2 tile.
+		 *
+		 *                 This method is commented out in the fields() method and is no longer
+		 *                 served to the Fields_Handler. It is retained here for reference.
 		 */
 		private static function card_greetings_style_2() {
 			$values = array(
@@ -495,19 +532,32 @@ if ( ! class_exists( 'HT_CTC_Settings_Greetings' ) ) {
 					// 'image'    => 'https://example.com/200x140?text=Disabled',
 				),
 				array(
-					'value'    => 'greetings-1',
-					'name'     => 'Greetings-1',
-					'icon'     => 'dashicons dashicons-format-chat',
+					'value'      => 'greetings-1',
+					'name'       => 'Greetings-1',
+					'icon'       => 'dashicons dashicons-format-chat',
 					// 'description' => 'WhatsApp-style chat popup with header, message, and call to action',
-					'sub_text' => 'WhatsApp-style chat popup with header, message, and call to action',
+					'sub_text'   => 'WhatsApp-style chat popup with header, message, and call to action',
 					// 'image'    => '',
+
+					/*
+					 * The stored value is hyphenated and the contextual id is not, so the tile
+					 * names the item outright rather than either side deriving it.
+					 */
+					'attributes' => array(
+						'data-contextual-group' => 'contextual_greetings',
+						'data-contextual-id'    => 'greetings_1',
+					),
 				),
 				array(
-					'value'    => 'greetings-2',
-					'name'     => 'Greetings-2',
-					'icon'     => 'dashicons dashicons-admin-comments',
-					'sub_text' => 'Minimal content-specific dialog — great for targeted page messages',
+					'value'      => 'greetings-2',
+					'name'       => 'Greetings-2',
+					'icon'       => 'dashicons dashicons-admin-comments',
+					'sub_text'   => 'Minimal content-specific dialog — great for targeted page messages',
 					// 'image'    => '',
+					'attributes' => array(
+						'data-contextual-group' => 'contextual_greetings',
+						'data-contextual-id'    => 'greetings_2',
+					),
 				),
 			);
 
@@ -561,7 +611,6 @@ if ( ! class_exists( 'HT_CTC_Settings_Greetings' ) ) {
 					'label'       => 'Click',
 					'badge'       => 'Interaction',
 					'badge_class' => 'interaction',
-					// todo(4.42): confirm the deep-link anchor for the Click trigger.
 					'link'        => array(
 						'url'   => 'https://holithemes.com/plugins/click-to-chat/greetings-actions/#click',
 						'label' => __( 'more info', 'click-to-chat-for-whatsapp' ),
@@ -575,7 +624,6 @@ if ( ! class_exists( 'HT_CTC_Settings_Greetings' ) ) {
 					'label'       => 'Viewport',
 					'badge'       => __( 'PRO', 'click-to-chat-for-whatsapp' ),
 					'badge_class' => 'pro',
-					// todo(4.42): confirm the deep-link anchor for the Viewport trigger.
 					'link'        => array(
 						'url'   => 'https://holithemes.com/plugins/click-to-chat/greetings-actions/#viewport',
 						'label' => __( 'more info', 'click-to-chat-for-whatsapp' ),
@@ -596,7 +644,6 @@ if ( ! class_exists( 'HT_CTC_Settings_Greetings' ) ) {
 					'label'       => 'Time Delay',
 					'badge'       => __( 'PRO', 'click-to-chat-for-whatsapp' ),
 					'badge_class' => 'pro',
-					// todo(4.42): confirm the deep-link anchor for the Time Delay trigger.
 					'link'        => array(
 						'url'   => 'https://holithemes.com/plugins/click-to-chat/greetings-actions/#time-delay',
 						'label' => __( 'more info', 'click-to-chat-for-whatsapp' ),
@@ -610,7 +657,6 @@ if ( ! class_exists( 'HT_CTC_Settings_Greetings' ) ) {
 					'label'       => 'Scroll Depth',
 					'badge'       => __( 'PRO', 'click-to-chat-for-whatsapp' ),
 					'badge_class' => 'pro',
-					// todo(4.42): confirm the deep-link anchor for the Scroll Depth trigger.
 					'link'        => array(
 						'url'   => 'https://holithemes.com/plugins/click-to-chat/greetings-actions/#scroll-depth',
 						'label' => __( 'more info', 'click-to-chat-for-whatsapp' ),

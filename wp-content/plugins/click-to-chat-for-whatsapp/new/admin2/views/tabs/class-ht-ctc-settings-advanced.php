@@ -4,7 +4,7 @@
  *
  * @package Click_To_Chat
  * @subpackage admin
- * @since 5.0
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -317,34 +317,20 @@ if ( ! class_exists( 'HT_CTC_Settings_Advanced' ) ) {
 						'id'           => 'enable_group',
 						'label'        => __( 'Enable Group Features', 'click-to-chat-for-whatsapp' ),
 						'option_group' => 'ht_ctc_othersettings',
-						'help'         => __( 'Adds WhatsApp Icon for Group', 'click-to-chat-for-whatsapp' ),
-					),
-					array(
-						'field_type'     => 'block_content',
-						'id'             => 'group_features_link',
-						'option_group'   => 'ht_ctc_othersettings',
-						'data_watch'     => '#enable_group',
-						'data_show_when' => '1',
-						// todo: check how its added in other places.. and update..
-						'content'        => '<a href="#group-settings" class="ctc-shortcut-link">' . __( 'Group Settings', 'click-to-chat-for-whatsapp' ) . ' <span class="dashicons dashicons-arrow-right-alt2"></span></a>',
-						'style'          => 'margin: 5px 0;',
+						'help'         => array(
+							__( 'Adds WhatsApp Icon for Group', 'click-to-chat-for-whatsapp' ),
+							'<span data-watch="#enable_group" data-show-when="1"><a href="#group-settings" class="ctc-shortcut-link">' . __( 'Group Settings', 'click-to-chat-for-whatsapp' ) . ' <span class="dashicons dashicons-arrow-right-alt2"></span></a></span>',
+						),
 					),
 					array(
 						'field_type'   => 'field_checkbox',
 						'id'           => 'enable_share',
 						'label'        => __( 'Enable Share Features', 'click-to-chat-for-whatsapp' ),
 						'option_group' => 'ht_ctc_othersettings',
-						'help'         => __( 'Adds WhatsApp Icon for Share', 'click-to-chat-for-whatsapp' ),
-					),
-					array(
-						'field_type'     => 'block_content',
-						'id'             => 'share_features_link',
-						'option_group'   => 'ht_ctc_othersettings',
-						'data_watch'     => '#enable_share',
-						'data_show_when' => '1',
-						// todo: check how its added in other places.. and update..
-						'content'        => '<a href="#share-settings" class="ctc-shortcut-link">' . sprintf( '%1$s %2$s', __( 'Share', 'click-to-chat-for-whatsapp' ), __( 'Settings', 'click-to-chat-for-whatsapp' ) ) . ' <span class="dashicons dashicons-arrow-right-alt2"></span></a>',
-						'style'          => 'margin: 5px 0;',
+						'help'         => array(
+							__( 'Adds WhatsApp Icon for Share', 'click-to-chat-for-whatsapp' ),
+							'<span data-watch="#enable_share" data-show-when="1"><a href="#share-settings" class="ctc-shortcut-link">' . sprintf( '%1$s %2$s', __( 'Share', 'click-to-chat-for-whatsapp' ), __( 'Settings', 'click-to-chat-for-whatsapp' ) ) . ' <span class="dashicons dashicons-arrow-right-alt2"></span></a></span>',
+						),
 					),
 				),
 			);

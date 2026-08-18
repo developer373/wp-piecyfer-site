@@ -105,7 +105,7 @@
     transform: translateY(-50%);
     height: 1.5rem;
     width: 3px;
-    /* Match the active label + icon colour so the whole active item is one tone. */
+    /* Match the active label + icon color so the whole active item is one tone. */
     background-color: var(--primary-readable);
     border-radius: 0 4px 4px 0;
 }
@@ -255,6 +255,14 @@
     background-color: var(--bg-card);
     color: var(--primary-readable);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Roving tabindex means arrow keys move focus between these without a click,
+   so the ring is the only thing showing where you are. Inset, because the
+   buttons sit flush inside the .sidebar-tabs track. */
+.sidebar-tab-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
 }
 
 .sidebar-tab-btn .dashicons {

@@ -23,3 +23,40 @@ require_once PIECYFER_THEME_DIR . 'inc/enqueue.php';
 require_once PIECYFER_THEME_DIR . 'inc/head.php';
 require_once PIECYFER_THEME_DIR . 'inc/template.php';
 require_once PIECYFER_THEME_DIR . 'inc/compat.php';
+
+/**
+ * Force repair Header & Footer conditions
+ */
+add_action( 'init', function() {
+	if ( ! is_admin() && ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+
+	// 1. Ensure Header 171 is published
+	wp_update_post( [
+		'ID'          => 171,
+		'post_status' => 'publish',
+	] );
+
+	// 2. Set Theme Builder routing conditions
+	$conditions = get_option( 'elementor_pro_theme_builder_conditions', [] );
+	if ( ! is_array( $conditions ) ) {
+		$conditions = [];
+	}
+
+	$conditions['header'] = [
+		171 => [ 'include/general' ],
+	];
+
+	if ( empty( $conditions['footer'] ) ) {
+		$conditions['footer'] = [
+			1273 => [ 'include/general' ],
+		];
+	}
+
+	update_option( 'elementor_pro_theme_builder_conditions', $conditions );
+	
+	if ( function_exists( 'wp_cache_flush' ) ) {
+		wp_cache_flush();
+	}
+} );

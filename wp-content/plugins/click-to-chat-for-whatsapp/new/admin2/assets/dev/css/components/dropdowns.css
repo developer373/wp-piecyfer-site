@@ -45,7 +45,9 @@
     animation: dropIn 0.3s var(--ease-prism) forwards;
 }
 
-/* todo(4.42): check if any thing better */
+/* todo(4.44): the inset highlight above is a literal rgba(255,255,255,0.5), not a
+   token, so it stays a bright white ring in dark mode. Either tokenize it or keep
+   the override below — needs looking at on screen, not guessing. */
 /* html[data-theme="dark"] .settings-dropdown {
     background: rgba(10, 12, 20, 0.85);
     box-shadow: var(--shadow-prism), inset 0 0 0 1px rgba(255, 255, 255, 0.05);

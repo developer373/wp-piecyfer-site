@@ -76,6 +76,46 @@ if ( ! class_exists( 'HT_CTC_Settings_Data' ) ) {
 
 
 		/**
+		 * Option groups saved by wholesale replace instead of deep merge.
+		 *
+		 * The client sends the COMPLETE group (its card carries .ctc-group-sync) and the
+		 * server overwrites, so a deleted row can never survive as a stale key. See
+		 * HT_CTC_Data_Processor::is_replace_entire_group() for why this beats merge+remove
+		 * for cohesive collections.
+		 *
+		 * Lives here rather than on the data processor because two very different stages
+		 * need the same answer: the processor (overwrite vs merge) and HT_CTC_Sanitizer
+		 * (whether to grandfather keys already in the DB). Two copies of this list would
+		 * drift, and the failure that follows is silent data loss.
+		 *
+		 * @return array Replace-strategy group keys.
+		 */
+		public static function get_replace_groups() {
+
+			$values = array();
+
+			/**
+			 * Option groups saved by wholesale replace. Pro registers its collection groups
+			 * here, e.g. 'ht_ctc_greetings_pro_1', 'ht_ctc_greetings_pro_2'.
+			 *
+			 * @param array $values Replace-strategy group keys.
+			 */
+			$values = apply_filters( 'ht_ctc_fh_replace_groups', $values );
+
+			return is_array( $values ) ? $values : array();
+		}
+
+		/**
+		 * Whether an option group is saved by the replace strategy.
+		 *
+		 * @param string $group Option group name.
+		 * @return bool
+		 */
+		public static function is_replace_group( $group ) {
+			return in_array( $group, self::get_replace_groups(), true );
+		}
+
+		/**
 		 * Full per-group settings schema (explicit build-all).
 		 *
 		 * Aggregator: builds the whole schema map by calling get_schema() for each

@@ -1,3 +1,5 @@
+import { safeQuery } from '../core/Utils.js';
+
 /**
  * Conditional Logic for Fields
  *
@@ -55,7 +57,9 @@ export const updateConditionalVisibility = (
 		controllerIds.forEach( id => {
 
 			// const field = document.getElementById( id );
-			const field = document.querySelector( `${id}` );
+			// safeQuery: `id` is one comma-separated piece of a PHP-declared
+			// data-watch, so a malformed one must not throw out of this loop.
+			const field = safeQuery( document, id, 'data-watch' );
 
 			// console.log('field: ', field);
 
@@ -71,7 +75,7 @@ export const updateConditionalVisibility = (
 
 	// Standard Mode: Uses the FIRST controller ID for standard logic (backwards compatibility).
 	// const controllerField = document.getElementById( controllerIds[ 0 ] );
-	const controllerField = document.querySelector( `${controllerIds[ 0 ]}` );
+	const controllerField = safeQuery( document, controllerIds[ 0 ], 'data-watch' );
 
 	// console.log('controllerField: ', controllerField);
 
@@ -189,7 +193,7 @@ export const initConditionalFieldLogic = ( context = document ) => {
 		let allFound = true;
 		controllerIds.forEach( controllerId => {
 			// Find the controller element (e.g. '#enable_group')
-			const controllerField = document.querySelector( `${controllerId}` );
+			const controllerField = safeQuery( document, controllerId, 'data-watch' );
 			if ( ! controllerField ) {
 				allFound = false;
 				return;

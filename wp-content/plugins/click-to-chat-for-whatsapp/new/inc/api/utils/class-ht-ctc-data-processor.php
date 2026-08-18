@@ -4,7 +4,7 @@
  *
  * @package Click_To_Chat
  * @subpackage API
- * @since 5.0
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -416,15 +416,13 @@ if ( ! class_exists( 'HT_CTC_Data_Processor' ) ) {
 		 */
 		protected function is_replace_entire_group( $group ) {
 
-			/**
-			 * Option groups saved by wholesale replace. Pro registers its collection groups
-			 * here, e.g. 'ht_ctc_greetings_pro_1', 'ht_ctc_greetings_pro_2'.
-			 *
-			 * @param array $groups Replace-strategy group keys. Default empty.
-			 */
-			$replace_groups = apply_filters( 'ht_ctc_fh_replace_groups', array() );
+			if ( ! class_exists( 'HT_CTC_Settings_Data' ) ) {
+				return false;
+			}
 
-			return is_array( $replace_groups ) && in_array( $group, $replace_groups, true );
+			// The list and its filter live on HT_CTC_Settings_Data: HT_CTC_Sanitizer needs
+			// the same answer at an earlier stage, and a second copy here would drift.
+			return HT_CTC_Settings_Data::is_replace_group( $group );
 		}
 
 		/**

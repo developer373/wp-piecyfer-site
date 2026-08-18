@@ -567,7 +567,7 @@ export const safeRun = ( fn, context = 'Feature' ) => {
  * belong there: on the wrapper they would also fire on the label or help text.
  *
  * Only `data-*` names are accepted — PHP field configs must never be able to set
- * `onclick`, `href`, `src`, `style`, etc. New behaviour = a new entry in the relevant
+ * `onclick`, `href`, `src`, `style`, etc. New behavior = a new entry in the relevant
  * registry (Actions.js / Conditions.js) + the attribute in PHP. Never a new branch here.
  *
  * @param {HTMLElement} element - The DOM element to apply attributes to.
@@ -589,6 +589,55 @@ export const applyDataAttributes = ( element, attributes ) => {
 		}
 
 		element.setAttribute( name, String( value ) );
+	}
+};
+
+/*
+ * SELECTORS THAT CAME FROM A FIELD DECLARATION.
+ *
+ * `data-watch` and `data-contextual-watch` hold CSS selectors written by hand in
+ * PHP — ours or an extension's — so unlike a selector literal in this file, they
+ * are not guaranteed to parse. An invalid one throws SyntaxError out of
+ * querySelector()/matches(), and it throws at the CALLER, which is the damage:
+ * initConditionalFieldLogic() loops every `[data-watch]` on a tab, so one bad
+ * selector takes down conditional logic for the whole tab, not just its own
+ * field. The two wrappers below degrade to "no match" instead.
+ *
+ * Use them for any selector that arrives from PHP. Selectors written here stay
+ * on the plain DOM methods — a typo in one is a bug to fix, not to swallow.
+ */
+
+/**
+ * querySelector that answers null for an unparseable selector.
+ *
+ * @param {Element|Document} root     Where to look.
+ * @param {string}           selector Selector from a field declaration.
+ * @param {string}           source   Attribute it came from, for the log line.
+ * @returns {Element|null} First match, or null.
+ */
+export const safeQuery = ( root, selector, source = 'selector' ) => {
+	try {
+		return root.querySelector( selector );
+	} catch {
+		console.warn( `CTC: invalid ${source} "${selector}" — ignored` );
+		return null;
+	}
+};
+
+/**
+ * Element.matches that answers false for an unparseable selector.
+ *
+ * @param {Element} element  Element to test.
+ * @param {string}  selector Selector from a field declaration.
+ * @param {string}  source   Attribute it came from, for the log line.
+ * @returns {boolean} True on a match.
+ */
+export const safeMatches = ( element, selector, source = 'selector' ) => {
+	try {
+		return element.matches( selector );
+	} catch {
+		console.warn( `CTC: invalid ${source} "${selector}" — ignored` );
+		return false;
 	}
 };
 

@@ -19,6 +19,7 @@
  * array keys at runtime, and restores exact[0] from searchEmptyState if omitted.
  *
  * @package Click_To_Chat
+ * @since 4.43
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

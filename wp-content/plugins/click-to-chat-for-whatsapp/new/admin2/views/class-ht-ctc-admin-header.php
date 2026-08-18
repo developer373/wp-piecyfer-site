@@ -4,6 +4,7 @@
  *
  * @package Click_To_Chat
  * @subpackage Administration
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -34,14 +35,29 @@ if ( ! class_exists( 'HT_CTC_Admin_Header' ) ) {
 			<header class="admin-header">
 
 				<div class="header-left">
-					<button type="button" id="menu-toggle" class="menu-toggle">
+					<?php
+					/*
+					 * Icon-only control: the sprite <svg> contributes no text, so without
+					 * aria-label it is announced as an unnamed "button". Interface.js keeps
+					 * aria-expanded and the tooltip in sync with the sidebar it controls.
+					 */
+					?>
+					<button type="button" id="menu-toggle" class="menu-toggle"
+						aria-label="Toggle settings menu"
+						aria-controls="sidebar" aria-expanded="false"
+						data-tip="Collapse menu" data-tip-pos="bottom">
 						<?php HT_CTC_Icons::render( 'menu', 'ctc-icon' ); ?>
 					</button>
 					<!-- Mobile: current section label -->
 					<span id="mobile-section-label" class="mobile-section-label"></span>
-					<div class="logo" id="logo-home">
+					<?php
+					// Clickable shortcut back to General — needs role/tabindex to be
+					// reachable at all by keyboard (Interface.js binds Enter/Space).
+					?>
+					<div class="logo" id="logo-home" role="button" tabindex="0"
+						aria-label="Go to General settings">
 						<div class="logo-icon">
-							<span class="dashicons dashicons-format-chat"></span>
+							<span class="dashicons dashicons-format-chat" aria-hidden="true"></span>
 						</div>
 						<div class="logo-text">Click to Chat
 							<?php do_action( 'ht_ctc_admin_header_logo_after' ); ?>
@@ -58,21 +74,42 @@ if ( ! class_exists( 'HT_CTC_Admin_Header' ) ) {
 						<span class="switch-text">Previous UI</span>
 					</a>
 
+					<?php
+					/*
+					 * Three mutually exclusive states: default, saving, and a short
+					 * "Saved" confirmation. They stack in one CSS grid cell, so the
+					 * button stays the width of its widest label and the header does
+					 * not shift as it swaps. Which one shows is a class on the button
+					 * (SettingsManager.setSaveButtonState) — no inline display styles,
+					 * so CSS alone decides, including the responsive icon-only mode.
+					 *
+					 * SettingsManager also rewrites `title` to say whether there are
+					 * unsaved changes and what the keyboard shortcut is. `title`, not
+					 * the nicer data-tip bubble: the button sets `overflow: hidden` to
+					 * clip its hover shine, which would clip the bubble too.
+					 */
+					?>
 					<button type="button" id="save-button" class="save-button">
 						<span class="default-state">
 							<?php HT_CTC_Icons::render( 'save', 'ctc-icon' ); ?>
 							<span class="text-label"><?php esc_html_e( 'Save Changes', 'click-to-chat-for-whatsapp' ); ?></span>
 						</span>
-						<span class="loading-state" style="display:none;">
+						<span class="loading-state">
 							<?php HT_CTC_Icons::render( 'loader-2', 'ctc-icon ctc-spin' ); ?>
-							<span>Saving...</span>
+							<span class="text-label">Saving...</span>
+						</span>
+						<span class="saved-state">
+							<?php HT_CTC_Icons::render( 'check', 'ctc-icon' ); ?>
+							<span class="text-label">Saved</span>
 						</span>
 					</button>
 					<!-- Settings Dropdown Button -->
 					<!-- todo: name attr.. save .. in db.... -->
 					<!-- check.. if better way..  -->
 					<div class="settings-dropdown-wrapper">
-						<button type="button" id="settings-toggle" class="settings-toggle" aria-label="<?php esc_attr_e( 'Settings', 'click-to-chat-for-whatsapp' ); ?>">
+						<button type="button" id="settings-toggle" class="settings-toggle" aria-label="<?php esc_attr_e( 'Settings', 'click-to-chat-for-whatsapp' ); ?>"
+							aria-haspopup="true" aria-expanded="false" aria-controls="settings-dropdown"
+							data-tip="Theme &amp; auto-save" data-tip-pos="bottom">
 							<?php HT_CTC_Icons::render( 'settings', 'ctc-icon' ); ?>
 						</button>
 						<div id="settings-dropdown" class="settings-dropdown hidden">

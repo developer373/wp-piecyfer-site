@@ -8,7 +8,7 @@
  *
  * @package Click_To_Chat
  * @subpackage Administration
- * @since 5.0
+ * @since 4.41
  *
  * todo: if pro version is not installed or if installed and if pro version is above 3.0 then load this admin2 else admin like..
  */

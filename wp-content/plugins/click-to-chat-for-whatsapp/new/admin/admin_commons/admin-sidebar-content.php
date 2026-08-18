@@ -63,7 +63,7 @@ $othersettings = get_option( 'ht_ctc_othersettings' );
 				<a href="https://holithemes.com/shop/" target="_blank" class="button" style="width: 100%; justify-content: center; background: #6366f1; border: none; color: #fff; height: 42px; line-height: 42px; font-size: 14px; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; position: relative; z-index: 1; transition: all 0.3s ease; margin: 0; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);">Update PRO Plugin</a>
 				<div style="margin: 18px 0 0; padding: 12px 14px; background: rgba(255, 255, 255, 0.6); border: 1px dashed #c4b5fd; border-radius: 10px; text-align: left; position: relative; z-index: 1;">
 					<p style="margin: 0; font-size: 12px; color: #4338ca; opacity: 0.85; line-height: 1.6;">
-						License expired and not renewing for now? <a href="https://holithemes.com/shop/download-click-to-chat-pro-compatible-version/" target="_blank" style="color: #4338ca; font-weight: 600;">Download the compatible PRO version</a> to use the new dashboard. Please note it is not the latest version.
+						License expired and not renewing for now? <a href="https://holithemes.com/shop/download-click-to-chat-pro-compatible-version/" target="_blank" style="color: #4338ca; font-weight: 600;">Download the compatible PRO version</a> to use the new dashboard.
 					</p>
 				</div>
 				<p style="margin: 20px 0 0; font-size: 12px; color: #4338ca; opacity: 0.7; position: relative; z-index: 1;">

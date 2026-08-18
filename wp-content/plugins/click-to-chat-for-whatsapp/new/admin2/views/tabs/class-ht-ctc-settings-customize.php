@@ -4,23 +4,37 @@
  *
  * @package Click_To_Chat
  * @subpackage admin
- * @since 5.0
+ * @since 4.41
+ * @deprecated 4.43 Use Contextual Settings Panel / new fields provider instead.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/*
+ * Deliberately NOT _deprecated_file(). This file is only ever loaded from inside a REST
+ * request (get_tab_fields() -> /get-fields/), and _deprecated_file() raises an
+ * E_USER_DEPRECATED notice — which, on a site with WP_DEBUG_DISPLAY on, prints ahead of
+ * the JSON body and turns a working response into a parse error in the admin SPA.
+ *
+ * The @deprecated tags above and below are the whole notice: they reach a developer
+ * reading the file without breaking a user's admin screen.
+ */
+
 if ( ! class_exists( 'HT_CTC_Settings_Customize' ) ) {
 
 	/**
 	 * Customize settings class.
+	 *
+	 * @deprecated 4.43 Use Contextual Settings Panel / new fields provider instead.
 	 */
 	class HT_CTC_Settings_Customize {
 
 		/**
 		 * Get fields
 		 *
+		 * @deprecated 4.43
 		 * @return array
 		 */
 		public static function fields() {

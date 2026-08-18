@@ -4,6 +4,7 @@
  *
  * @package Click_To_Chat
  * @subpackage Administration
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -16,6 +17,14 @@ if ( ! class_exists( 'HT_CTC_Admin_Page_Scripts' ) ) {
 	 * Admin Page Scripts Class
 	 */
 	class HT_CTC_Admin_Page_Scripts {
+
+		/**
+		 * Admin hook for the main SPA page — the top-level menu registered with
+		 * slug 'click-to-chat' in class-ht-ctc-admin-menu.php.
+		 *
+		 * @var string
+		 */
+		const SPA_HOOK = 'toplevel_page_click-to-chat';
 
 		/**
 		 * Constructor
@@ -66,9 +75,7 @@ if ( ! class_exists( 'HT_CTC_Admin_Page_Scripts' ) ) {
 		 * @return string[]
 		 */
 		private function allowed_hooks() {
-			// Hook for the top-level menu with slug 'click-to-chat' from
-			// ht_ctc_admin_menu.php add_menu_page().
-			$hooks = array( 'toplevel_page_click-to-chat' );
+			$hooks = array( self::SPA_HOOK );
 
 			return apply_filters( 'ht_ctc_fh_admin_allowed_hooks', $hooks );
 		}
@@ -147,11 +154,19 @@ if ( ! class_exists( 'HT_CTC_Admin_Page_Scripts' ) ) {
 			// ex: "wp-json/click-to-chat-for-whatsapp/v1/get-fields/".
 			$get_fields_endpoint = class_exists( 'HT_CTC_Rest_API' ) ? HT_CTC_Rest_API::route( 'get-fields/' ) : '';
 
+			$user_locale = get_user_locale();
+
+			// One resolution of the admin locale for the phone field; see
+			// HT_CTC_Phone_Field::locale() for why 'tag' and 'strings' differ.
+			$phone_locale = HT_CTC_Phone_Field::locale( $user_locale );
+
 			$ctc = array(
 				'version'         => HT_CTC_VERSION,
 				// Admin locale — part of the JS field-cache key (fields carry translated
-				// strings, so a language switch must invalidate the cached tabs).
-				'locale'          => get_user_locale(),
+				// strings, so a language switch must invalidate the cached tabs). The RAW
+				// WP locale on purpose: as a cache key it only has to vary, and
+				// de_DE_formal vs de_DE are different translations.
+				'locale'          => $user_locale,
 				'initialSettings' => $initial_settings,
 				'paths'           => array(
 					'plugin_url' => defined( 'HT_CTC_PLUGIN_DIR_URL' ) ? HT_CTC_PLUGIN_DIR_URL : plugin_dir_url( HT_CTC_PLUGIN_FILE ),
@@ -171,11 +186,13 @@ if ( ! class_exists( 'HT_CTC_Admin_Page_Scripts' ) ) {
 						// without parsing the URL.
 						'version'           => $phone_field_assets['version'],
 						// Admin's own language, for the country names — the browser
-						// translates those itself from this tag.
-						'locale'            => get_user_locale(),
+						// translates those itself from this tag. Already resolved to
+						// valid BCP-47; JS must pass it straight through, never
+						// reshape it (that is what produced 'de-CH_informal').
+						'locale'            => $phone_locale['tag'],
 						// The library's own chrome for that same language, inlined —
 						// empty for English/unknown, where its own defaults stand.
-						'uiStrings'         => HT_CTC_Phone_Field::locale_strings( get_user_locale() ),
+						'uiStrings'         => HT_CTC_Phone_Field::locale_strings( $user_locale ),
 					),
 				),
 				'api'             => array(
@@ -186,8 +203,15 @@ if ( ! class_exists( 'HT_CTC_Admin_Page_Scripts' ) ) {
 				),
 				'wprest_nonce'    => wp_create_nonce( 'wp_rest' ),
 				'nonce'           => wp_create_nonce( 'ht_ctc_admin_nonce' ),
-				// i18n UI strings
-				// todo(4.43): i18n and have to update the content and at js file
+
+				/*
+				 * i18n UI strings.
+				 *
+				 * todo(4.44): wrap these in __() and settle the wording. Held back
+				 * deliberately: admin2's copy is still moving, and a string wrapped
+				 * now is a translation asked for and then thrown away. Do it once
+				 * the strings stop changing, alongside the JS that consumes them.
+				 */
 				'i18n'            => array(
 					'save'          => 'Save',
 					'saved'         => 'Settings saved successfully.',
@@ -210,34 +234,12 @@ if ( ! class_exists( 'HT_CTC_Admin_Page_Scripts' ) ) {
 
 				/*
 				 * Lazy modules: each entry is a JS file App.js dynamically import()s.
-				 * All paths use $assets_dir so dev loads source and prod loads min.
+				 * Triggers (tabs / selector / delay / on-demand) and the per-entry keys
+				 * are documented in
+				 * dev/docs/developer-reference/admin2-module-loading.md.
 				 *
-				 * HOW AN ENTRY LOADS — set ONE of these triggers (an entry with
-				 * neither `tabs` nor `delay` is inert: it just never loads, no error):
-				 *   • tabs  → loaded when one of these admin tabs is opened
-				 *             (App.loadTabSettings — load before render, then run
-				 *             `method` after render). Use for tab-specific UI.
-				 *   • delay → loaded once, `delay` ms after boot, regardless of tab
-				 *             (App.loadDelayedModules). Use for global, always-on
-				 *             features kept out of the initial bundle (e.g. preview).
-				 *   • on-demand → no trigger here; loaded explicitly by key from JS
-				 *             when needed (e.g. App.loadAndInitIntlInput reads
-				 *             modulesPath.phoneInput directly). Use for rare/contextual loads.
-				 *
-				 * PER-ENTRY KEYS:
-				 *   path      — URL of the JS module to import() (required). End it with
-				 *               . $ver — see where $ver is defined for why a bare
-				 *               plugins_url() breaks on update. Extensions registering
-				 *               an entry via the filter below must stamp their own
-				 *               version the same way; nothing does it for them.
-				 *   tabs      — tab ids that trigger loading (see above).
-				 *   delay     — ms after boot to load (see above).
-				 *   method    — export name called after load: method(arg|context, context, app).
-				 *   arg       — optional first arg for `method`.
-				 *   managerId — register module.default as a named manager (app.managers[id])
-				 *               instead of/in addition to calling `method`; lets other
-				 *               code + PRO look it up (RepeaterManager, PreviewManager).
-				 *   rendererId— register module.default as a field renderer.
+				 * Every `path` must end with . $ver — dynamic import() URLs never pass
+				 * through wp_enqueue_script, so nothing else cache-busts them.
 				 */
 				'modulesPath'     => array(
 					'phoneInput'      => array(
@@ -253,6 +255,11 @@ if ( ! class_exists( 'HT_CTC_Admin_Page_Scripts' ) ) {
 					),
 					'repeater'        => array(
 						'path'      => plugins_url( "new/admin2/assets/$assets_dir/js/modules/managers/RepeaterManager.js", HT_CTC_PLUGIN_FILE ) . $ver,
+
+						// BOTH triggers on purpose — either one alone leaves a hole.
+						// Keep a tab listed here when its repeater markup arrives
+						// asynchronously, since `selector` is matched only once.
+						'selector'  => '.ctc_repeater_add_button, .ctc-remove-button',
 						'tabs'      => array( 'general-settings', 'greetings-settings', 'display-settings', 'analytics-settings' ),
 						'managerId' => 'repeater',
 					),
@@ -348,7 +355,7 @@ if ( ! class_exists( 'HT_CTC_Admin_Page_Scripts' ) ) {
 			$phone_field_assets = HT_CTC_Phone_Field::assets();
 			wp_register_style( 'ctc_admin_intl_css', $phone_field_assets['css'], array(), HT_CTC_VERSION );
 
-			if ( 'toplevel_page_click-to-chat' !== $hook ) {
+			if ( self::SPA_HOOK !== $hook ) {
 				return;
 			}
 
@@ -362,7 +369,7 @@ if ( ! class_exists( 'HT_CTC_Admin_Page_Scripts' ) ) {
 		 * @return void
 		 */
 		private function enqueue_wp_media( $hook ) {
-			if ( 'toplevel_page_click-to-chat' !== $hook ) {
+			if ( self::SPA_HOOK !== $hook ) {
 				return;
 			}
 
@@ -379,7 +386,7 @@ if ( ! class_exists( 'HT_CTC_Admin_Page_Scripts' ) ) {
 		 * @return void
 		 */
 		private function enqueue_wp_editor( $hook ) {
-			if ( 'toplevel_page_click-to-chat' !== $hook ) {
+			if ( self::SPA_HOOK !== $hook ) {
 				return;
 			}
 

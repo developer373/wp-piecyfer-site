@@ -15,6 +15,11 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    /* Jump offset. The page scrolls on the window while #wpadminbar and
+       .admin-header sit fixed/sticky on top, so anything scrolled to y=0 lands
+       behind them. Not inherited, hence the universal selector — this covers
+       Interface.scrollToElement and native #id jumps alike. */
+    scroll-margin-top: var(--ctc-scroll-offset);
 }
 
 body {
@@ -101,8 +106,13 @@ html[data-theme="dark"] body {
    (outline-width animates 0→2px over ~200ms) instead of appearing instantly.
    Suspend transitions while an element shows its keyboard focus ring. */
 .ctc-admin-dashboard :focus-visible,
-.ctc-admin-dashboard:focus-visible {
-    /* !important so higher-specificity component `transition` rules
+.ctc-admin-dashboard:focus-visible,
+
+/* The grid tile draws the ring for the inner element that actually has focus, so it is
+   not itself :focus-visible and the two selectors above miss it — leaving `transition:
+   all` to fade its outline in over 300ms, the exact thing this block prevents. */
+.ctc-admin-dashboard .grid-option:has( > .grid-option-select:focus-visible ) {
+    /* Using !important so higher-specificity component `transition` rules
        (e.g. `.ctc-admin-dashboard input[type="text"]`) can't re-enable the
        fade while the ring is shown. */
     transition: none !important;
@@ -147,7 +157,18 @@ html[data-theme="dark"] body {
     outline-offset: 2px;
 }
 
-.grid-option:focus-visible {
+/*
+ * The ring belongs on the TILE, but the tile is no longer what receives focus: splitting
+ * `.grid-option` moved tabindex/role onto the inner `.grid-option-select`, so the old
+ * `.grid-option:focus-visible` matched nothing and keyboard navigation lost its indicator.
+ *
+ * Matched on the tile, keyed off focus inside it, rather than moved onto the inner
+ * element. The ring has to enclose the whole tile — the same box as the selected tile's
+ * border — and ringing the inner element cannot reproduce that: it sits 10px inside the
+ * tile (0.5rem padding + 2px border), so the same 3px offset draws a box 20px smaller in
+ * both dimensions. Values here are unchanged from before the split.
+ */
+.grid-option:has( > .grid-option-select:focus-visible ) {
     outline: 2px solid var(--primary);
     outline-offset: 3px;
     border-radius: var(--radius);
@@ -161,5 +182,12 @@ html[data-theme="dark"] body {
 .theme-option input:focus-visible+.theme-icon {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
+    border-radius: var(--radius-pill);
+}
+
+/* The logo is a role="button" shortcut back to General, so it takes focus. */
+#logo-home:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 4px;
     border-radius: var(--radius-pill);
 }

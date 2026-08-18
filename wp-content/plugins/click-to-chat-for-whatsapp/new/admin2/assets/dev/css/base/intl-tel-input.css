@@ -23,7 +23,7 @@ html[data-theme="dark"] .ctc_intl_container {
     --iti-icon-color: var(--text-secondary);
 }
 
-/* Text colour has no library variable, so it still needs element rules. */
+/* Text color has no library variable, so it still needs element rules. */
 html[data-theme="dark"] .iti__country-list,
 html[data-theme="dark"] .iti__country-name,
 html[data-theme="dark"] .iti__search-input,

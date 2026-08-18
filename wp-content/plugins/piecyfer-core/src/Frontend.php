@@ -149,9 +149,9 @@ final class Frontend {
 		/**
 		 * Filters whether the PieCyfer frontend JavaScript layer loads.
 		 *
-		 * @param bool $enabled Default false.
+		 * @param bool $enabled Default true.
 		 */
-		return (bool) apply_filters( 'piecyfer_core/frontend_js/enabled', false );
+		return (bool) apply_filters( 'piecyfer_core/frontend_js/enabled', true );
 	}
 
 	/**

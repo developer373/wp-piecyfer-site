@@ -1137,7 +1137,10 @@ document.addEventListener( 'DOMContentLoaded', function initializeMaterializeCom
 				.then( function handleIntlReady ( intlTelInputFn ) {
 					var uiTranslations = buildUiTranslations(
 						ht_ctc_admin_var.intl_ui,
-						( ht_ctc_admin_var.intl_lang || 'en' ).replace( '_', '-' ),
+
+						// Already a valid BCP-47 tag from HT_CTC_Phone_Field::locale().
+						// Do NOT reshape it here.
+						ht_ctc_admin_var.intl_lang || 'en',
 					);
 
 					if ( ! intlTelInputFn || phoneInputElement.dataset.ctcIntlBound === 'true' ) {
@@ -1164,12 +1167,36 @@ document.addEventListener( 'DOMContentLoaded', function initializeMaterializeCom
 		 */
 		function intlConstruct ( phoneInputElement, intlTelInputFn, uiTranslations ) {
 			var $el = $( phoneInputElement );
-			var attr_value = $el.attr( 'value' );
+			var attr_value = $el.attr( 'value' ) ?
+				$el.attr( 'value' ) :
+				'';
+
+			/*
+			 * Normalise to a '+' prefix, then take the value OUT of the field:
+			 * it is constructed empty and seeded via setNumber() below. That is
+			 * load-bearing — see the note at the setNumber() call.
+			 */
+			if ( attr_value ) {
+				attr_value = '+' !== attr_value.charAt( 0 ) ? '+' + attr_value : attr_value;
+				phoneInputElement.value = '';
+				phoneInputElement.removeAttribute( 'value' );
+			}
+
 			var hidden_input_name = $el.attr( 'data-name' ) ?
 				$el.attr( 'data-name' ) :
 				'ht_ctc_chat_options[number]';
 
-			$el.removeAttr( 'name' );
+			/*
+			 * The visible input KEEPS its `name` until the hidden input that
+			 * replaces it exists (below, after the constructor). It used to be
+			 * dropped here, which left a window — the constructor — where NOTHING
+			 * carried this setting into the POST.
+			 *
+			 * That window matters more in this tree than in admin2: options_sanitize()
+			 * rebuilds the option from `$input` alone, so a key missing from the POST
+			 * is not "unchanged", it is DELETED. A library throw during init wiped
+			 * the saved number outright.
+			 */
 
 			var stored_pre_countries = ctc_getItem( 'pre_countries' );
 
@@ -1209,7 +1236,8 @@ document.addEventListener( 'DOMContentLoaded', function initializeMaterializeCom
 					null,
 
 				// Country names from the browser, in the admin's language.
-				countryNameLocale: ( ht_ctc_admin_var.intl_lang || 'en' ).replace( '_', '-' ),
+				// Resolved server-side; passed through untouched.
+				countryNameLocale: ht_ctc_admin_var.intl_lang || 'en',
 			};
 
 			if ( uiTranslations ) {
@@ -1242,23 +1270,66 @@ document.addEventListener( 'DOMContentLoaded', function initializeMaterializeCom
 			hidden.value = attr_value ? attr_value : '';
 			phoneInputElement.parentNode.insertBefore( hidden, phoneInputElement.nextSibling );
 
-			// Fix: Input display issue – auto-parsing fails for certain numbers
-			// (value is saved and retrieved correctly from DB)
-			if ( attr_value && attr_value.length > 8 ) {
+			// Only now does the visible input stop being the one that posts.
+			$el.removeAttr( 'name' );
+
+			/*
+			 * Seed the saved number — issue #343. Why the field was constructed
+			 * empty and the value is applied HERE:
+			 *
+			 * "Some numbers" is REGIONLESS NANP — toll-free +1 800 / 833 / 844 /
+			 * 855 / 866 / 877 / 888. Their country cannot be derived from the
+			 * dial code, so with `initialCountry: ''` + a lookup the library
+			 * selects NO country until the geo-IP call returns — and that call
+			 * is blocked by most ad blockers.
+			 *
+			 * The library handles that state inconsistently:
+			 *
+			 *   - #setInitialState() takes a regionless branch that does NOT
+			 *     call #updateCountryFromNumber(), then formats anyway —
+			 *     reaching stripSeparateDialCode() with a null country, which
+			 *     THROWS out of the intlTelInput() constructor.
+			 *   - setNumber() always calls #updateCountryFromNumber() first,
+			 *     which resolves these numbers to US, so it is safe.
+			 *
+			 * So we keep the value away from the constructor and hand it to
+			 * setNumber() instead — consumer-side, so there is no patched vendor
+			 * file to lose on the next library upgrade. The attribute is
+			 * restored first so the library's own recovery pass still sees the
+			 * full number.
+			 */
+			if ( attr_value ) {
+				phoneInputElement.setAttribute( 'value', attr_value );
 				intl.setNumber( attr_value );
 			}
 
 			if ( intl.promise && 'function' === typeof intl.promise.then ) {
-				intl.promise.then( function handleIntlReadyValue () {
-					// utils is ready now: replace the seed / best-effort value with
-					// the canonical formatted number.
-					var readyNumber = intlNumber( intl, phoneInputElement );
-
-					if ( readyNumber ) {
-						hidden.value = readyNumber;
-					}
+				/*
+				 * On SETTLE, not on resolve: intl.promise is
+				 * Promise.all([autoCountry, utils]) and the auto-country
+				 * deferred REJECTS when the geo-IP lookup fails — which it
+				 * routinely does, since ipinfo.io is blocked by most ad
+				 * blockers. .then() alone would skip the re-apply in exactly
+				 * the case that needs it.
+				 */
+				intl.promise.catch( function handleIntlPromiseError () {
+					// Lookup and/or utils failed; still re-seed below.
 				} )
-					.catch( function handleIntlPromiseError () {
+					.then( function handleIntlSettledValue () {
+						// Re-seed the visible field, unless the user is already editing it.
+						if ( attr_value && document.activeElement !== phoneInputElement ) {
+							intl.setNumber( attr_value );
+						}
+
+						// utils may be ready now: replace the seed / best-effort
+						// value with the canonical formatted number.
+						var readyNumber = intlNumber( intl, phoneInputElement );
+
+						if ( readyNumber ) {
+							hidden.value = readyNumber;
+						}
+					} )
+					.catch( function handleIntlReapplyError () {
 						// keep the stored value
 					} );
 			}

@@ -99,7 +99,7 @@ final class Module {
 		 *
 		 * @param bool $enabled
 		 */
-		return (bool) apply_filters( 'piecyfer/forms/enabled', false );
+		return (bool) apply_filters( 'piecyfer/forms/enabled', true );
 	}
 
 	/**

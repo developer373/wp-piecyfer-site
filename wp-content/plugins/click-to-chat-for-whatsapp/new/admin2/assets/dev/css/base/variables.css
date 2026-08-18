@@ -125,7 +125,27 @@
     /* card bg end */
 
 
-    --success: #00d1b2;
+    /*
+     * Success (confirmation) — one family for every "it worked" surface: the
+     * save button's "Saved" flash and the success toast above all, since those
+     * two appear at the same moment for the same save. They used to pick their
+     * own greens independently (a teal #00d1b2 in the toast, a stock emerald
+     * #10b981 on the button), so one action confirmed itself in two colours.
+     *
+     * Two greens, deliberately:
+     *   --success        fills — a luminous green in the same lightness band as
+     *                    --primary, so a filled success surface carries the same
+     *                    weight as the rest of the UI instead of going dark and
+     *                    heavy the moment it appears.
+     *   --success-strong text and icons on light surfaces, where that luminous
+     *                    green would be unreadable.
+     */
+    --success: hsl(152, 85%, 45%);
+    --success-strong: hsl(160, 90%, 26%);
+    --success-surface: hsla(152, 85%, 45%, 0.08);
+    --success-border: hsla(152, 85%, 45%, 0.28);
+    --success-glow: hsla(152, 85%, 45%, 0.4);
+
     --error: #ff3860;
     --warning: #ffdd57;
 
@@ -154,6 +174,13 @@ html[data-theme="dark"] {
     --primary-readable: hsl(var(--p-h), 100%, 50%);
     --primary-readable-hover: hsl(var(--p-h), 95%, 62%);
     --shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+    /* Success: the fill green is already bright enough for dark surfaces; it is
+       the text/icon green that has to invert — dark-on-light becomes light-on-dark. */
+    --success-strong: hsl(155, 80%, 58%);
+    --success-surface: hsla(152, 85%, 45%, 0.12);
+    --success-border: hsla(152, 85%, 45%, 0.35);
+    --success-glow: hsla(152, 85%, 50%, 0.45);
 
     /* PRO accent: brighter amber for legible contrast on dark surfaces. */
     --pro-color: #fbbf24;

@@ -4,7 +4,7 @@
  *
  * @package Click_To_Chat
  * @subpackage admin
- * @since 5.0
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -348,13 +348,6 @@ if ( ! class_exists( 'HT_CTC_Settings_Share' ) ) {
 								'label'  => __( 'Desktop', 'click-to-chat-for-whatsapp' ),
 								'fields' => array(
 									array(
-										'field_type' => 'block_content',
-										'style'      => 'margin-bottom: 10px;',
-										'data_watch' => '#share-desktop-style-tab #style_desktop',
-										'data_show_on_change' => 'true',
-										'content'    => '<a href="#customize-settings" class="ctc-shortcut-link">' . __( 'Customize the styles', 'click-to-chat-for-whatsapp' ) . ' <span class="dashicons dashicons-arrow-right-alt2"></span></a>',
-									),
-									array(
 										'field_type'   => 'block_grid_select',
 										'id'           => 'style_desktop',
 										'label'        => sprintf( '%1$s:', __( 'Select Style', 'click-to-chat-for-whatsapp' ) ),
@@ -441,20 +434,6 @@ if ( ! class_exists( 'HT_CTC_Settings_Share' ) ) {
 												__( 'Position Type', 'click-to-chat-for-whatsapp' ),
 												__( 'Position to Place', 'click-to-chat-for-whatsapp' ),
 											)
-										),
-									),
-									array(
-										'field_type'     => 'block_group',
-										'data_watch'     => '#share-mobile-style-tab #same_settings',
-										'data_hide_when' => '1',
-										'fields'         => array(
-											array(
-												'field_type' => 'block_content',
-												'style'   => 'margin-bottom: 10px;',
-												'data_watch' => '#share-mobile-style-tab #style_mobile',
-												'data_show_on_change' => 'true',
-												'content' => '<a href="#customize-settings" class="ctc-shortcut-link">' . __( 'Customize the styles', 'click-to-chat-for-whatsapp' ) . ' <span class="dashicons dashicons-arrow-right-alt2"></span></a>',
-											),
 										),
 									),
 									array(

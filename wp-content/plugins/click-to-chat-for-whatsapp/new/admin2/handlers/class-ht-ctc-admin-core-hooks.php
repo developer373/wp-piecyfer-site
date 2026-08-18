@@ -24,7 +24,7 @@
  * The class is instantiated directly via `new HT_CTC_Admin_Core_Hooks()`
  * during core bootstrapping inside `HT_CTC::init()`.
  *
- * @since 5.0
+ * @since 4.41
  * @package Click_To_Chat
  * @subpackage Admin2
  */

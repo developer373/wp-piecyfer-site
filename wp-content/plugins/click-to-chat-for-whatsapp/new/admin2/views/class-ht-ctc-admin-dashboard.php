@@ -4,6 +4,7 @@
  *
  * @package Click_To_Chat
  * @subpackage Administration
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -94,20 +95,30 @@ if ( ! class_exists( 'HT_CTC_Admin_Dashboard' ) ) {
 				);
 			}
 
+			/*
+			 * Customize is gone from the menu: its settings now open inline, at the style
+			 * picker, through the Contextual Settings Panel.
+			 *
+			 * Unregistered rather than deleted — HT_CTC_Settings_Customize and its map
+			 * entry are still there (see HT_CTC_Admin_Settings_Fields::customize_settings),
+			 * so the tab can be brought back with these two blocks alone while the inline
+			 * route finishes rolling out.
+			 *
+			 * $main_nav_items[] = array(
+			 *     'tab'   => 'customize-settings',
+			 *     'icon'  => 'dashicons-art',
+			 *     'label' => 'Customize',
+			 * );
+			 */
+
 			// WooCommerce is now handled via a drill-down menu.
-			$main_nav_items[] = array(
-				'tab'   => 'customize-settings',
-				'icon'  => 'dashicons-art',
-				'label' => 'Customize',
-				// 'label' => __('Customize Styles', 'click-to-chat-for-whatsapp'),
-			);
 			$main_nav_items[] = array(
 				'tab'   => 'advanced-settings',
 				'icon'  => 'dashicons-admin-settings',
 				'label' => 'Advanced',
 			);
 
-			// todo(4.42): will do it after initial release as planing to add dynamic way of identifying issues
+			// todo(4.44): will do it after initial release as planing to add dynamic way of identifying issues
 
 			/*
 			$main_nav_items[] = array(
@@ -183,13 +194,22 @@ if ( ! class_exists( 'HT_CTC_Admin_Dashboard' ) ) {
 				);
 			}
 
-			$settings_panels[] = array(
-				'id'    => 'customize-settings',
-				'group' => 'customize_settings',
-				// 'title' => 'Customize',
-				'title' => __( 'Customize Styles', 'click-to-chat-for-whatsapp' ),
-				'desc'  => 'Set custom colors, icon size, and mobile display behavior',
-			);
+			/*
+			 * Paired with the nav item above — see the note there.
+			 *
+			 * The panel has to go too, not just the menu entry. preloadBackgroundTabs()
+			 * walks `.settings-panel` and prefetches each one's group, so leaving the panel
+			 * behind would keep firing a request for a group whose method is commented out:
+			 * a 400 in the console on every admin page load, for a tab nothing can reach.
+			 *
+			 * $settings_panels[] = array(
+			 *     'id'    => 'customize-settings',
+			 *     'group' => 'customize_settings',
+			 *     'title' => __( 'Customize Styles', 'click-to-chat-for-whatsapp' ),
+			 *     'desc'  => 'Set custom colors, icon size, and mobile display behavior',
+			 * );
+			 */
+
 			$settings_panels[] = array(
 				'id'    => 'advanced-settings',
 				'group' => 'advanced_settings',
@@ -238,8 +258,9 @@ if ( ! class_exists( 'HT_CTC_Admin_Dashboard' ) ) {
 			<aside id="sidebar" class="sidebar">
 				<div class="sidebar-header">
 					<div class="sidebar-title"><?php echo esc_html__( 'Settings', 'click-to-chat-for-whatsapp' ); ?></div>
-					<button type="button" id="close-sidebar" class="close-sidebar">
-						<span class="dashicons dashicons-no-alt"></span>
+					<button type="button" id="close-sidebar" class="close-sidebar"
+						aria-label="Close settings menu">
+						<span class="dashicons dashicons-no-alt" aria-hidden="true"></span>
 					</button>
 				</div>
 				<?php
@@ -567,19 +588,13 @@ if ( ! class_exists( 'HT_CTC_Admin_Dashboard' ) ) {
 									// 'title' => 'Custom URL',
 									// 'desc'  => 'Send the click to any custom destination instead of WhatsApp.',
 									// ),
-									// Customize.
-									array(
-										'tabs'  => 'customize-settings',
-										'icon'  => 'dashicons-randomize',
-										'title' => 'Random & Sequential Numbers',
-										'desc'  => 'Distribute chats across multiple numbers to balance the load.',
-									),
-									array(
-										'tabs'  => 'customize-settings',
-										'icon'  => 'dashicons-move',
-										'title' => 'Fixed / Absolute Position',
-										'desc'  => 'Place the widget anywhere with advanced position types.',
-									),
+
+									// array(
+									// 'tabs'  => 'general-settings',
+									// 'icon'  => 'dashicons-randomize',
+									// 'title' => 'Random & Sequential Numbers',
+									// 'desc'  => 'Distribute chats across multiple numbers to balance the load.',
+									// ),
 									// WooCommerce.
 									// array(
 									// 'tabs'  => 'woo-overwrite-settings woo-add-whatsapp-settings',

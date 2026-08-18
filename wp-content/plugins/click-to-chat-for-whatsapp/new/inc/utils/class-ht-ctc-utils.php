@@ -4,7 +4,7 @@
  *
  * @package Click_To_Chat
  * @subpackage Administration
- * @since 5.0
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

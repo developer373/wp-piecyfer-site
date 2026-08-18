@@ -8,6 +8,12 @@
  * 3. Handling UI-specific interactions like Grid selection
  */
 import { log, friendlyErrorMessage, copyToClipboard } from '../core/Utils.js';
+import {
+	handleContextualTriggerClick,
+	syncPanelToSelection,
+	initContextualTriggers,
+} from '../components/layouts/ContextualTrigger.js';
+
 export default class UIManager {
 
 	static init ( app ) {
@@ -37,7 +43,7 @@ export default class UIManager {
 					// (field labels); fall back to the generic line.
 					description: payload?.summary || 'Your changes were successfully saved.',
 					iconClass: 'dashicons dashicons-yes-alt',
-					iconColor: 'green',
+					variant: 'success',
 				} );
 			} );
 
@@ -59,7 +65,7 @@ export default class UIManager {
 					title: this.app.config.i18n.error || 'Error saving settings.',
 					description,
 					iconClass: 'dashicons dashicons-warning',
-					iconColor: 'red',
+					variant: 'error',
 					duration: 12000,
 				} );
 
@@ -69,12 +75,156 @@ export default class UIManager {
 			} );
 		}
 
+		// Keeps Customize triggers in step with the panel they open.
+		initContextualTriggers( this.app );
+
 		// ~ Start listening for changes on inputs marked with 'update-hidden-field'
 		// ~ This bridges the UI inputs (toggle switches) -> Actual Hidden Form Inputs
 		this.listenerForInputChanges();
 
+		// Dismiss button + hold-while-reading behavior for the toast
+		this.initToastControls();
+
 		// Initialize physical on-page offline/online warning box
 		this.initOfflineDetection();
+	}
+
+	/**
+	 * Wire the toast's dismiss button and its hover/focus hold.
+	 *
+	 * A toast is not always disposable here: a save failure carries the exact
+	 * technical message support asks for, and a PRO toast carries an action
+	 * link. Both were on the same fixed timer as "Settings saved", so reaching
+	 * for the link or reading the error raced a countdown. Hovering or tabbing
+	 * into the toast now holds it; leaving resumes with the time that was left.
+	 *
+	 * Bound once, on the element that outlives every individual toast.
+	 */
+	static initToastControls () {
+		const toast = document.getElementById( 'toast' );
+		if ( ! toast ) { return; }
+
+		toast.querySelector( '.toast-close' )
+			?.addEventListener( 'click', () => this.hideToast() );
+
+		toast.addEventListener( 'mouseenter', () => this.pauseToast() );
+		toast.addEventListener( 'mouseleave', () => {
+			// Keyboard focus inside the toast is its own reason to hold it open.
+			if ( toast.contains( document.activeElement ) ) { return; }
+			this.resumeToast();
+		} );
+
+		// focusin/focusout, not focus/blur: the focusable children are the close
+		// button and the action link, and only the bubbling pair sees them.
+		toast.addEventListener( 'focusin', ( event ) => {
+			// Remember where focus came IN from, so dismissing can hand it back.
+			// Only on entry from outside — moving between the toast's own close
+			// button and action link must not overwrite the original origin.
+			if ( ! toast.contains( event.relatedTarget ) ) {
+				this.toastReturnFocus = event.relatedTarget || null;
+			}
+			this.pauseToast();
+		} );
+		toast.addEventListener( 'focusout', ( event ) => {
+			// Ignore focus moving between the toast's own children.
+			if ( toast.contains( event.relatedTarget ) ) { return; }
+			this.resumeToast();
+		} );
+
+		// Esc dismisses whichever toast is showing, from anywhere on the page.
+		document.addEventListener( 'keydown', ( event ) => {
+			if ( 'Escape' !== event.key || ! toast.classList.contains( 'show' ) ) { return; }
+			this.hideToast();
+		} );
+	}
+
+	/**
+	 * Hold the visible toast open: stop its dismiss timer and its progress bar,
+	 * banking however much of the countdown was left.
+	 */
+	static pauseToast () {
+		const toast = document.getElementById( 'toast' );
+		if ( ! toast || ! toast.classList.contains( 'show' ) || this.toastPaused ) { return; }
+
+		clearTimeout( this.toastTimeout );
+		this.toastRemaining = Math.max(
+			0,
+			this.toastRemaining - ( Date.now() - this.toastResumedAt ),
+		);
+		this.toastPaused = true;
+		toast.classList.add( 'is-paused' );
+	}
+
+	/**
+	 * Resume a held toast from where its countdown stopped.
+	 */
+	static resumeToast () {
+		const toast = document.getElementById( 'toast' );
+		if ( ! toast || ! this.toastPaused ) { return; }
+
+		// Tabbing out of the close button while the pointer still rests on the
+		// toast fires focusout, but hovering alone is reason enough to hold.
+		if ( toast.matches( ':hover' ) ) { return; }
+
+		this.toastPaused = false;
+		toast.classList.remove( 'is-paused' );
+
+		// Give a nearly-expired toast a moment to be seen again rather than
+		// vanishing the instant the pointer leaves.
+		this.startToastTimer( Math.max( this.toastRemaining, 600 ) );
+	}
+
+	/**
+	 * (Re)start the dismiss countdown.
+	 *
+	 * @param {number} ms Milliseconds until the toast slides out.
+	 */
+	static startToastTimer ( ms ) {
+		clearTimeout( this.toastTimeout );
+		this.toastRemaining = ms;
+		this.toastResumedAt = Date.now();
+		this.toastTimeout = setTimeout( () => this.hideToast(), ms );
+	}
+
+	/**
+	 * Slide the toast out and announce it, whether it timed out or was dismissed.
+	 *
+	 * 'toast:hidden' is deliberately late: the live Preview floats at the widget
+	 * position and can sit under the toast, so it waits for the 0.3s slide-out
+	 * (toast.css) before re-rendering itself.
+	 */
+	static hideToast () {
+		const toast = document.getElementById( 'toast' );
+		if ( ! toast ) { return; }
+
+		/*
+		 * Where focus is BEFORE the toast is hidden. .toast (no .show) is
+		 * visibility:hidden, which correctly drops the element from the tab
+		 * order — and takes focus with it, to <body>. A keyboard user who
+		 * tabbed in would then have to tab the whole admin page to get back.
+		 *
+		 * "It auto-hides anyway" does not cover this case: focus INSIDE the
+		 * toast pauses the dismiss timer by design, so a focused toast never
+		 * times out. Escape or the close button is the only way out, which is
+		 * exactly the path that strands them.
+		 *
+		 * Guarded on focus actually being inside: a toast that times out on
+		 * its own, or is dismissed by mouse from elsewhere on the page, must
+		 * not yank focus to somewhere the user never was.
+		 */
+		const returnTo = toast.contains( document.activeElement ) ? this.toastReturnFocus : null;
+
+		clearTimeout( this.toastTimeout );
+		this.toastPaused = false;
+		toast.classList.remove( 'show', 'is-paused' );
+
+		if ( returnTo && returnTo.isConnected && returnTo.focus ) { returnTo.focus(); }
+		this.toastReturnFocus = null;
+
+		clearTimeout( this.toastHiddenTimeout );
+		this.toastHiddenTimeout = setTimeout( () => {
+			this.app?.events?.emit( 'toast:hidden' );
+		}, 300 );
 	}
 
 	/**
@@ -294,11 +444,21 @@ export default class UIManager {
 		updateOfflineBanner();
 	}
 
+	/**
+	 * @param {object}  options
+	 * @param {string}  options.variant One of 'success' | 'error' | '' (neutral).
+	 *                                  Sets a class the stylesheet colours the
+	 *                                  status icon AND the progress bar from, so
+	 *                                  one message is one colour. Prefer this to
+	 *                                  iconColor, which is kept only for outside
+	 *                                  callers (PRO) that pass a literal colour.
+	 */
 	static showToast ( {
 		title = '',
 		description = '',
 		iconClass = 'dashicons dashicons-yes-alt',
 		iconColor = '',
+		variant = '',
 		duration = 3000,
 		action = null,
 	} = {} ) {
@@ -310,7 +470,11 @@ export default class UIManager {
 		// currently sliding out — this new toast owns the corner again).
 		if ( this.toastTimeout ) { clearTimeout( this.toastTimeout ); }
 		if ( this.toastHiddenTimeout ) { clearTimeout( this.toastHiddenTimeout ); }
-		toast.classList.remove( 'show' );
+
+		// Drop any hold from the outgoing toast; the new one starts its own.
+		this.toastPaused = false;
+		toast.classList.remove( 'show', 'is-paused', 'is-success', 'is-error' );
+		if ( variant ) { toast.classList.add( `is-${variant}` ); }
 		void toast.offsetWidth;
 
 		// 2. Update Content
@@ -335,7 +499,9 @@ export default class UIManager {
 			}
 		}
 
-		const icon = toast.querySelector( '.toast-content .dashicons' );
+		// Direct child only — the dismiss button's glyph is also a .dashicons
+		// inside .toast-content, and this line rewrites className wholesale.
+		const icon = toast.querySelector( '.toast-content > .dashicons' );
 		if ( icon ) {
 			icon.className = iconClass;
 			icon.style.color = iconColor;
@@ -354,16 +520,12 @@ export default class UIManager {
 		// it hides on 'toast:show' and re-renders itself on 'toast:hidden'.
 		this.app?.events?.emit( 'toast:show' );
 
-		this.toastTimeout = setTimeout( () => {
-			toast.classList.remove( 'show' );
+		this.startToastTimer( duration );
 
-			// Announce 'toast:hidden' only after the slide-out transition
-			// finishes (0.3s in toast.css) — emitting immediately would bring
-			// the preview back under the still-animating toast.
-			this.toastHiddenTimeout = setTimeout( () => {
-				this.app?.events?.emit( 'toast:hidden' );
-			}, 300 );
-		}, duration );
+		// A toast raised while the pointer is already resting in the corner
+		// (a second save from the same spot) should hold, same as one hovered
+		// after it appears — :hover is a state, not only an event.
+		if ( toast.matches( ':hover' ) ) { this.pauseToast(); }
 	}
 
 	/**
@@ -436,66 +598,96 @@ export default class UIManager {
 			this.updateTargetInput( targetSelector, newValue );
 		} );
 
-		// 3. Grid Option Click Listener
-		// Handles selection logic for custom Grid options (visual radio replacements).
+		/*
+		 * 3. Click-as-input sync.
+		 *
+		 * `.ctc-sync-source-click` marks any element that stands in for a form field: click
+		 * it, and its value is pushed into the input named by `data-sync-target`. Nothing
+		 * about this is grid-specific — a grid tile is only one user of it.
+		 *
+		 * The class marks the CLICKABLE REGION; the value and target may live on it or on
+		 * an ancestor, which is why both are resolved with closest(). A grid tile keeps
+		 * them on `.grid-option` and puts the class on its inner select region, so the
+		 * Customize button can sit outside the clickable area entirely.
+		 */
 		document.addEventListener( 'click', ( event ) => {
-			// A. Trigger for .ctc-sync-source-click elements
-			// These are elements (like buttons or divs) that act as inputs when clicked.
-			// Exclude .is-locked options: they share this class but are display-only with no
-			// real value (data-value="undefined"); syncing would corrupt the target input.
-			// They are handled by the .grid-option branch below.
-			const sourceClick = event.target.closest( '.ctc-sync-source-click:not(.is-locked)' );
+			const sourceClick = event.target.closest( '.ctc-sync-source-click' );
 
-			if ( sourceClick ) {
-				const targetSelector = sourceClick.dataset.syncTarget;
-				if ( targetSelector ) {
-					// Use value attribute or data-value
-					const newValue = sourceClick.value || sourceClick.dataset.value;
-					this.updateTargetInput( targetSelector, newValue );
+			// Locked elements are display-only: no real value (data-value="undefined"), so
+			// syncing would overwrite the target with junk. The class may be on a child of
+			// the locked element, hence closest() rather than a :not() in the selector.
+			if ( ! sourceClick || sourceClick.closest( '.is-locked' ) ) { return; }
+
+			const host = sourceClick.closest( '[data-sync-target]' );
+			if ( ! host ) { return; }
+
+			// `value` for real form controls, `data-value` for elements pretending to be one.
+			const newValue = sourceClick.value || host.dataset.value;
+
+			this.updateTargetInput( host.dataset.syncTarget, newValue );
+		} );
+
+		// 4. Grid option click — the visual radio behavior, plus the Customize trigger
+		// that sits alongside it.
+		document.addEventListener( 'click', async ( event ) => {
+			/*
+			 * The trigger is a sibling of the select region, so it never reaches the sync
+			 * listener above. It is still inside .grid-option, so claim it here to skip the
+			 * selection pass below.
+			 */
+			if ( await handleContextualTriggerClick( this.app, event ) ) { return; }
+
+			/*
+			 * Selection counts only when the click landed in the tile's interactive region —
+			 * the SAME region that syncs the value. Matching `.grid-option` instead would
+			 * let the tile's padding, or any slack the grid row stretches it by, highlight a
+			 * tile whose value was never synced: selected on screen, unchanged underneath.
+			 */
+			const selectEl = event.target.closest( '.grid-option-select' );
+			if ( ! selectEl ) { return; }
+
+			const gridOption = selectEl.closest( '.grid-option' );
+			if ( ! gridOption ) { return; }
+
+			// Locked options are display-only — ignore selection clicks. PRO-locked
+			// options additionally surface an upgrade hint via the toast.
+			if ( gridOption.classList.contains( 'is-locked' ) ) {
+				if ( gridOption.classList.contains( 'pro-option' ) ) {
+					this.showToast( {
+						title: 'A PRO feature',
+						description: 'Unlock this and more with Click to Chat PRO.',
+						iconClass: 'dashicons dashicons-star-filled',
+						iconColor: 'var(--pro-color)',
+						duration: 6000,
+						action: {
+							text: 'Upgrade to PRO',
+							url: 'https://holithemes.com/plugins/click-to-chat/pricing/',
+						},
+					} );
 				}
+				return;
 			}
 
-			// B. Trigger for .grid-option elements
-			const gridOption = event.target.closest( '.grid-option' );
-			if ( gridOption ) {
-				// Locked options are display-only — ignore selection clicks. PRO-locked
-				// options additionally surface an upgrade hint via the toast.
-				if ( gridOption.classList.contains( 'is-locked' ) ) {
-					if ( gridOption.classList.contains( 'pro-option' ) ) {
-						this.showToast( {
-							title: 'A PRO feature',
-							description: 'Unlock this and more with Click to Chat PRO.',
-							iconClass: 'dashicons dashicons-star-filled',
-							iconColor: 'var(--pro-color)',
-							duration: 6000,
-							action: {
-								text: 'Upgrade to PRO',
-								url: 'https://holithemes.com/plugins/click-to-chat/pricing/',
-							},
-						} );
-					}
-					return;
-				}
+			if ( null === gridOption.getAttribute( 'data-value' ) ) { return; }
 
-				// Get value from data-value attribute
-				const gridOptionValue = gridOption.getAttribute( 'data-value' );
-				if ( gridOptionValue === null ) { return; }
+			const mainGrid = gridOption.closest( '.grid' );
+			if ( ! mainGrid ) { return; }
 
-				// Find the mainGrid container (.grid)
-				const mainGrid = gridOption.closest( '.grid' );
-				if ( ! mainGrid ) { return; }
+			const wasSelected = gridOption.classList.contains( 'selected' );
 
-				// UI Update: Remove selected class from siblings, add to clicked
-				mainGrid.querySelectorAll( '.grid-option' )
-					.forEach( opt => {
-						const selected = opt === gridOption;
-						opt.classList.toggle( 'selected', selected );
-						opt.setAttribute( 'aria-pressed', selected ? 'true' : 'false' );
-					} );
+			// Highlight only — the VALUE is moved by the sync listener above, because the
+			// tile's select region carries .ctc-sync-source-click.
+			mainGrid.querySelectorAll( '.grid-option' )
+				.forEach( opt => {
+					const selected = opt === gridOption;
+					opt.classList.toggle( 'selected', selected );
+					opt.querySelector( '.grid-option-select' )
+						?.setAttribute( 'aria-pressed', selected ? 'true' : 'false' );
+				} );
 
-				// Note: Actual data syncing is often handled by a separate hidden input or
-				// if the grid option itself has data-sync-target via the 'ctc-sync-source-click' class handled above.
-				// If specific grid logic is needed here, it can be added.
+			// An open contextual panel follows the new selection; a no-op when none is open.
+			if ( ! wasSelected ) {
+				await syncPanelToSelection( this.app, gridOption, mainGrid );
 			}
 		} );
 	}

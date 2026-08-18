@@ -8,16 +8,40 @@
     margin: 1rem 0;
 }
 
+/*
+ * The tile is a container: border, selected state, and the box the Customize trigger
+ * docks into. It is NOT the click target — .grid-option-select is.
+ */
 .grid-option {
     display: flex;
     flex-direction: column;
     align-items: center;
-    cursor: pointer;
     transition: var(--transition);
     border: 2px solid transparent;
     border-radius: var(--radius);
     padding: 0.5rem;
     position: relative;
+}
+
+/*
+ * The clickable region — everything except the Customize trigger, which is its sibling.
+ * Carries .ctc-sync-source-click, role="button" and the pointer cursor, so the trigger is
+ * outside the area that selects the tile.
+ */
+.grid-option-select {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+
+    /*
+     * Absorb the slack. Grid rows stretch every tile to the tallest one, and the selected
+     * tile is taller because of its Customize bar — so without this the neighbors end up
+     * with a dead strip of tile below their click region, exactly level with that bar.
+     * Clicking it used to highlight a tile whose value was never synced.
+     */
+    flex: 1 1 auto;
+    cursor: pointer;
 }
 
 .grid-option:hover {

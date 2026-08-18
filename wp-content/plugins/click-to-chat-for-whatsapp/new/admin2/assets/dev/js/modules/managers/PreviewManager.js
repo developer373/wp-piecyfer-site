@@ -94,7 +94,7 @@ export default class PreviewManager {
 		// admin may still be editing CTA settings), so instead it adds a class
 		// that fully hides the CTA — and keeps it hidden through later open/close
 		// (it won't even reveal on hover). Any settings edit clears it, restoring
-		// the CTA to its normal behaviour. Set when the greeting opens (init +
+		// the CTA to its normal behavior. Set when the greeting opens (init +
 		// click-to-open), cleared in bindFormEvents.
 		this.ctaHardHidden = false;
 

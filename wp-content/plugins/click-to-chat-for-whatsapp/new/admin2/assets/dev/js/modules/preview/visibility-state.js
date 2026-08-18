@@ -2,7 +2,7 @@
  * Visibility state machine for the chat widget's notification badge and
  * greetings dialog.
  *
- * Pure logic, no DOM. Mirrors the front-end behaviour in
+ * Pure logic, no DOM. Mirrors the front-end behavior in
  * new/inc/assets/js/dev/app.dev.js (greetings_open / greetings_close /
  * stop_notification_badge) so the admin live preview and the real widget
  * can't drift. Designed so the front end could adopt the same model if/when

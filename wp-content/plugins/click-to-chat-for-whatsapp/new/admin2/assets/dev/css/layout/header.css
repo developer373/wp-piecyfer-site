@@ -21,19 +21,32 @@
     z-index: 1000;
     box-shadow: var(--shadow-prism);
     transition: var(--transition);
-    animation: prismSweepBG 8s infinite var(--ease-prism);
+
+    /* One-time entrance sweep.
+       This used to loop forever (8s), which put permanent motion in the sticky
+       chrome of a screen people read and type on — the light band crossing the
+       header in peripheral vision every few seconds, indefinitely. It was also
+       the most expensive thing on the page: animating background-position can't
+       be composited, so it repainted a 40px backdrop-filter surface every frame
+       for the whole session. A single pass on load keeps the flourish. */
+    animation: prismSweepBG 1.6s var(--ease-prism) 0.15s both;
 }
 
 @keyframes prismSweepBG {
-    0% {
+    from {
         background-position: -100% 0;
     }
 
-    20% {
+    to {
         background-position: 300% 0;
     }
+}
 
-    100% {
+/* `both` parks the gradient off the right edge after the sweep; reduced-motion
+   users skip straight to that resting state. */
+@media (prefers-reduced-motion: reduce) {
+    .admin-header {
+        animation: none;
         background-position: 300% 0;
     }
 }

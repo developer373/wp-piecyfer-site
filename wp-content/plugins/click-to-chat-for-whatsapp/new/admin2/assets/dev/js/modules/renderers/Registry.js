@@ -21,6 +21,7 @@ import { createBlockContentDetails } from '../components/layouts/BlockContentDet
 import { createBlockAccordion } from '../components/layouts/BlockAccordion.js';
 import { createBlockFaq } from '../components/layouts/BlockFaq.js';
 import { createBlockGridSelect } from '../components/layouts/BlockGridSelect.js';
+import { createContextualTriggerField } from '../components/layouts/ContextualTrigger.js';
 import { createBlockRows } from '../components/layouts/BlockRows.js';
 import { createSubHeading } from '../components/layouts/SubHeading.js';
 import { createInfoBox } from '../components/layouts/InfoBox.js';
@@ -107,6 +108,7 @@ export const registerDefaultRenderers = ( app ) => {
 	renderers.block_accordion = ( field ) => createBlockAccordion( field, createField );
 	renderers.block_faq = createBlockFaq;
 	renderers.block_grid_select = ( field ) => createBlockGridSelect( field, app.config );
+	renderers.block_contextual_trigger = createContextualTriggerField;
 	renderers.block_rows = ( field, context ) => createBlockRows( field, context, createField );
 	renderers.block_sub_heading = createSubHeading;
 	renderers.block_infobox = createInfoBox;

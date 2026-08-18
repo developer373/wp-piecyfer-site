@@ -4,7 +4,7 @@
  *
  * @package Click_To_Chat
  * @subpackage admin
- * @since 5.0
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -83,7 +83,10 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 					'sub_text'    => 'Theme Button',
 					'icon'        => 'dashicons dashicons-format-chat',
 					'class_field' => 'style-1',
-					// 'image'       => 'https://example.com/image.png',
+					'attributes'  => array(
+						'data-contextual-group' => 'contextual_styles',
+						'data-contextual-id'    => 'style_1',
+					),
 				),
 				array(
 					'value'       => '2',
@@ -91,7 +94,10 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 					'sub_text'    => 'Square Icon',
 					'icon'        => 'dashicons dashicons-format-chat',
 					'class_field' => 'style-2',
-					// 'image'       => '',
+					'attributes'  => array(
+						'data-contextual-group' => 'contextual_styles',
+						'data-contextual-id'    => 'style_2',
+					),
 				),
 				array(
 					'value'       => '3',
@@ -99,7 +105,10 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 					'sub_text'    => 'Round Icon',
 					'icon'        => 'dashicons dashicons-format-chat',
 					'class_field' => 'style-3',
-					// 'image'       => '',
+					'attributes'  => array(
+						'data-contextual-group' => 'contextual_styles',
+						'data-contextual-id'    => 'style_3',
+					),
 				),
 				array(
 					'value'       => '3_1',
@@ -107,7 +116,10 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 					'sub_text'    => 'Round Icon',
 					'icon'        => 'dashicons dashicons-format-chat',
 					'class_field' => 'style-3-1',
-					// 'image'       => '',
+					'attributes'  => array(
+						'data-contextual-group' => 'contextual_styles',
+						'data-contextual-id'    => 'style_3_1',
+					),
 				),
 				array(
 					'value'       => '4',
@@ -116,7 +128,10 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 					'icon'        => 'dashicons dashicons-format-chat',
 					'text'        => 'Chat',
 					'class_field' => 'style-4',
-					// 'image'       => '',
+					'attributes'  => array(
+						'data-contextual-group' => 'contextual_styles',
+						'data-contextual-id'    => 'style_4',
+					),
 				),
 				array(
 					'value'       => '5',
@@ -125,7 +140,10 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 					'icon'        => 'dashicons dashicons-format-chat',
 					'text'        => 'Chat',
 					'class_field' => 'style-5',
-					// 'image'       => '',
+					'attributes'  => array(
+						'data-contextual-group' => 'contextual_styles',
+						'data-contextual-id'    => 'style_5',
+					),
 				),
 				array(
 					'value'       => '6',
@@ -133,7 +151,10 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 					'sub_text'    => 'Text Only',
 					'text'        => 'Chat with us',
 					'class_field' => 'style-6',
-					// 'image'       => '',
+					'attributes'  => array(
+						'data-contextual-group' => 'contextual_styles',
+						'data-contextual-id'    => 'style_6',
+					),
 				),
 				array(
 					'value'       => '7',
@@ -141,7 +162,10 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 					'sub_text'    => 'Rounded Button',
 					'text'        => 'WhatsApp Chat',
 					'class_field' => 'style-7',
-					// 'image'       => '',
+					'attributes'  => array(
+						'data-contextual-group' => 'contextual_styles',
+						'data-contextual-id'    => 'style_7',
+					),
 				),
 				array(
 					'value'       => '7_1',
@@ -149,7 +173,10 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 					'sub_text'    => 'Rounded Button',
 					'text'        => 'WhatsApp Chat',
 					'class_field' => 'style-7-1',
-					// 'image'       => '',
+					'attributes'  => array(
+						'data-contextual-group' => 'contextual_styles',
+						'data-contextual-id'    => 'style_7_1',
+					),
 				),
 				array(
 					'value'       => '8',
@@ -157,7 +184,10 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 					'sub_text'    => 'Rect Button',
 					'text'        => 'WhatsApp Chat',
 					'class_field' => 'style-8',
-					// 'image'       => '',
+					'attributes'  => array(
+						'data-contextual-group' => 'contextual_styles',
+						'data-contextual-id'    => 'style_8',
+					),
 				),
 				array(
 					'value'       => '99',
@@ -165,7 +195,10 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 					'sub_text'    => 'Custom Image',
 					'icon'        => 'dashicons dashicons-format-image',
 					'class_field' => 'style-99',
-					// 'image'       => '',
+					'attributes'  => array(
+						'data-contextual-group' => 'contextual_styles',
+						'data-contextual-id'    => 'style_99',
+					),
 				),
 			);
 		}
@@ -564,7 +597,7 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 			if ( class_exists( 'WooCommerce' ) ) {
 				$values['fields'][] = array(
 					'field_type' => 'block_infobox',
-					'content'    => 'To change Pre-filled Message for WooCommerce Single Product Pages, go to <a href="#woo-overwrite-settings" class="ctc-shortcut-link">WooCommerce Settings <span class="dashicons dashicons-arrow-right-alt2"></span></a>.',
+					'content'    => 'To change Pre-filled Message for WooCommerce Single Product Pages, go to <a href="#woo-overwrite-settings/woo_pre_filled" class="ctc-shortcut-link">WooCommerce Settings <span class="dashicons dashicons-arrow-right-alt2"></span></a>.',
 					'class_pr'   => '',
 				);
 			}
@@ -605,7 +638,7 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 			if ( class_exists( 'WooCommerce' ) ) {
 				$values['fields'][] = array(
 					'field_type' => 'block_infobox',
-					'content'    => 'To change Call to Action for WooCommerce Single Product Pages, go to <a href="#woo-overwrite-settings" class="ctc-shortcut-link">WooCommerce Settings <span class="dashicons dashicons-arrow-right-alt2"></span></a>.',
+					'content'    => 'To change Call to Action for WooCommerce Single Product Pages, go to <a href="#woo-overwrite-settings/woo_call_to_action" class="ctc-shortcut-link">WooCommerce Settings <span class="dashicons dashicons-arrow-right-alt2"></span></a>.',
 					'class_pr'   => '',
 				);
 			}
@@ -649,13 +682,6 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 							'desktop-style' => array(
 								'label'  => __( 'Desktop', 'click-to-chat-for-whatsapp' ),
 								'fields' => array(
-									array(
-										'field_type' => 'block_content',
-										'content'    => '<a href="#customize-settings" class="ctc-shortcut-link">' . __( 'Customize the styles', 'click-to-chat-for-whatsapp' ) . ' <span class="dashicons dashicons-arrow-right-alt2"></span></a>',
-										// 'data_watch'          => '#desktop-style-tab #style_desktop',
-										// 'data_show_on_change' => 'true',
-										'style'      => 'margin-bottom: 10px;',
-									),
 									array(
 										'field_type'   => 'block_grid_select',
 										'label'        => sprintf(
@@ -766,22 +792,6 @@ if ( ! class_exists( 'HT_CTC_Settings_General' ) ) {
 											)
 										),
 
-									),
-									array(
-										'field_type'     => 'block_rows',
-										'data_watch'     => '#mobile-style-tab #same_settings',
-										'data_hide_when' => '1',
-										'fields'         => array(
-											array(
-												array(
-													'field_type'          => 'block_content',
-													'data_watch'          => '#mobile-style-tab #style_mobile',
-													'data_show_on_change' => 'true',
-													'content'             => '<a href="#customize-settings" class="ctc-shortcut-link">' . __( 'Customize the styles', 'click-to-chat-for-whatsapp' ) . ' <span class="dashicons dashicons-arrow-right-alt2"></span></a>',
-													'style'               => 'margin-bottom: 10px;',
-												),
-											),
-										),
 									),
 									array(
 										'field_type'     => 'block_grid_select',

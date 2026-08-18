@@ -97,6 +97,10 @@ if ( ! class_exists( 'HT_CTC_Group_Shortcode' ) ) {
 			// group_id
 			$group_id = esc_attr( $a['group_id'] );
 
+			// if ( '' === $group_id ) {
+			// return '';
+			// }
+
 			// hide on devices
 			// if 'yes' then hide
 			$hide_mobile  = esc_attr( $a['hide_mobile'] );

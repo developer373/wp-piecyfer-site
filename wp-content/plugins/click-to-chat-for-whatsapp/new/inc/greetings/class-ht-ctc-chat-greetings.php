@@ -72,7 +72,7 @@ if ( ! class_exists( 'HT_CTC_Chat_Greetings' ) ) {
 			$ht_ctc_greetings['call_to_action'] = apply_filters( 'wpml_translate_single_string', $ht_ctc_greetings['call_to_action'], 'Click to Chat for WhatsApp', 'greetings_call_to_action' );
 			$ht_ctc_greetings['opt_in']         = apply_filters( 'wpml_translate_single_string', $ht_ctc_greetings['opt_in'], 'Click to Chat for WhatsApp', 'greetings_opt_in' );
 
-			// greetings dialog window type - next (default behaviour) or modal. next: next to button to open dialog, modal: open dialog in modal style
+			// greetings dialog window type - next (default behavior) or modal. next: next to button to open dialog, modal: open dialog in modal style
 			$g_position = ( isset( $greetings_settings['g_position'] ) ) ? esc_attr( $greetings_settings['g_position'] ) : 'next';
 
 			// greetings dialog size. s: small, m: mid, l: large

@@ -1,4 +1,6 @@
-import { applyConditionalAttributes, getNestedValue, escapeHTML, escapeAttr, safeUrl } from '../../core/Utils.js';
+import { applyConditionalAttributes, applyDataAttributes, getNestedValue, escapeHTML, escapeAttr, safeUrl } from '../../core/Utils.js';
+import { createContextualTrigger } from './ContextualTrigger.js';
+import { appendHelpText } from '../fields/BaseField.js';
 
 /**
  * field_type: block_grid_select
@@ -24,13 +26,13 @@ export const createBlockGridSelect = ( field, config ) => {
 
 	const classPr = field.class_pr || '';
 	const inputClass = field.class_field || '';
-	const group = document.createElement( 'div' );
-	group.className = `form-group todo-form-group ${classPr}`;
+	const formGroup = document.createElement( 'div' );
+	formGroup.className = `form-group todo-form-group ${classPr}`;
 
-	applyConditionalAttributes( group, field );
+	applyConditionalAttributes( formGroup, field );
 	if ( field.label ) {
 		// eslint-disable-next-line no-unsanitized/property -- Contains static HTML/Safely escaped dynamic values
-		group.innerHTML = `<label>${escapeHTML( field.label )}</label>`;
+		formGroup.innerHTML = `<label>${escapeHTML( field.label )}</label>`;
 	}
 
 	const grid = document.createElement( 'div' );
@@ -69,7 +71,7 @@ export const createBlockGridSelect = ( field, config ) => {
 		hiddenInput.name = `${optionGroupName}[${field.id}]`;
 		hiddenInput.className = inputClass;
 		hiddenInput.value = value;
-		group.appendChild( hiddenInput );
+		formGroup.appendChild( hiddenInput );
 	}
 
 	if ( field.options ) {
@@ -77,12 +79,20 @@ export const createBlockGridSelect = ( field, config ) => {
 			const optDiv = document.createElement( 'div' );
 			const isSelected = String( opt.value ) === String( value );
 
-			// is-locked = display-only behaviour (no value sync). pro-option = PRO styling/badge.
+			// is-locked = display-only behavior (no value sync). pro-option = PRO styling/badge.
 			// Currently every locked option is a PRO upsell, but the two are kept separate so a
 			// non-PRO locked option can reuse is-locked without the PRO treatment.
 			const isLocked = opt.locked || opt.pro;
-			optDiv.className = `grid-option ctc-sync-source-click ${isSelected ? 'selected' : ''} ${isLocked ? 'is-locked' : ''} ${opt.pro ? 'pro-option' : ''}`;
+
+			/*
+			 * The TILE is a plain container. It carries identity — value, sync target,
+			 * contextual attributes, selected state — and nothing interactive.
+			 */
+			optDiv.className = `grid-option ${isSelected ? 'selected' : ''} ${isLocked ? 'is-locked' : ''} ${opt.pro ? 'pro-option' : ''}`;
 			optDiv.setAttribute( 'data-value', opt.value );
+
+			// Apply per-option data-* attributes from PHP ('attributes' => array('data-*' => ...))
+			applyDataAttributes( optDiv, opt.attributes );
 
 			const targetSelector = classPr ?
 				`.${classPr.trim()
@@ -90,18 +100,30 @@ export const createBlockGridSelect = ( field, config ) => {
 				`#${field.id}`;
 			optDiv.setAttribute( 'data-sync-target', targetSelector );
 
-			optDiv.setAttribute( 'role', 'button' );
-			optDiv.setAttribute( 'aria-pressed', isSelected ? 'true' : 'false' );
-			optDiv.setAttribute( 'tabindex', '0' );
+			/*
+			 * The SELECT REGION is the interactive part — everything except the Customize
+			 * trigger, which is appended as its sibling further down.
+			 *
+			 * Splitting them is what lets the trigger sit outside `.ctc-sync-source-click`,
+			 * so pressing it cannot sync the tile's value and dirty the form. It also stops
+			 * a real <button> being nested inside a role="button", which is invalid and was
+			 * why Space needed special handling.
+			 *
+			 * Identity stays on the tile: the sync listener resolves data-sync-target and
+			 * data-value through closest(), and e2e selects tiles by those attributes.
+			 */
+			const selectEl = document.createElement( 'div' );
+			selectEl.className = 'grid-option-select ctc-sync-source-click';
+			selectEl.setAttribute( 'role', 'button' );
+			selectEl.setAttribute( 'aria-pressed', isSelected ? 'true' : 'false' );
+			selectEl.setAttribute( 'tabindex', '0' );
 
 			if ( opt.description || opt.name ) {
 				// The crown overlay is decorative (aria-hidden), so fold the PRO state into
 				// the accessible name/tooltip now that the visible "PRO" badge is gone.
 				const a11yLabel = ( opt.description || opt.name ) + ( opt.pro ? ' (Pro feature)' : '' );
-				optDiv.setAttribute( 'title', a11yLabel );
-
-				// optDiv.setAttribute( 'data-tip', a11yLabel );
-				optDiv.setAttribute( 'aria-label', a11yLabel );
+				selectEl.setAttribute( 'title', a11yLabel );
+				selectEl.setAttribute( 'aria-label', a11yLabel );
 			}
 
 			const isIconUrl = opt.icon && ( opt.icon.startsWith( 'http' ) || opt.icon.startsWith( '/' ) || opt.icon.startsWith( 'data:' ) );
@@ -122,7 +144,7 @@ export const createBlockGridSelect = ( field, config ) => {
 			}
 
 			// eslint-disable-next-line no-unsanitized/property -- Static HTML template; dynamic values are safely escaped
-			optDiv.innerHTML = `
+			selectEl.innerHTML = `
             <div class="grid-preview">
                 <div class="grid-widget-preview" data-style-id="${escapeAttr( opt.value )}">
                     ${opt.image ? `<img data-src="${escapeAttr( safeUrl( opt.image ) )}" class="grid-image-preview lazy" loading="lazy" alt="${escapeAttr( opt.name )}">` : ''}
@@ -135,8 +157,10 @@ export const createBlockGridSelect = ( field, config ) => {
             </div>
             `;
 
+			optDiv.appendChild( selectEl );
+
 			if ( opt.image ) {
-				const img = optDiv.querySelector( '.grid-image-preview' );
+				const img = selectEl.querySelector( '.grid-image-preview' );
 				if ( img ) {
 					const onLoad = ( image ) => {
 						image.classList.remove( 'lazy' );
@@ -161,28 +185,47 @@ export const createBlockGridSelect = ( field, config ) => {
 					}
 				}
 			}
+
+			/*
+			 * An option that declares where its settings live gets an explicit control, so
+			 * choosing a style and editing it stay two separate intentions — picking one no
+			 * longer opens a panel as a side effect. The group may be declared per option or
+			 * once on the wrapper, which is why both are checked.
+			 *
+			 * Never on a locked option: it cannot be selected, so the control could not be
+			 * reached — but rendering one would put a button for unreachable settings in the
+			 * DOM, one click-handler change away from opening them.
+			 */
+			const hasContextual = optDiv.dataset.contextualGroup ||
+				formGroup.dataset.contextualGroup;
+
+			if ( hasContextual && ! isLocked ) {
+				optDiv.appendChild( createContextualTrigger() );
+			}
+
 			grid.appendChild( optDiv );
 		} );
 
 		grid.addEventListener( 'keydown', ( event ) => {
-			const option = document.activeElement.closest( '.grid-option' );
-			if ( ! option ) { return; }
+			/*
+			 * Scoped to the select region, not the tile. The Customize trigger is a sibling
+			 * of it rather than a child, so it keeps its own Space/Enter handling for free —
+			 * no guard needed here.
+			 */
+			const selectEl = document.activeElement.closest( '.grid-option-select' );
+			if ( ! selectEl ) { return; }
+
 			if ( [ ' ' ].includes( event.key ) ) {
 				event.preventDefault();
-				option.click();
+				selectEl.click();
 			}
 		} );
 	}
 
-	group.appendChild( grid );
+	formGroup.appendChild( grid );
 
-	if ( field.help ) {
-		const helpP = document.createElement( 'p' );
-		helpP.className = 'help-text';
-		// eslint-disable-next-line no-unsanitized/property -- Help text is defined in PHP and can contain safe HTML
-		helpP.innerHTML = field.help;
-		group.appendChild( helpP );
-	}
+	// The shared one — it also handles a `help` declared as an array, and `help_click`.
+	appendHelpText( formGroup, field );
 
-	return group;
+	return formGroup;
 };

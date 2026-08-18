@@ -43,6 +43,20 @@ export default class App {
 		this.managers = {};
 
 		/*
+		 * group -> the fetch already in flight for it.
+		 *
+		 * The field cache is only written once a response arrives, so without this every
+		 * caller that asks during that window misses the cache and starts its own request.
+		 * A tab avoids that with a `data-loading` flag on its panel, but anything else
+		 * calling getFieldsForGroup() had no equivalent — on a slow connection, five clicks
+		 * on a Customize trigger meant five identical requests.
+		 *
+		 * Sharing the promise is better than dropping the extra calls: every caller gets
+		 * the data, and only one request is made.
+		 */
+		this.pendingFieldFetches = new Map();
+
+		/*
 		 * Cache-key suffix for the per-tab field definitions in localStorage:
 		 * plugin version + PRO version + admin locale. Any of these changing
 		 * must invalidate cached fields — fields carry translated strings and
@@ -240,7 +254,21 @@ export default class App {
 		const cached = this.getCachedFields( cacheKey, windowKey );
 		if ( cached ) { return cached; }
 
-		return this.fetchFieldsFromAPI( group, cacheKey );
+		// Already being fetched — hand back the same promise rather than asking again.
+		const inFlight = this.pendingFieldFetches.get( group );
+		if ( inFlight ) { return inFlight; }
+
+		/*
+		 * Cleared on settle, not just on success: a failed fetch must not leave a rejected
+		 * promise cached, or every later attempt would replay the same failure instead of
+		 * retrying.
+		 */
+		const request = this.fetchFieldsFromAPI( group, cacheKey )
+			.finally( () => this.pendingFieldFetches.delete( group ) );
+
+		this.pendingFieldFetches.set( group, request );
+
+		return request;
 	}
 
 	/**
@@ -366,6 +394,12 @@ export default class App {
 								key,
 							) );
 				}
+
+				// Dynamic Module Loading (Phase 3: DOM-driven).
+				// Modules needed because of what the panel CONTAINS rather than
+				// which tab it is. Has to run after render — the markup it
+				// matches against does not exist before that.
+				await this.loadModulesForPanel( panel );
 			}
 		} catch ( error ) {
 			console.error( `Error loading ${tabId}:`, error );
@@ -453,25 +487,8 @@ export default class App {
 				const max = Math.min( index + chunkSize, totalFields );
 
 				for ( ; index < max; index++ ) {
-					/** In JavaScript, arrays are actually special types of objects.
-					 * The elements are stored as key-value pairs where keys are strings.
-					 * Example array
-					 * const arr = ['a', 'b', 'c'];
-
-					 * Internally, it behaves like an object:
-					 * {
-					 *   "0": "a",   // index 0 stored as string key "0"
-					 *   "1": "b",   // index 1 stored as string key "1"
-					 *   "2": "c",   // index 2 stored as string key "2"
-					 *   length: 3   // special property tracking number of elements
-					 * }
-					 * Accessing array elements:
-					 * arr[0];    // same as arr["0"]
-					 * arr[1];    // same as arr["1"]
-					 * This is why functions that work with object keys
-					 * (like hasOwnProperty) also work with arrays.
-					*/
-					// const field = fieldsToRender[ index ];
+					// String( index ): getSafeProperty guards an own-property lookup,
+					// and array indices are string keys.
 					const field = Utils.getSafeProperty( fieldsToRender, String( index ) );
 
 					// Transform the field config object into a DOM element
@@ -497,10 +514,10 @@ export default class App {
 	/**
 	 * Load and init the phone input on demand (modulesPath.phoneInput).
 	 *
-	 * Public API method for dynamic phone input initialisation.
+	 * Public API method for dynamic phone input initialization.
 	 * Do not rename without maintaining a delegating alias for backwards compatibility.
 	 *
-	 * @param {string}           containerClass Visible input class to initialise.
+	 * @param {string}           containerClass Visible input class to initialize.
 	 * @param {Document|Element} context        Scope to search within.
 	 * @returns {Promise<void>}
 	 */
@@ -573,6 +590,39 @@ export default class App {
 	}
 
 	/**
+	 * Load the modules a rendered panel needs, decided by its own markup.
+	 *
+	 * An entry declaring `selector` loads when the panel contains something
+	 * matching it. This exists because the `tabs` trigger couples a control to a
+	 * list kept in a different file: a tab that renders a repeater button but is
+	 * missing from RepeaterManager's `tabs` gets a button that does nothing, with
+	 * no error anywhere — the control is present, its behavior silently is not.
+	 * A selector cannot drift the same way, because the thing that needs the
+	 * module is the thing being matched.
+	 *
+	 * Load-once: `loadModule` caches the import on the entry, so a module already
+	 * loaded by another tab is skipped rather than re-imported and re-inited.
+	 *
+	 * @param {HTMLElement} panel Rendered tab panel.
+	 */
+	async loadModulesForPanel ( panel ) {
+		if ( ! panel || ! this.config.modulesPath ) { return; }
+
+		const matched = Object.entries( this.config.modulesPath )
+			.filter( ( [ , moduleConf ] ) =>
+				moduleConf.selector &&
+				! moduleConf._loadedModule &&
+				panel.querySelector( moduleConf.selector ) );
+
+		if ( ! matched.length ) { return; }
+
+		await Promise.allSettled( matched.map( async ( [ key, moduleConf ] ) => {
+			const moduleObj = await this.loadModule( key, moduleConf );
+			this.runModuleMethod( moduleObj, moduleConf, panel, key );
+		} ) );
+	}
+
+	/**
 	 * Invoke a module's post-load init method, if it declares one.
 	 *
 	 * @param {Object|null} moduleObj  Imported module (or null — no-op).
@@ -625,6 +675,27 @@ export default class App {
 	 * Ensures 0ms latency when switching to new tabs on slow connections.
 	 */
 	async preloadBackgroundTabs () {
+		// 'contextual_styles': instead of directly adding similar like nav tabs make things are dynamically understood and load.
+
+		/*
+		 * Contextual groups FIRST, ahead of the tabs.
+		 *
+		 * The style grid is on General — the tab already on screen — so its Customize
+		 * trigger is clickable within a second of load, before any tab preload could
+		 * matter. Queued last it arrived after ~nine tabs and their 500ms spacing, which
+		 * is several seconds of a click that has to wait on the network.
+		 */
+		try {
+			await this.getFieldsForGroup( 'contextual_styles' );
+		} catch ( error ) {
+			log( 'App', 'Preload failed for contextual_styles', error );
+		}
+		try {
+			await this.getFieldsForGroup( 'contextual_greetings' );
+		} catch ( error ) {
+			log( 'App', 'Preload failed for contextual_greetings', error );
+		}
+
 		const panels = document.querySelectorAll( '.settings-panel' );
 
 		for ( const panel of panels ) {

@@ -18,7 +18,7 @@
  *
  * @package Click_To_Chat
  * @subpackage API
- * @since 5.0
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -117,10 +117,21 @@ if ( ! class_exists( 'HT_CTC_Sanitizer' ) ) {
 
 				$schema = self::get_group_schema( $group_key );
 
+				// Replace groups additionally tolerate keys already stored in the DB —
+				// see sanitize_tree()'s $stored parameter. Read once per group, and only
+				// for those groups, so the common merge path costs nothing extra.
+				$stored = null;
+				if ( class_exists( 'HT_CTC_Settings_Data' ) && HT_CTC_Settings_Data::is_replace_group( $group_key ) ) {
+					$stored = get_option( $group_key, array() );
+					if ( ! is_array( $stored ) ) {
+						$stored = null;
+					}
+				}
+
 				// Array: sanitize_tree walks each key and calls sanitize_value on every leaf.
 				// Scalar: sanitize_value called directly here.
 				if ( is_array( $group_values ) ) {
-					$sanitized[ $group_key ] = self::sanitize_tree( $group_values, $schema, $group_key );
+					$sanitized[ $group_key ] = self::sanitize_tree( $group_values, $schema, $group_key, 0, '', $stored );
 				} else {
 					$sanitized[ $group_key ] = self::sanitize_value( $group_values, $group_key, $schema['sanitization_callbacks'] );
 				}
@@ -150,9 +161,13 @@ if ( ! class_exists( 'HT_CTC_Sanitizer' ) ) {
 		 *                                items carry no field name of their own (indices
 		 *                                0, 1, 2, ...) still resolve a callback — see
 		 *                                sanitize_value()'s container-key fallback.
+		 * @param array  $stored          REPLACE GROUPS ONLY (null elsewhere): the node of the
+		 *                                currently-stored option value at this same path. A key
+		 *                                present here is admitted even when the schema does not
+		 *                                name it — see the grandfathering note below.
 		 * @return array
 		 */
-		private static function sanitize_tree( $values, $schema, $parent_key = '', $depth = 0, $parent_bare_key = '' ) {
+		private static function sanitize_tree( $values, $schema, $parent_key = '', $depth = 0, $parent_bare_key = '', $stored = null ) {
 
 			$sanitized = array();
 
@@ -166,8 +181,14 @@ if ( ! class_exists( 'HT_CTC_Sanitizer' ) ) {
 				// e.g. 'call_to_action', 'position'.
 				$key = self::sanitize_key( $key );
 
-				// Drop keys not in this group's allow-list / patterns (checked at every depth).
-				if ( '' === $key || ! self::is_key_allowed( $key, $schema ) ) {
+				if ( '' === $key ) {
+					continue;
+				}
+
+				// Drop keys not in this group's allow-list / patterns (checked at every depth),
+				// UNLESS this is a replace group and the key already exists in the stored
+				// option — see is_grandfathered().
+				if ( ! self::is_key_allowed( $key, $schema ) && ! self::is_grandfathered( $key, $stored ) ) {
 					continue;
 				}
 
@@ -175,13 +196,58 @@ if ( ! class_exists( 'HT_CTC_Sanitizer' ) ) {
 				$full_key = ( '' !== $parent_key ) ? "{$parent_key}[{$key}]" : $key;
 
 				if ( is_array( $value ) ) {
-					$sanitized[ $key ] = self::sanitize_tree( $value, $schema, $full_key, $depth + 1, $key );
+					// Descend the stored tree in lock-step so grandfathering is evaluated
+					// against the value at THIS path, never against a same-named key
+					// somewhere else in the option.
+					$stored_child = ( is_array( $stored ) && isset( $stored[ $key ] ) && is_array( $stored[ $key ] ) ) ? $stored[ $key ] : null;
+
+					$sanitized[ $key ] = self::sanitize_tree( $value, $schema, $full_key, $depth + 1, $key, $stored_child );
 				} else {
 					$sanitized[ $key ] = self::sanitize_value( $value, $key, $schema['sanitization_callbacks'], $full_key, $parent_bare_key );
 				}
 			}
 
 			return $sanitized;
+		}
+
+		/**
+		 * Whether a key survives because the option already contains it.
+		 *
+		 * ## The problem this solves
+		 *
+		 * A replace group is overwritten wholesale by what the client submits, so every
+		 * key has to be re-submitted to survive. That includes keys this build cannot
+		 * render an editor for, because the extension that registered them is not
+		 * currently active. An admin screen can re-emit such values as hidden inputs and
+		 * still lose them here: this allow-list is assembled from the schemas of the
+		 * plugins that are RUNNING, and an inactive extension registers nothing. Its keys
+		 * would be stripped after the form submitted them perfectly, and the overwrite
+		 * would then delete settings the user never touched.
+		 *
+		 * The alternative was for this plugin to hardcode every extension's key names
+		 * forever — a maintenance treadmill, and a layering break.
+		 *
+		 * ## Why this stays safe
+		 *
+		 * Admission is not widened to "anything": a key qualifies only by ALREADY EXISTING
+		 * at this exact path in the stored option. Nothing can be introduced this way —
+		 * to be in the option a key must have passed this same allow-list earlier, while
+		 * some plugin legitimately declared it. So the tolerated set is exactly "keys an
+		 * extension really wrote", it shrinks by itself when a key is deliberately removed,
+		 * and an injected `foo` is still dropped because no stored `foo` exists.
+		 *
+		 * Only KEY admission changes. The value still goes through the normal leaf
+		 * sanitizer, so a grandfathered key cannot carry unsanitized content.
+		 *
+		 * Merge groups never reach this ($stored is null): they keep absent keys anyway,
+		 * so there is nothing to preserve and no reason to widen anything.
+		 *
+		 * @param string $key    Sanitized key being considered.
+		 * @param array  $stored Stored node at this path, or null when not applicable.
+		 * @return bool
+		 */
+		private static function is_grandfathered( $key, $stored ) {
+			return is_array( $stored ) && array_key_exists( $key, $stored );
 		}
 
 		/**

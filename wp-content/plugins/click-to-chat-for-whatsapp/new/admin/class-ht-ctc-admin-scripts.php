@@ -148,7 +148,9 @@ if ( ! class_exists( 'HT_CTC_Admin_Scripts' ) ) {
 				 */
 				'intl'       => $phone_field_assets['js'] . '?ver=' . HT_CTC_VERSION,
 				'utils'      => $phone_field_assets['utils'] . '?ver=' . HT_CTC_VERSION,
-				'intl_lang'  => get_user_locale(),
+				// Resolved BCP-47 tag, not the raw WP locale — pass it straight to
+				// the library, never reshape it in JS.
+				'intl_lang'  => HT_CTC_Phone_Field::locale()['tag'],
 				'intl_ui'    => HT_CTC_Phone_Field::locale_strings( get_user_locale() ),
 				'tz'         => esc_attr( get_option( 'gmt_offset' ) ),
 			);

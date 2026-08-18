@@ -28,6 +28,23 @@ import Interface from '../logic/Interface.js';
  *
  * Keyed by the field's DOM id → list of settings groups (data-group) to clear.
  */
+/**
+ * An attribute selector matching one field name.
+ *
+ * Field names carry brackets (`g[display][home]`), so they need escaping. Not
+ * CSS.escape: that targets identifiers rather than quoted strings, and it is a
+ * browser-only global. Inside quotes only `"` and `\` have to be neutralized.
+ *
+ * @param {string} name The input's name attribute.
+ * @returns {string} e.g. `[name="g[display][home]"]`.
+ */
+const nameSelector = ( name ) => {
+	const escaped = String( name )
+		.replace( /["\\]/g, '\\$&' );
+
+	return `[name="${escaped}"]`;
+};
+
 const CACHE_INVALIDATION_MAP = new Map( [
 	// Disable Intl input library — changes how the WhatsApp number field renders.
 	[ 'no-intl', [ 'general_settings', 'greetings_settings' ] ],
@@ -52,6 +69,16 @@ export default class SettingsManager {
 		// that flight so we can flush exactly one trailing save when it finishes.
 		this.isSaving = false;
 		this.pendingSave = false;
+
+		// Timer for the transient "Saved" state on the button; cleared whenever a
+		// new save starts so a stale one can't reset the button mid-flight.
+		this.savedStateTimeout = null;
+
+		// Label for the save shortcut, as the platform writes it. `platform` on
+		// userAgentData is the reliable half of a deprecated API; the rest are
+		// fallbacks for browsers that don't expose it.
+		const platform = navigator.userAgentData?.platform || navigator.platform || navigator.userAgent || '';
+		this.saveShortcutLabel = /mac|iphone|ipad|ipod/i.test( platform ) ? '⌘S' : 'Ctrl+S';
 	}
 
 	init () {
@@ -101,11 +128,69 @@ export default class SettingsManager {
 		// Enter to Save Listener
 		this.form.addEventListener( 'keydown', ( event ) => this.handleEnterKeySave( event ) );
 
+		// Cmd/Ctrl+S to save. On the document, not the form, so it works with
+		// focus anywhere on the page (sidebar, header, preview panel).
+		document.addEventListener( 'keydown', ( event ) => this.handleSaveShortcut( event ) );
+
 		// Save Button Listener
 		this.saveButton.addEventListener( 'click', () => this.handleSaveClick() );
 
 		// Warn before leaving if there are unsaved changes
 		window.addEventListener( 'beforeunload', ( event ) => this.handleBeforeUnload( event ) );
+
+		this.updateSaveHint();
+	}
+
+	/**
+	 * Cmd/Ctrl+S → save the settings instead of the browser's "Save page as…".
+	 *
+	 * The reflex is universal in editors and admin panels, and the dialog it
+	 * otherwise opens lands on top of a form with unsaved changes.
+	 *
+	 * @param {KeyboardEvent} event
+	 */
+	handleSaveShortcut ( event ) {
+		if ( 's' !== ( event.key || '' ).toLowerCase() ) { return; }
+
+		// Shift/Alt variants are the browser's own ("Save as", screenshot) — leave them.
+		if ( ! ( event.metaKey || event.ctrlKey ) || event.shiftKey || event.altKey ) { return; }
+
+		event.preventDefault();
+		if ( this.saveButton && ! this.saveButton.disabled ) {
+			this.saveButton.click();
+		}
+	}
+
+	/**
+	 * Keep the save button's tooltip describing the button's actual state.
+	 *
+	 * It carries two things nothing else on the page says: what the amber
+	 * "unsaved changes" tint means, and that the keyboard shortcut exists.
+	 */
+	updateSaveHint () {
+		if ( ! this.saveButton ) { return; }
+
+		const isDirty = !! this.form?.querySelector( '[data-changed="true"]' );
+		const state = isDirty ? 'Unsaved changes' : 'No unsaved changes';
+
+		this.saveButton.title = `${state} · ${this.saveShortcutLabel}`;
+	}
+
+	/**
+	 * Swap the save button between its three states.
+	 *
+	 * Only classes — the states themselves are stacked in one grid cell and
+	 * shown/hidden by buttons.css, which keeps the button one width and lets
+	 * the responsive icon-only rules apply to every state equally.
+	 *
+	 * @param {HTMLElement|null} saveBtn
+	 * @param {'default'|'loading'|'saved'} state
+	 */
+	setSaveButtonState ( saveBtn, state ) {
+		if ( ! saveBtn ) { return; }
+
+		saveBtn.classList.toggle( 'is-loading', 'loading' === state );
+		saveBtn.classList.toggle( 'is-saved', 'saved' === state );
 	}
 
 	/**
@@ -171,6 +256,7 @@ export default class SettingsManager {
 			if ( this.saveButton ) {
 				this.saveButton.classList.remove( 'has-unsaved-changes' );
 			}
+			this.updateSaveHint();
 			return;
 		}
 
@@ -204,6 +290,7 @@ export default class SettingsManager {
 
 			if ( this.saveButton ) {
 				this.saveButton.classList.add( 'has-unsaved-changes' );
+				this.updateSaveHint();
 			}
 
 			// Trigger auto-save after delay
@@ -215,10 +302,6 @@ export default class SettingsManager {
 		}
 	}
 
-	/**
-	 * Perform Auto Save
-	 * @param {boolean} force
-	 */
 	/**
 	 * Validate a form's validity.
 	 * @param {HTMLFormElement} form
@@ -259,6 +342,12 @@ export default class SettingsManager {
 		return true;
 	}
 
+	/**
+	 * Save without a button press: the debounced auto-save, and the trailing
+	 * flush after a save that had requests queued behind it.
+	 *
+	 * @param {boolean} force Run even when the auto-save toggle is off.
+	 */
 	async performAutoSave ( force = false ) {
 		const autoSaveToggle = document.getElementById( 'auto-save-toggle' );
 		const isEnabled = autoSaveToggle ? autoSaveToggle.checked : false;
@@ -496,21 +585,18 @@ export default class SettingsManager {
 		const submittedFields = Array.from( settingsForm.querySelectorAll( '[data-changed="true"]' ) )
 			.map( el => ( { el, signature: this.fieldSignature( el ) } ) );
 
-		const toggleState = ( isLoading ) => {
-			if ( ! saveBtn ) { return; }
-			const defaultState = saveBtn.querySelector( '.default-state' );
-			const loadingState = saveBtn.querySelector( '.loading-state' );
+		// Whether to land on the "Saved" confirmation rather than straight back
+		// to default — set only on the success path below.
+		let didSave = false;
 
-			if ( defaultState && loadingState ) {
-				defaultState.style.display = isLoading ? 'none' : '';
-				loadingState.style.display = isLoading ? '' : 'none';
-			}
-		};
+		// A "Saved" badge still counting down from a previous save must not
+		// outlive this one and reset the button while it says "Saving…".
+		clearTimeout( this.savedStateTimeout );
 
 		try {
 			if ( saveBtn ) {
 				saveBtn.disabled = true;
-				toggleState( true );
+				this.setSaveButtonState( saveBtn, 'loading' );
 			}
 
 			const api = this.app.getApi();
@@ -538,18 +624,17 @@ export default class SettingsManager {
 				// caches so the change reflects without a manual "Force Refresh".
 				this.invalidateDependentCaches( submittedFields );
 
+				// Fields the user re-edited while the POST was in flight. The response
+				// predates those edits, so writing it back would overwrite them with
+				// the older saved value — skip those inputs entirely.
+				const reEdited = new Set( submittedFields
+					.filter( ( { el, signature } ) => this.fieldSignature( el ) !== signature )
+					.map( ( { el } ) => el ) );
+
 				// Update form with sanitized values from server
 				if ( result.settings ) {
-					this.updateFormValues( settingsForm, result.settings );
+					this.updateFormValues( settingsForm, result.settings, '', reEdited );
 				}
-
-				// // Reset changed state
-				// settingsForm.querySelectorAll( '[data-changed="true"]' )
-				// 	.forEach( el => { el.dataset.changed = 'false'; } );
-
-				// if ( this.saveButton ) {
-				// 	this.saveButton.classList.remove( 'has-unsaved-changes' );
-				// }
 
 				// Reset changed state — but only for the fields we actually sent, and
 				// only if they're untouched since collection. A field re-edited during
@@ -566,6 +651,9 @@ export default class SettingsManager {
 					this.saveButton.classList.remove( 'has-unsaved-changes' );
 				}
 
+				this.updateSaveHint();
+				didSave = true;
+
 			} else {
 				throw new Error( result.message || 'Unknown error' );
 			}
@@ -581,7 +669,20 @@ export default class SettingsManager {
 				// Artificial delay for better UX (so user sees "Saving..." even if fast)
 				setTimeout( () => {
 					saveBtn.disabled = false;
-					toggleState( false );
+
+					if ( ! didSave ) {
+						this.setSaveButtonState( saveBtn, 'default' );
+						return;
+					}
+
+					// Confirm in place, where the click happened. The toast says the
+					// same thing in the opposite corner, which is easy to miss when
+					// you are looking at the button you just pressed.
+					this.setSaveButtonState( saveBtn, 'saved' );
+					this.savedStateTimeout = setTimeout(
+						() => this.setSaveButtonState( saveBtn, 'default' ),
+						1600,
+					);
 				}, 500 );
 			}
 
@@ -692,17 +793,20 @@ export default class SettingsManager {
 	 * @param {HTMLFormElement} form
 	 * @param {Object} data
 	 * @param {string} prefix
+	 * @param {Set<HTMLElement>|null} skip Inputs re-edited since the save was
+	 *   collected; the server value is older than what the user is looking at,
+	 *   so these are left untouched (and keep their dirty flag).
 	 */
-	updateFormValues ( form, data, prefix = '' ) {
+	updateFormValues ( form, data, prefix = '', skip = null ) {
 		for ( const [ key, value ] of Object.entries( data ) ) {
 			const name = prefix ? `${prefix}[${key}]` : key;
 
 			if ( value !== null && typeof value === 'object' ) {
-				this.updateFormValues( form, value, name );
+				this.updateFormValues( form, value, name, skip );
 			} else {
-				const input = form.querySelector( `[name="${name}"]` );
+				const input = form.querySelector( nameSelector( name ) );
 
-				if ( input ) {
+				if ( input && ! skip?.has( input ) ) {
 					const newValue = value === null ? '' : String( value );
 
 					if ( input.type === 'checkbox' ) {
@@ -712,9 +816,9 @@ export default class SettingsManager {
 							input.dataset.changed = 'false';
 						}
 					} else if ( input.type === 'radio' ) {
-						const selector = `[name="${CSS.escape( name )}"]`;
-						const radioGroup = form.querySelectorAll( selector );
+						const radioGroup = form.querySelectorAll( nameSelector( name ) );
 						radioGroup.forEach( radio => {
+							if ( skip?.has( radio ) ) { return; }
 							const shouldBeChecked = String( radio.value ) === newValue;
 							if ( radio.checked !== shouldBeChecked ) {
 								radio.checked = shouldBeChecked;

@@ -53,6 +53,13 @@ const PIECYFER_ELEMENTOR_FEATURES = array(
  */
 function piecyfer_setup() {
 	load_theme_textdomain( 'piecyfer-theme', PIECYFER_THEME_DIR . 'languages' );
+	
+	add_theme_support( 'menus' );
+	register_nav_menus(
+		array(
+			'primary-menu' => esc_html__( 'Primary Menu', 'piecyfer-theme' ),
+		)
+	);
 
 	add_theme_support( 'post-thumbnails' );
 	add_theme_support( 'automatic-feed-links' );

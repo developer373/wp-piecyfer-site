@@ -4,7 +4,7 @@
  *
  * @package Click_To_Chat
  * @subpackage admin
- * @since 5.0
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -71,20 +71,54 @@ if ( ! class_exists( 'HT_CTC_Settings_Woo' ) ) {
 		/**
 		 * Style options for WooCommerce settings.
 		 *
+		 * Each option names the contextual item it stands for, so the Customize trigger
+		 * beside the select opens the right style without deriving an id from the stored
+		 * value — '3_1' can open 'style_3_1' and nothing has to know how.
+		 *
 		 * @return array
 		 */
 		private static function style_options() {
 			return array(
-				'1'   => __( 'Style-1', 'click-to-chat-for-whatsapp' ),
-				'2'   => __( 'Style-2', 'click-to-chat-for-whatsapp' ),
-				'3'   => __( 'Style-3', 'click-to-chat-for-whatsapp' ),
-				'3_1' => __( 'Style-3 Extend', 'click-to-chat-for-whatsapp' ), // phpcs:ignore Universal.Arrays.DuplicateArrayKey.Found
-				'4'   => __( 'Style-4', 'click-to-chat-for-whatsapp' ),
-				'5'   => __( 'Style-5', 'click-to-chat-for-whatsapp' ),
-				'7'   => __( 'Style-7', 'click-to-chat-for-whatsapp' ),
-				'7_1' => __( 'Style-7 Extend', 'click-to-chat-for-whatsapp' ), // phpcs:ignore Universal.Arrays.DuplicateArrayKey.Found
-				'8'   => __( 'Style-8', 'click-to-chat-for-whatsapp' ),
-				'99'  => __( 'Add your own image / GIF (Style-99)', 'click-to-chat-for-whatsapp' ),
+				'1'   => array(
+					'label'      => __( 'Style-1', 'click-to-chat-for-whatsapp' ),
+					'attributes' => array( 'data-contextual-id' => 'style_1' ),
+				),
+				'2'   => array(
+					'label'      => __( 'Style-2', 'click-to-chat-for-whatsapp' ),
+					'attributes' => array( 'data-contextual-id' => 'style_2' ),
+				),
+				'3'   => array(
+					'label'      => __( 'Style-3', 'click-to-chat-for-whatsapp' ),
+					'attributes' => array( 'data-contextual-id' => 'style_3' ),
+				),
+				'3_1' => array( // phpcs:ignore Universal.Arrays.DuplicateArrayKey.Found
+					'label'      => __( 'Style-3 Extend', 'click-to-chat-for-whatsapp' ),
+					'attributes' => array( 'data-contextual-id' => 'style_3_1' ),
+				),
+				'4'   => array(
+					'label'      => __( 'Style-4', 'click-to-chat-for-whatsapp' ),
+					'attributes' => array( 'data-contextual-id' => 'style_4' ),
+				),
+				'5'   => array(
+					'label'      => __( 'Style-5', 'click-to-chat-for-whatsapp' ),
+					'attributes' => array( 'data-contextual-id' => 'style_5' ),
+				),
+				'7'   => array(
+					'label'      => __( 'Style-7', 'click-to-chat-for-whatsapp' ),
+					'attributes' => array( 'data-contextual-id' => 'style_7' ),
+				),
+				'7_1' => array( // phpcs:ignore Universal.Arrays.DuplicateArrayKey.Found
+					'label'      => __( 'Style-7 Extend', 'click-to-chat-for-whatsapp' ),
+					'attributes' => array( 'data-contextual-id' => 'style_7_1' ),
+				),
+				'8'   => array(
+					'label'      => __( 'Style-8', 'click-to-chat-for-whatsapp' ),
+					'attributes' => array( 'data-contextual-id' => 'style_8' ),
+				),
+				'99'  => array(
+					'label'      => __( 'Add your own image / GIF (Style-99)', 'click-to-chat-for-whatsapp' ),
+					'attributes' => array( 'data-contextual-id' => 'style_99' ),
+				),
 			);
 		}
 
@@ -365,20 +399,32 @@ if ( ! class_exists( 'HT_CTC_Settings_Woo' ) ) {
 										'option_group'   => 'ht_ctc_woo_options',
 										'options'        => $style_options,
 										'help'           => sprintf(
-											'<a target="_blank" href="%1$s" class="external-link">%2$s <span class="dashicons dashicons-external"></span></a> &emsp; | &emsp; <a class="customize_styles_href ctc-shortcut-link" href="%3$s">%4$s <span class="dashicons dashicons-arrow-right-alt2"></span></a> <br> <strong>%5$s: 1, 4, 8</strong>',
+											'<a target="_blank" href="%1$s" class="external-link">%2$s <span class="dashicons dashicons-external"></span></a> <br> <strong>%3$s: 1, 4, 8</strong>',
 											'https://holithemes.com/plugins/click-to-chat/list-of-styles/',
 											__( 'List of Styles', 'click-to-chat-for-whatsapp' ),
-											'#customize-settings',
-											__( 'Customize the styles', 'click-to-chat-for-whatsapp' ),
 											'Recommended Styles'
 										),
 										'data_watch'     => '#woo_position',
-										'data_show_when' => 'woocommerce_before_main_content,woocommerce_before_single_product,woocommerce_before_single_product_summary,woocommerce_single_product_summary,woocommerce_before_add_to_cart_form,woocommerce_before_add_to_cart_button,woocommerce_after_add_to_cart_button,woocommerce_after_add_to_cart_form,woocommerce_after_single_product,woocommerce_after_single_product_summary',
+										'data_hide_when' => 'select',
+									),
+
+									/*
+									 * Opens the picked style's settings inline, replacing the
+									 * "Customize the styles" link that sent the user off to the
+									 * Click to Chat -> Customize tab.
+									 */
+									array(
+										'field_type'       => 'block_contextual_trigger',
+										'label'            => 'Customize',
+										'contextual_group' => 'contextual_styles',
+										'contextual_watch' => '#woo_style',
+										'data_watch'       => '#woo_position',
+										'data_hide_when'   => 'select',
 									),
 									array(
 										'field_type'     => 'block_group',
 										'data_watch'     => '#woo_position',
-										'data_show_when' => 'woocommerce_before_main_content,woocommerce_before_single_product,woocommerce_before_single_product_summary,woocommerce_single_product_summary,woocommerce_before_add_to_cart_form,woocommerce_before_add_to_cart_button,woocommerce_after_add_to_cart_button,woocommerce_after_add_to_cart_form,woocommerce_after_single_product,woocommerce_after_single_product_summary',
+										'data_hide_when' => 'select',
 										'fields'         => array(
 											array(
 												'field_type' => 'field_checkbox',
@@ -472,15 +518,33 @@ if ( ! class_exists( 'HT_CTC_Settings_Woo' ) ) {
 													'option_group' => 'ht_ctc_woo_options',
 													'options' => $style_options,
 													'help' => sprintf(
-														'<a target="_blank" href="%1$s" class="external-link">%2$s <span class="dashicons dashicons-external"></span></a> &emsp; | &emsp; <a class="customize_styles_href ctc-shortcut-link" href="%3$s">%4$s <span class="dashicons dashicons-arrow-right-alt2"></span></a> <br> <strong>%5$s: 1, 8</strong>',
+														'<a target="_blank" href="%1$s" class="external-link">%2$s <span class="dashicons dashicons-external"></span></a> <br> <strong>%3$s: 1, 8</strong>',
 														'https://holithemes.com/plugins/click-to-chat/list-of-styles/',
 														__( 'List of Styles', 'click-to-chat-for-whatsapp' ),
-														'#customize-settings',
-														__( 'Customize the styles', 'click-to-chat-for-whatsapp' ),
 														'Recommended Styles'
 													),
 													'data_watch' => '#woo_shop_add_whatsapp',
 													'data_show_when' => '1',
+												),
+											),
+
+											/*
+											 * Its OWN row, not a second entry in the select's row.
+											 * Each entry of a row becomes a .field-col — a nowrap flex
+											 * column — so a trigger placed beside the select sits next
+											 * to it, and the full-width panel it opens is trapped in
+											 * that column at half width. A row of its own is a block,
+											 * which is what the single-product trigger above already
+											 * gets by being a plain sibling field.
+											 */
+											array(
+												array(
+													'field_type'       => 'block_contextual_trigger',
+													'label'            => 'Customize',
+													'contextual_group' => 'contextual_styles',
+													'contextual_watch' => '#woo_shop_style',
+													'data_watch'       => '#woo_shop_add_whatsapp',
+													'data_show_when'   => '1',
 												),
 											),
 											array(

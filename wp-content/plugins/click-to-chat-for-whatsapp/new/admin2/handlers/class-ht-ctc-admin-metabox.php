@@ -9,6 +9,7 @@
  *
  * @package Click_To_Chat
  * @subpackage Admin2
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,6 +22,18 @@ if ( ! class_exists( 'HT_CTC_Admin_MetaBox' ) ) {
 	 * Meta box class for Click to Chat plugin.
 	 */
 	class HT_CTC_Admin_MetaBox {
+
+		/**
+		 * Sanitizer used for a page-level field the map does not name.
+		 *
+		 * Textarea rather than text: it strips tags but keeps line breaks, so a field
+		 * this build knows nothing about (a PRO / add-on field, or one from a newer
+		 * version) is never mangled beyond recognition. Matches what free 4.41 - 4.42.x
+		 * applied to every page-level field.
+		 *
+		 * @var string
+		 */
+		const DEFAULT_SANITIZE_CALLBACK = 'sanitize_textarea_field';
 
 		/**
 		 * Constructor.
@@ -266,6 +279,71 @@ if ( ! class_exists( 'HT_CTC_Admin_MetaBox' ) ) {
 
 
 		/**
+		 * Page-level field map: field key => sanitize callback.
+		 *
+		 * The map decides the SANITIZE CALLBACK, not (yet) what may be saved — an
+		 * unlisted key is still stored, sanitized with DEFAULT_SANITIZE_CALLBACK. See
+		 * save_meta_box() for why, and for the plan to tighten this later.
+		 *
+		 * A callback is the name of an HT_CTC_Sanitizer method — the same vocabulary as
+		 * the REST schema's `sanitization_callbacks`, so a field is sanitized identically
+		 * whether it is saved globally or per page. Unknown names fall back to
+		 * sanitize_text_field, so a typo weakens nothing.
+		 *
+		 * select / radio / checkbox values just use sanitize_text_field: the front end
+		 * compares them against known literals, so an unrecognized value has no effect.
+		 *
+		 * PRO / add-ons register their own fields through the filter.
+		 *
+		 * @return array Field key => HT_CTC_Sanitizer method name.
+		 */
+		public function pagelevel_fields() {
+
+			$field_map = array(
+				'number'         => 'ctc_sanitize_whatsapp_number',
+				'call_to_action' => 'ctc_sanitize_emoji_text',
+				'pre_filled'     => 'ctc_sanitize_emoji_textarea',
+				// Radio: 'Default' posts '' and is intentionally not stored.
+				'show_hide'      => 'sanitize_text_field',
+				'group_id'       => 'sanitize_text_field',
+			);
+
+			$field_map = apply_filters( 'ht_ctc_fh_pagelevel_fields', $field_map );
+
+			return is_array( $field_map ) ? $field_map : array();
+		}
+
+
+		/**
+		 * Sanitize one page-level value with the callback its field declares.
+		 *
+		 * @param mixed  $value             Raw (unslashed) request value.
+		 * @param string $key               Field key.
+		 * @param string $sanitize_callback HT_CTC_Sanitizer method name — see pagelevel_fields().
+		 * @return string Sanitized value; '' when the value is unusable (caller drops it).
+		 */
+		private function sanitize_field( $value, $key, $sanitize_callback ) {
+
+			// Page-level fields are scalar. Arrays / objects are never stored.
+			if ( ! is_scalar( $value ) ) {
+				return '';
+			}
+
+			$value             = (string) $value;
+			$sanitize_callback = is_string( $sanitize_callback ) ? $sanitize_callback : self::DEFAULT_SANITIZE_CALLBACK;
+
+			if ( class_exists( 'HT_CTC_Sanitizer' ) ) {
+				// sanitize_value() resolves the name against its own allow-list of
+				// sanitizers and falls back to sanitize_text_field for anything else.
+				return HT_CTC_Sanitizer::sanitize_value( $value, $key, array( $key => $sanitize_callback ) );
+			}
+
+			// Shared sanitizer unavailable: strip rather than store raw input.
+			return function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $value ) : sanitize_text_field( $value );
+		}
+
+
+		/**
 		 * Save meta box.
 		 *
 		 * @param int $post_id The post ID.
@@ -294,50 +372,68 @@ if ( ! class_exists( 'HT_CTC_Admin_MetaBox' ) ) {
 				return $post_id;
 			}
 
-			// Keep the key allow-list below when reworking — it was lost once already in the
-			// extraction refactor (original hardening: temp/pagelevel df2b98307, re-ported to dev).
-			$editor = array();
-			$editor = apply_filters( 'ht_ctc_fh_greetings_setting_meta_editor', $editor );
-
-			if ( isset( $_POST['ht_ctc_pagelevel'] ) ) {
-
-				$ht_ctc_pagelevel = array_filter( map_deep( wp_unslash( $_POST['ht_ctc_pagelevel'] ), 'sanitize_textarea_field' ) );
-
-				if ( ! empty( $ht_ctc_pagelevel ) ) {
-
-					// Sanitize.
-					foreach ( $ht_ctc_pagelevel as $key => $value ) {
-						if ( isset( $ht_ctc_pagelevel[ $key ] ) ) {
-							if ( 'pre_filled' === $key ) {
-								if ( function_exists( 'sanitize_textarea_field' ) ) {
-									$new[ $key ] = sanitize_textarea_field( $ht_ctc_pagelevel[ $key ] );
-								} else {
-									$new[ $key ] = sanitize_text_field( $ht_ctc_pagelevel[ $key ] );
-								}
-							} elseif ( 'call_to_action' === $key ) {
-								$new[ $key ] = sanitize_text_field( $ht_ctc_pagelevel[ $key ] );
-							} elseif ( in_array( $key, $editor, true ) ) {
-								if ( ! empty( $ht_ctc_pagelevel[ $key ] ) ) {
-
-									// editor-content sanitizer (same pipeline the REST save uses). loads only when an editor field is saved.
-									HT_CTC_Utils::load_class( 'new/inc/api/utils/class-ht-ctc-sanitizer.php', 'HT_CTC_Sanitizer' );
-
-									if ( class_exists( 'HT_CTC_Sanitizer' ) ) {
-										$new[ $key ] = HT_CTC_Sanitizer::ctc_sanitize_text_editor( $ht_ctc_pagelevel[ $key ] );
-									}
-								}
-							} else {
-								$new[ $key ] = sanitize_text_field( $ht_ctc_pagelevel[ $key ] );
-							}
-							$ht_ctc_pagelevel[ $key ] = $new[ $key ];
-						}
-					}
-
-					update_post_meta( $post_id, 'ht_ctc_pagelevel', $ht_ctc_pagelevel );
-				} else {
-					delete_post_meta( $post_id, 'ht_ctc_pagelevel', '' );
-				}
+			if ( ! isset( $_POST['ht_ctc_pagelevel'] ) || ! is_array( $_POST['ht_ctc_pagelevel'] ) ) {
+				return;
 			}
+
+			// Not sanitized here: every value is sanitized individually below, by the
+			// sanitizer its field declares in pagelevel_fields(). A blanket
+			// sanitize_textarea_field() pass here would strip the editor fields' markup
+			// before their own sanitizer ever sees it.
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- per-field sanitizing, see sanitize_field().
+			$raw = wp_unslash( $_POST['ht_ctc_pagelevel'] );
+
+			// Shared leaf sanitizers — the same ones the REST save path uses.
+			HT_CTC_Utils::load_class( 'new/inc/api/utils/class-ht-ctc-sanitizer.php', 'HT_CTC_Sanitizer' );
+
+			$field_map        = $this->pagelevel_fields();
+			$ht_ctc_pagelevel = array();
+
+			/**
+			 * Every posted field is saved; the map only picks its sanitize callback.
+			 *
+			 * Deliberately NOT an allow-list yet: 'ht_ctc_fh_pagelevel_fields' does not
+			 * exist before free 4.43, so PRO 2.21 / 2.22 register nothing through it and
+			 * dropping unlisted keys would silently wipe every PRO page-level setting on
+			 * those sites. Unlisted keys are kept, sanitized with
+			 * DEFAULT_SANITIZE_CALLBACK — what 4.41 - 4.42.x did to every field.
+			 *
+			 */
+
+			// allow-list (1 of 2): keys already on this post stay allowed.
+			// $stored = get_post_meta( $post_id, 'ht_ctc_pagelevel', true );
+			// $stored = is_array( $stored ) ? $stored : array();
+
+			foreach ( $raw as $key => $value ) {
+
+				$key = HT_CTC_Sanitizer::sanitize_key( $key );
+
+				if ( '' === $key ) {
+					continue;
+				}
+
+				// allow-list (2 of 2): drop anything the map does not name.
+				// if ( ! isset( $field_map[ $key ] ) && ! array_key_exists( $key, $stored ) ) {
+				// continue;
+				// }
+
+				$sanitize_callback = isset( $field_map[ $key ] ) ? $field_map[ $key ] : self::DEFAULT_SANITIZE_CALLBACK;
+				$value             = $this->sanitize_field( $value, $key, $sanitize_callback );
+
+				// Empty means "no page-level value" — leave it out so the global applies.
+				if ( '' === $value ) {
+					continue;
+				}
+
+				$ht_ctc_pagelevel[ $key ] = $value;
+			}
+
+			if ( empty( $ht_ctc_pagelevel ) ) {
+				delete_post_meta( $post_id, 'ht_ctc_pagelevel' );
+				return;
+			}
+
+			update_post_meta( $post_id, 'ht_ctc_pagelevel', $ht_ctc_pagelevel );
 		}
 	}
 

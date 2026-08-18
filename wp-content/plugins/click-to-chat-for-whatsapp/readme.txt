@@ -1,9 +1,9 @@
 === Click to Chat - HoliThemes ===
 Requires at least: 6.5
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 5.6
 Contributors: HoliThemes
-Stable tag: 4.42.1
+Stable tag: 4.43
 Tags: whatsapp, whatsapp business, click to chat, whatsapp chat, WooCommerce WhatsApp
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -556,6 +556,9 @@ Thank you for your support!
 
 == Changelog ==
 
+= 4.43 =
+* New: Customize style and greetings settings inline directly within the style picker, eliminating the separate Customize tab.
+* Enhancement: Admin UI for a smoother experience.
 
 = 4.42.1 =
 * Fix: Phone number field in the settings page showing as a plain text field.
@@ -603,10 +606,9 @@ Thank you for your support!
 
 == Upgrade Notice ==
 
-
+= 4.43 =
+* New: Customize style and greetings settings inline directly within the style picker, eliminating the separate Customize tab.
+* Enhancement: Admin UI for a smoother experience.
 
 = 4.42.1 =
 Fixes the phone number field in the settings page showing as a plain text field after updating to 4.42. Update recommended.
-
-= 4.42 =
-International phone input enhancements, custom click tracking compatibility. Update recommended.

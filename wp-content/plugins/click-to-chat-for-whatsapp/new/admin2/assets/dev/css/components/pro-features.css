@@ -517,7 +517,8 @@ html[data-theme="dark"] .pro-feature-box {
 }
 
 .ctc-pro-yes {
-    color: var(--success);
+    /* Text-weight green (see toast: --success itself is a fill colour). */
+    color: var(--success-strong);
     font-weight: 700;
 }
 

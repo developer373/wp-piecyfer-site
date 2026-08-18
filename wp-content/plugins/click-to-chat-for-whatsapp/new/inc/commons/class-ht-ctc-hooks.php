@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'HT_CTC_Hooks' ) ) {
 
 	/**
-	 * Registers hooks that drive Click to Chat behaviour.
+	 * Registers hooks that drive Click to Chat behavior.
 	 */
 	class HT_CTC_Hooks {
 

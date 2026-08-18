@@ -4,7 +4,7 @@
  *
  * @package Click_To_Chat
  * @subpackage admin
- * @since 5.0
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -65,7 +65,7 @@ if ( ! class_exists( 'HT_CTC_Settings_Support' ) ) {
 						'field_type'   => 'block_content',
 						'id'           => 'support_ts_help_link',
 						'option_group' => 'ht_ctc_othersettings',
-						// todo(4.42) - add the documentation page URL
+						// todo(4.44) - add the documentation page URL
 						'content'      => '<div>
 							<a href="https://holithemes.com/plugins/click-to-chat/troubleshoot/" target="_blank" class="external-link">View Complete Troubleshoot Guide <span class="dashicons dashicons-external"></span></a>
 						</div>

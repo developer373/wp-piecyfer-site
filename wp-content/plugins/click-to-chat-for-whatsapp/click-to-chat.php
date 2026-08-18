@@ -7,7 +7,7 @@
  * Plugin Name: Click to Chat
  * Plugin URI:  https://wordpress.org/plugins/click-to-chat-for-whatsapp/
  * Description: Lets make your Web page visitors contact you through WhatsApp with a single click/tap
- * Version:     4.42.1
+ * Version:     4.43
  * Author:      HoliThemes
  * Author URI:  https://holithemes.com/plugins/click-to-chat/
  * License:     GPL2
@@ -21,7 +21,7 @@ if ( ! defined( 'WPINC' ) ) {
 
 // ctc - Version - update version at readme 'Stable tag'.
 if ( ! defined( 'HT_CTC_VERSION' ) ) {
-	define( 'HT_CTC_VERSION', '4.42.1' );
+	define( 'HT_CTC_VERSION', '4.43' );
 }
 
 // define HT_CTC_PLUGIN_FILE.

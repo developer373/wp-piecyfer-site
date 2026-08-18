@@ -95,7 +95,7 @@ const buildUiTranslations = ( source, locale ) => {
  * Name is referenced by PHP as modulesPath.phoneInput.method — keep the two in
  * sync when renaming.
  *
- * @param {string}      className Visible input class to initialise.
+ * @param {string}      className Visible input class to initialize.
  * @param {Document|Element} context Scope to search within.
  * @param {Object}      app       App instance (event bus).
  * @returns {Promise<void>}
@@ -121,7 +121,10 @@ export const initPhoneInput = async ( className = 'intl_number', context = docum
 		// Inlined by PHP — no request, nothing to await.
 		const adminVar = window.ht_ctc_admin_var || {};
 		const phoneInput = adminVar.paths && adminVar.paths.phoneInput;
-		const localeTag = ( ( phoneInput && phoneInput.locale ) || 'en' ).replace( '_', '-' );
+
+		// Already a valid BCP-47 tag from HT_CTC_Phone_Field::locale(). Do NOT
+		// reshape it here — every past attempt to do so in JS is what broke it.
+		const localeTag = ( phoneInput && phoneInput.locale ) || 'en';
 		const uiTranslations = buildUiTranslations(
 			( phoneInput && phoneInput.uiStrings ) || null,
 			localeTag,
@@ -140,6 +143,17 @@ export const initPhoneInput = async ( className = 'intl_number', context = docum
 
 // Helper to initialize a single element
 const intl_init = ( element, intlTelInput, uiTranslations = null ) => {
+	/*
+	 * Hoisted so the catch can put the field back. Between the point where the
+	 * visible input gives up its `name` and the point where the hidden input
+	 * that replaces it exists, NOTHING carries this setting into the save
+	 * payload — and the library throwing in that gap is not hypothetical, it is
+	 * exactly what issue #343 was. See the catch at the bottom.
+	 */
+	let attr_value = '';
+	let hidden_input_name = '';
+	let hiddenInput = null;
+
 	try {
 		if ( ! element || ! ( element instanceof Element ) ) { return null; }
 
@@ -160,30 +174,35 @@ const intl_init = ( element, intlTelInput, uiTranslations = null ) => {
 
 		element.classList.add( 'iti-loaded' );
 
-		// 1. Get current value
-		// Fix the literal DOM attribute so the library's internal detection sees the '+' prefix.
-		let attr_value = ( element.hasAttribute( 'value' ) ? element.getAttribute( 'value' ) : element.value ) || '';
+		// 1. Get current value, normalized to a '+' prefix.
+		attr_value = ( element.hasAttribute( 'value' ) ? element.getAttribute( 'value' ) : element.value ) || '';
 
 		if ( attr_value ) {
-			element.value = ! attr_value.startsWith( '+' ) ? `+${attr_value}` : attr_value; // Updates the live property
-			element.setAttribute( 'value', element.value ); // Updates the HTML attribute
-			attr_value = element.value;
+			attr_value = attr_value.startsWith( '+' ) ? attr_value : `+${ attr_value }`;
+
+			/*
+			 * Construct on an EMPTY field, then seed with setNumber() below.
+			 * This is load-bearing — see the note at the intlTelInput() call.
+			 */
+			element.value = '';
+			element.removeAttribute( 'value' );
 		}
 
 		// 2. Identify Hidden Input (Actual data storage)
 		// The visible input is just for the user interface. The actual number is stored in a hidden input.
 		const dataName = element.getAttribute( 'data-name' );
-		const hidden_input_name = dataName || 'ht_ctc_chat_options[number]';
-		element.removeAttribute( 'name' ); // Remove name to exclude from form data. (hidden value is main)
+		hidden_input_name = dataName || 'ht_ctc_chat_options[number]';
 
-		// Mark as a UI-only input so SettingsManager.markChanged() ignores init-time
-		// events fired by intlTelInput (e.g. during setNumber / countrychange).
-		// Real dirty tracking flows through the hidden input via triggerAutoSave (guarded by userInteracted).
-		element.dataset.ctcNoTrack = 'true';
+		/*
+		 * The visible input KEEPS its `name` for now. It is handed over only once
+		 * the hidden input that replaces it exists (below, after the constructor —
+		 * it has to be created there so the library's wrapper ends up as its
+		 * parent, which is where getHiddenInput() looks for it).
+		 */
 
 		// 3. Configuration
 		//
-		// Every option the field's behaviour depends on is set EXPLICITLY, so a
+		// Every option the field's behavior depends on is set EXPLICITLY, so a
 		// change of library default in a future update cannot silently alter it.
 		const adminVar = window.ht_ctc_admin_var || {};
 		const phoneInputPaths = ( adminVar.paths && adminVar.paths.phoneInput ) || {};
@@ -215,7 +234,8 @@ const intl_init = ( element, intlTelInput, uiTranslations = null ) => {
 			containerClass: 'ctc_intl_container',
 
 			// Country names in admin language via browser Intl.DisplayNames.
-			countryNameLocale: ( phoneInputPaths.locale || 'en' ).replace( '_', '-' ),
+			// Resolved server-side; passed through untouched (see localeTag above).
+			countryNameLocale: phoneInputPaths.locale || 'en',
 
 			// Managed hidden input handles saved values.
 			hiddenInputs: null,
@@ -238,12 +258,68 @@ const intl_init = ( element, intlTelInput, uiTranslations = null ) => {
 
 		keepDropdownWidthInSync( element, intl );
 
-		if ( attr_value && attr_value.length > 8 ) {
-			intl.setNumber( attr_value );
+		/*
+		 * Hand the setting over to the hidden input BEFORE setNumber() — that is
+		 * the one call here that can still throw, and it must not be able to throw
+		 * while nothing is carrying the value.
+		 *
+		 * Seeded with attr_value (the stored number) rather than getNumber(),
+		 * which throws until the lazy utils module resolves. An input holding the
+		 * real option name and an empty string is worse than no input at all: it
+		 * would post '' over the saved number. The canonical value replaces this
+		 * seed below, once the country is resolved.
+		 */
+		hiddenInput = createHiddenInput( element, hidden_input_name );
+
+		if ( hiddenInput ) {
+			if ( attr_value ) {
+				hiddenInput.value = attr_value;
+			}
+
+			// Only now does the visible input stop being the one that saves.
+			element.removeAttribute( 'name' );
+
+			// UI-only from here, so SettingsManager.markChanged() ignores the input
+			// events setNumber() is about to fire. Must precede that call. Real
+			// dirty tracking flows through the hidden input, guarded by userInteracted.
+			element.dataset.ctcNoTrack = 'true';
 		}
 
-		// Our own hidden input: this is what the save payload reads.
-		const hiddenInput = createHiddenInput( element, hidden_input_name );
+		/*
+		 * Seed the saved number — issue #343. Why the field was constructed empty
+		 * and the value is applied HERE rather than left in the DOM:
+		 *
+		 * "Some numbers" is specifically REGIONLESS NANP — toll-free +1 800 /
+		 * 833 / 844 / 855 / 866 / 877 / 888. Their country cannot be derived
+		 * from the dial code, so with `initialCountry: ''` + a lookup the
+		 * library selects NO country until the geo-IP call returns — and that
+		 * call is blocked by most ad blockers.
+		 *
+		 * The library handles that state inconsistently, and this is the crux:
+		 *
+		 *   - #setInitialState() takes a regionless branch that does NOT call
+		 *     #updateCountryFromNumber(), then formats anyway — reaching
+		 *     stripSeparateDialCode() with a null country, which THROWS out of
+		 *     the intlTelInput() constructor.
+		 *   - setNumber() always calls #updateCountryFromNumber() first, which
+		 *     resolves these numbers to US, so it is safe.
+		 *
+		 * So we keep the value away from the constructor and hand it to
+		 * setNumber() instead. This is deliberately consumer-side: no patched
+		 * vendor file to lose on the next library upgrade. Covered by
+		 * tests/js/phone-input-regionless-nanp.test.js, which asserts the
+		 * sequence against the real library.
+		 *
+		 * The attribute is restored first so the library's own recovery pass
+		 * (#setInitialState(true), on geo-IP success) still sees the full number.
+		 *
+		 * No length heuristic: the old `length > 8` test was incidental, and it
+		 * differed between this tree and the 2019 admin.
+		 */
+		if ( attr_value ) {
+			element.setAttribute( 'value', attr_value );
+			intl.setNumber( attr_value );
+		}
 
 		if ( hiddenInput ) {
 			const seed = intlBestEffortNumber( intl, element );
@@ -253,8 +329,29 @@ const intl_init = ( element, intlTelInput, uiTranslations = null ) => {
 			}
 		}
 
+		/*
+		 * Second pass, on SETTLE — not on resolve.
+		 *
+		 * `intl.promise` is Promise.all([autoCountryDeferred, utilsDeferred]), and
+		 * the auto-country deferred is *rejected* when the geo-IP lookup fails —
+		 * which it routinely does, because ipinfo.io is blocked by most ad
+		 * blockers. Hanging this off .then() alone would skip the re-apply in
+		 * exactly the case that needs it most, so both outcomes run it.
+		 */
 		intl.promise
+			.catch( ( err ) => {
+				log( 'PhoneInput', 'intl.promise rejected (geo-IP lookup and/or utils failed)', err );
+			} )
 			.then( () => {
+				// Re-seed from the DB value. Skipped once the user has touched the
+				// field, so this can never overwrite typing.
+				const isIdle = ! element.dataset.userInteracted &&
+					document.activeElement !== element;
+
+				if ( attr_value && isIdle ) {
+					intl.setNumber( attr_value );
+				}
+
 				const value = intlBestEffortNumber( intl, element );
 
 				if ( hiddenInput && value ) {
@@ -262,13 +359,34 @@ const intl_init = ( element, intlTelInput, uiTranslations = null ) => {
 				}
 			} )
 			.catch( ( err ) => {
-				log( 'PhoneInput', 'Error resolving intl.promise', err );
+				log( 'PhoneInput', 'Error re-applying saved number', err );
 			} );
 
 		return intl;
 
 	} catch ( error ) {
 		log( 'PhoneInput', 'intl_init global error', error );
+
+		/*
+		 * Put the field back. If we got far enough to blank the value but not far
+		 * enough to create the hidden input, this setting has nothing carrying it
+		 * — the key would simply be absent from the save, and in the 2019 admin
+		 * (whose sanitizer rebuilds the option from POST) absent means DELETED.
+		 *
+		 * Restoring name + value degrades the field to a plain text input that
+		 * still posts the stored number: the save becomes a no-op instead of a
+		 * wipe. Guarded on hiddenInput because once that exists it owns the
+		 * setting, and giving the visible input its name back would post twice.
+		 */
+		if ( ! hiddenInput && hidden_input_name ) {
+			element.setAttribute( 'name', hidden_input_name );
+
+			if ( attr_value ) {
+				element.value = attr_value;
+				element.setAttribute( 'value', attr_value );
+			}
+		}
+
 		return null;
 	}
 };

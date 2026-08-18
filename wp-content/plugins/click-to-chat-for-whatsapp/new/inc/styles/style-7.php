@@ -1,6 +1,6 @@
 <?php
 /**
- * Style 7 icon with customise padding.
+ * Style 7 icon with customized padding.
  *
  * @package Click_To_Chat
  */

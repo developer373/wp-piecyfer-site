@@ -9,6 +9,7 @@
  * styles so the tab follows the theme tokens in light and dark.
  *
  * @package Click_To_Chat
+ * @since 4.41
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
