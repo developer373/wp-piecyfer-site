@@ -116,9 +116,9 @@
 
 .elementor-widget-testimonial-carousel .elementor-swiper-button:hover,
 .elementor-widget-testimonial-carousel.testimonials-btns .elementor-swiper-button:hover {
-	background-color: #010ED0 !important;
-	border-color: #010ED0 !important;
-	box-shadow: 0 6px 18px rgba(1, 14, 208, 0.25) !important;
+	background-color: #3469B3 !important;
+	border-color: #3469B3 !important;
+	box-shadow: 0 6px 18px rgba(52, 105, 179, 0.25) !important;
 	transform: translateY(-2px) !important;
 }
 
