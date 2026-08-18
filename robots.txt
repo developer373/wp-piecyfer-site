@@ -1,0 +1,15 @@
+# PieCyfer Robots.txt - Search Engine Optimization Directives
+User-agent: *
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
+Disallow: /wp-login.php
+Disallow: /*?s=*
+Disallow: /search/
+Disallow: /feed/
+Disallow: /trackback/
+Allow: /wp-content/uploads/
+Allow: /wp-content/plugins/
+Allow: /wp-content/themes/
+
+# Search Engine Sitemaps
+Sitemap: https://piecyfer.com/wp-sitemap.xml

@@ -23,6 +23,8 @@ require_once PIECYFER_THEME_DIR . 'inc/enqueue.php';
 require_once PIECYFER_THEME_DIR . 'inc/head.php';
 require_once PIECYFER_THEME_DIR . 'inc/template.php';
 require_once PIECYFER_THEME_DIR . 'inc/compat.php';
+require_once PIECYFER_THEME_DIR . 'inc/schema.php';
+require_once PIECYFER_THEME_DIR . 'inc/seo.php';
 
 /**
  * Force repair Header & Footer conditions
