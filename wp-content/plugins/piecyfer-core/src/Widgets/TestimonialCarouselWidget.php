@@ -1398,13 +1398,11 @@ class TestimonialCarouselWidget extends AbstractWidget {
 		if ( ! empty( $slide['image']['url'] ) ) {
 			$img_src = $this->get_slide_image_url( $slide, $settings );
 
-			$img_attribute = array();
+			$img_attribute['src'] = $img_src;
 
 			if ( $lazyload ) {
 				$img_attribute['class']    = 'swiper-lazy';
 				$img_attribute['data-src'] = $img_src;
-			} else {
-				$img_attribute['src'] = $img_src;
 			}
 
 			$img_attribute['alt'] = ! empty( $slide['image']['alt'] ) ? $slide['image']['alt'] : $slide['name'];
