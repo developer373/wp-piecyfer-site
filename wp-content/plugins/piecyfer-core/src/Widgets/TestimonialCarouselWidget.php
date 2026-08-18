@@ -99,23 +99,8 @@ class TestimonialCarouselWidget extends AbstractWidget {
 		return false;
 	}
 
-	public function get_html_wrapper_class() {
-		$classes  = parent::get_html_wrapper_class();
-		$settings = $this->get_settings_for_display();
-
-		$classes .= ' vamtam-has-theme-widget-styles';
-
-		if ( ! empty( $settings['vamtam_nav_pos'] ) ) {
-			$classes .= ' vamtam-nav-pos-' . sanitize_html_class( (string) $settings['vamtam_nav_pos'] );
-		}
-		if ( ! empty( $settings['vamtam_nav_pos_tablet'] ) ) {
-			$classes .= ' vamtam-nav-pos-tablet-' . sanitize_html_class( (string) $settings['vamtam_nav_pos_tablet'] );
-		}
-		if ( ! empty( $settings['vamtam_nav_pos_mobile'] ) ) {
-			$classes .= ' vamtam-nav-pos-mobile-' . sanitize_html_class( (string) $settings['vamtam_nav_pos_mobile'] );
-		}
-
-		return $classes;
+	protected function get_html_wrapper_class(): string {
+		return parent::get_html_wrapper_class() . ' vamtam-has-theme-widget-styles';
 	}
 
 	/**
@@ -1337,7 +1322,19 @@ class TestimonialCarouselWidget extends AbstractWidget {
 	// ---------------------------------------------------------------- render
 
 	protected function render_widget(): void {
-		$this->print_slider();
+		$settings = $this->get_settings_for_display();
+
+		if ( ! empty( $settings['vamtam_nav_pos'] ) ) {
+			$this->add_render_attribute( '_wrapper', 'class', 'vamtam-nav-pos-' . sanitize_html_class( (string) $settings['vamtam_nav_pos'] ) );
+		}
+		if ( ! empty( $settings['vamtam_nav_pos_tablet'] ) ) {
+			$this->add_render_attribute( '_wrapper', 'class', 'vamtam-nav-pos-tablet-' . sanitize_html_class( (string) $settings['vamtam_nav_pos_tablet'] ) );
+		}
+		if ( ! empty( $settings['vamtam_nav_pos_mobile'] ) ) {
+			$this->add_render_attribute( '_wrapper', 'class', 'vamtam-nav-pos-mobile-' . sanitize_html_class( (string) $settings['vamtam_nav_pos_mobile'] ) );
+		}
+
+		$this->print_slider( $settings );
 	}
 
 	/**
