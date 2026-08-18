@@ -240,8 +240,147 @@
   display: inline-block;
 }
 
-.elementor-swiper-button svg,
-.elementor-widget-testimonial-carousel .elementor-swiper-button svg {
-  width: 1em;
-  height: 1em;
+/* ==========================================================================
+   Testimonial Carousel & Navigation Buttons Styles
+   ========================================================================== */
+.elementor-widget-testimonial-carousel .elementor-main-swiper,
+.elementor-widget-testimonial-carousel .elementor-arrows-yes .elementor-main-swiper {
+	width: 100% !important;
+	max-width: 100% !important;
 }
+
+.elementor-widget-testimonial-carousel .elementor-swiper {
+	position: relative;
+	padding-bottom: 75px;
+}
+
+.elementor-widget-testimonial-carousel .swiper-slide {
+	padding: 0 !important;
+	box-sizing: border-box;
+}
+
+.elementor-widget-testimonial-carousel .elementor-testimonial {
+	display: flex;
+	flex-direction: column-reverse;
+	text-align: left;
+}
+
+.elementor-widget-testimonial-carousel .elementor-testimonial__footer {
+	display: flex;
+	align-items: center;
+	margin-bottom: 24px;
+}
+
+.elementor-widget-testimonial-carousel .elementor-testimonial__image {
+	display: inline-flex;
+}
+
+.elementor-widget-testimonial-carousel .elementor-testimonial__image img {
+	width: 54px !important;
+	height: 54px !important;
+	max-width: 54px !important;
+	border-radius: 6px;
+	object-fit: contain;
+}
+
+.elementor-widget-testimonial-carousel .elementor-testimonial__content {
+	display: flex;
+	flex-direction: column;
+}
+
+.elementor-widget-testimonial-carousel .elementor-testimonial__text {
+	font-size: 18px;
+	line-height: 1.75;
+	color: #2b354f;
+	font-style: normal;
+	font-weight: 400;
+	margin-bottom: 24px;
+}
+
+.elementor-widget-testimonial-carousel .elementor-testimonial__cite {
+	display: flex;
+	flex-direction: column;
+	font-style: normal;
+}
+
+.elementor-widget-testimonial-carousel .elementor-testimonial__name {
+	font-size: 17px;
+	font-weight: 700;
+	color: #0c152e;
+	line-height: 1.4;
+	margin-bottom: 2px;
+}
+
+.elementor-widget-testimonial-carousel .elementor-testimonial__title {
+	font-size: 14px;
+	font-weight: 400;
+	color: #64748b;
+	line-height: 1.4;
+}
+
+/* --- Navigation Buttons (Bottom-Left Circular Arrows) --- */
+.elementor-widget-testimonial-carousel .elementor-swiper-button,
+.elementor-widget-testimonial-carousel.testimonials-btns .elementor-swiper-button {
+	position: absolute !important;
+	top: auto !important;
+	bottom: 0 !important;
+	transform: none !important;
+	width: 44px !important;
+	height: 44px !important;
+	border-radius: 50% !important;
+	background-color: #ffffff !important;
+	border: 1px solid #e2e8f0 !important;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	cursor: pointer !important;
+	z-index: 10 !important;
+	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	outline: none;
+}
+
+.elementor-widget-testimonial-carousel .elementor-swiper-button-prev,
+.elementor-widget-testimonial-carousel.testimonials-btns .elementor-swiper-button-prev {
+	left: 0 !important;
+	right: auto !important;
+}
+
+.elementor-widget-testimonial-carousel .elementor-swiper-button-next,
+.elementor-widget-testimonial-carousel.testimonials-btns .elementor-swiper-button-next {
+	left: 56px !important;
+	right: auto !important;
+}
+
+.elementor-widget-testimonial-carousel .elementor-swiper-button svg {
+	width: 14px !important;
+	height: 14px !important;
+	fill: #5F6567 !important;
+	transition: fill 0.2s ease, transform 0.2s ease;
+}
+
+.elementor-widget-testimonial-carousel .elementor-swiper-button:hover,
+.elementor-widget-testimonial-carousel.testimonials-btns .elementor-swiper-button:hover {
+	background-color: #010ED0 !important;
+	border-color: #010ED0 !important;
+	box-shadow: 0 6px 18px rgba(1, 14, 208, 0.25) !important;
+	transform: translateY(-2px) !important;
+}
+
+.elementor-widget-testimonial-carousel .elementor-swiper-button:hover svg,
+.elementor-widget-testimonial-carousel.testimonials-btns .elementor-swiper-button:hover svg {
+	fill: #ffffff !important;
+}
+
+.elementor-widget-testimonial-carousel .elementor-swiper-button-prev:hover svg {
+	transform: translateX(-2px);
+}
+
+.elementor-widget-testimonial-carousel .elementor-swiper-button-next:hover svg {
+	transform: translateX(2px);
+}
+
+.elementor-widget-testimonial-carousel .elementor-swiper-button:active {
+	transform: translateY(0) !important;
+}
+
