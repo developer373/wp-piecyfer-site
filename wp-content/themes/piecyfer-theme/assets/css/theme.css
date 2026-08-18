@@ -384,3 +384,166 @@
 	transform: translateY(0) !important;
 }
 
+/* ==========================================================================
+   Clutch & Google Reviews Symmetrical Layout & Alignment
+   ========================================================================== */
+.elementor-146 .elementor-element.elementor-element-099b635,
+.elementor-146 .elementor-element.elementor-element-56075b3 {
+	display: inline-block !important;
+	vertical-align: middle !important;
+}
+
+.elementor-146 .elementor-element.elementor-element-56075b3 > .elementor-widget-container {
+	margin: 0 0 0 40px !important;
+}
+
+/* Clutch Review Template Styles */
+.elementor-988052 .elementor-element-604b92bc {
+	padding: 0 !important;
+}
+
+.elementor-988052 .elementor-element-6e25c9b3 > .elementor-widget-wrap {
+	display: flex !important;
+	flex-wrap: wrap !important;
+	align-items: center !important;
+	align-content: center !important;
+	gap: 0 !important;
+}
+
+.elementor-988052 .elementor-element-3583b93 {
+	width: auto !important;
+	max-width: none !important;
+	margin: 0 8px 0 0 !important;
+}
+
+.elementor-988052 .elementor-element-3583b93 .elementor-heading-title {
+	font-family: "Inter Tight", Sans-serif !important;
+	font-size: 11px !important;
+	font-weight: 600 !important;
+	text-transform: uppercase !important;
+	line-height: 1.2 !important;
+	letter-spacing: 0.5px !important;
+	color: #64748b !important;
+}
+
+.elementor-988052 .elementor-element-6f3461af {
+	width: auto !important;
+	margin: 0 !important;
+}
+
+.elementor-988052 .elementor-element-6f3461af .elementor-star-rating i:before {
+	color: #FF3D2E !important;
+}
+
+.elementor-988052 .elementor-element-43a23a8d {
+	flex-basis: 100% !important;
+	height: 4px !important;
+	margin: 0 !important;
+	border: none !important;
+}
+
+.elementor-988052 .elementor-element-79f6e76b {
+	width: auto !important;
+	max-width: none !important;
+	margin: 0 8px 0 0 !important;
+}
+
+.elementor-988052 .elementor-element-79f6e76b img {
+	width: 77px !important;
+	height: auto !important;
+	max-width: 77px !important;
+	display: block !important;
+}
+
+.elementor-988052 .elementor-element-45597131 {
+	width: auto !important;
+	margin: 2px 0 0 0 !important;
+}
+
+.elementor-988052 .elementor-element-45597131 .elementor-heading-title {
+	font-family: "Inter Tight", Sans-serif !important;
+	font-size: 11px !important;
+	font-weight: 600 !important;
+	text-transform: uppercase !important;
+	line-height: 1.2 !important;
+	letter-spacing: 0.5px !important;
+	color: #64748b !important;
+}
+
+/* Google Review Template Styles */
+.elementor-867 .elementor-element-d41922e {
+	padding: 0 !important;
+}
+
+.elementor-867 .elementor-element-94ebc5a > .elementor-widget-wrap {
+	display: flex !important;
+	flex-wrap: wrap !important;
+	align-items: center !important;
+	align-content: center !important;
+	gap: 0 !important;
+}
+
+.elementor-867 .elementor-element-f79d456 {
+	width: auto !important;
+	max-width: none !important;
+	margin: 0 10px 0 0 !important;
+	display: flex !important;
+	align-items: center !important;
+}
+
+.elementor-867 .elementor-element-f79d456 img {
+	width: 38px !important;
+	height: 38px !important;
+	max-width: 38px !important;
+	display: block !important;
+}
+
+.elementor-867 .elementor-element-d272f68 {
+	width: auto !important;
+	margin: 0 6px 0 0 !important;
+	padding: 2px 6px !important;
+	border-radius: 4px !important;
+	background-color: var(--e-global-color-vamtam_accent_2, #f1f5f9) !important;
+}
+
+.elementor-867 .elementor-element-d272f68 .elementor-heading-title {
+	font-family: "Inter Tight", Sans-serif !important;
+	font-size: 13px !important;
+	font-weight: 700 !important;
+	line-height: 1.2 !important;
+	color: var(--e-global-color-vamtam_accent_6, #1e293b) !important;
+}
+
+.elementor-867 .elementor-element-239f68f {
+	width: auto !important;
+	margin: 0 !important;
+}
+
+.elementor-867 .elementor-element-239f68f .elementor-star-rating i,
+.elementor-867 .elementor-element-239f68f .elementor-star-rating i:before {
+	color: #FBB002 !important;
+}
+
+.elementor-867 .elementor-element-6446ab1 {
+	flex-basis: 100% !important;
+	height: 2px !important;
+	margin: 0 !important;
+	border: none !important;
+}
+
+.elementor-867 .elementor-element-3895fcf {
+	width: auto !important;
+	margin: 0 0 0 48px !important;
+}
+
+.elementor-867 .elementor-element-3895fcf .elementor-heading-title {
+	font-family: "Inter Tight", Sans-serif !important;
+	font-size: 11px !important;
+	font-weight: 600 !important;
+	text-transform: uppercase !important;
+	line-height: 1.2 !important;
+	letter-spacing: 0.5px !important;
+	color: #64748b !important;
+}
+
+
