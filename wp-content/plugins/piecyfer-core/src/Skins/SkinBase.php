@@ -1097,18 +1097,25 @@ abstract class SkinBase extends Elementor_Skin_Base {
 		<div class="elementor-post__excerpt">
 			<?php
 			global $post;
-			$apply_to_custom_excerpt = $this->get_instance_value( 'apply_to_custom_excerpt' );
+			$max_length = (int) $this->get_instance_value( 'excerpt_length' );
+			if ( ! $max_length || $max_length <= 0 ) {
+				$max_length = 22;
+			}
 
-			// Force the manually-generated Excerpt length as well if the user chose to enable 'apply_to_custom_excerpt'.
-			if ( 'yes' === $apply_to_custom_excerpt && ! empty( $post->post_excerpt ) ) {
-				$max_length = (int) $this->get_instance_value( 'excerpt_length' );
-				$excerpt = apply_filters( 'the_excerpt', get_the_excerpt() );
-				$excerpt = self::trim_words( $excerpt, $max_length );
-				echo wp_kses_post( $excerpt );
+			$raw_excerpt = ! empty( $post->post_excerpt ) ? $post->post_excerpt : get_the_excerpt();
+			if ( empty( $raw_excerpt ) ) {
+				$raw_excerpt = get_the_content();
+			}
+			$clean_text = wp_strip_all_tags( strip_shortcodes( $raw_excerpt ) );
+			$words      = preg_split( '/\s+/u', trim( $clean_text ), -1, PREG_SPLIT_NO_EMPTY );
+
+			if ( count( $words ) > $max_length ) {
+				$excerpt = implode( ' ', array_slice( $words, 0, $max_length ) ) . '...';
 			} else {
-				the_excerpt();
+				$excerpt = implode( ' ', $words );
 			}
 			?>
+			<p><?php echo esc_html( $excerpt ); ?></p>
 		</div>
 		<?php
 

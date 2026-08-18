@@ -80,16 +80,28 @@ function piecyfer_legacy_301_redirects() {
 
 	// 2. Direct legacy URL mappings
 	$redirect_map = array(
-		'service'                         => home_url( '/#services' ),
-		'services'                        => home_url( '/#services' ),
-		'hire-developers'                 => home_url( '/hire-an-expert/' ),
-		'staff-augmentation'              => home_url( '/hire-an-expert/' ),
-		'dedicated-developers'            => home_url( '/hire-an-expert/' ),
-		'custom-software-development'     => home_url( '/enterprise-software-development/' ),
-		'qa-testing'                      => home_url( '/software-quality-testing/' ),
-		'quality-assurance'               => home_url( '/software-quality-testing/' ),
-		'cloud-consulting'                => home_url( '/cloud-services/' ),
-		'careers'                         => home_url( '/about-piecyfer/' ),
+		'service'                           => home_url( '/#services' ),
+		'services'                          => home_url( '/#services' ),
+		'hire-developers'                   => home_url( '/hire-an-expert/' ),
+		'hire-dedicated-developers'         => home_url( '/hire-an-expert/' ),
+		'staff-augmentation'                => home_url( '/hire-an-expert/' ),
+		'dedicated-developers'              => home_url( '/hire-an-expert/' ),
+		'custom-software-development'       => home_url( '/enterprise-software-development/' ),
+		'qa-and-testing'                    => home_url( '/software-quality-testing/' ),
+		'qa-testing'                        => home_url( '/software-quality-testing/' ),
+		'quality-assurance'                 => home_url( '/software-quality-testing/' ),
+		'software-quality-assurance'        => home_url( '/software-quality-testing/' ),
+		'maintenance-and-support'           => home_url( '/software-maintenance-and-support/' ),
+		'maintenance'                       => home_url( '/software-maintenance-and-support/' ),
+		'software-maintenance'              => home_url( '/software-maintenance-and-support/' ),
+		'software-re-engineering-services'  => home_url( '/software-re-engineering/' ),
+		'data-migration-services'           => home_url( '/software-migration/' ),
+		'data-migration'                    => home_url( '/software-migration/' ),
+		'digital-marketing-services'        => home_url( '/digital-marketing/' ),
+		'crm-development'                   => home_url( '/crm-solutions/' ),
+		'cms-development'                   => home_url( '/cms-solutions/' ),
+		'cloud-consulting'                  => home_url( '/cloud-services/' ),
+		'careers'                           => home_url( '/about-piecyfer/' ),
 	);
 
 	if ( isset( $redirect_map[ $path ] ) ) {
@@ -98,3 +110,22 @@ function piecyfer_legacy_301_redirects() {
 	}
 }
 add_action( 'template_redirect', 'piecyfer_legacy_301_redirects', 1 );
+
+/**
+ * Exclude internal / builder post types from XML Sitemaps.
+ *
+ * Prevents elementskit_content, elementor_library, and builder templates from appearing in sitemaps.
+ *
+ * @param array $post_types List of post types in sitemap.
+ * @return array
+ */
+function piecyfer_clean_sitemaps_post_types( $post_types ) {
+	unset( $post_types['elementskit_content'] );
+	unset( $post_types['elementor_library'] );
+	unset( $post_types['e-landing-page'] );
+	unset( $post_types['elementor_font'] );
+	unset( $post_types['elementor_icons'] );
+	return $post_types;
+}
+add_filter( 'wp_sitemaps_post_types', 'piecyfer_clean_sitemaps_post_types' );
+
